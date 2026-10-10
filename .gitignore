@@ -4,3 +4,7 @@ shots/
 scratch/
 .playwright-mcp/
 *.log
+
+# website build output
+website/dist/
+website/.cache/

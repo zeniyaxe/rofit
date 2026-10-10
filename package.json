@@ -12,7 +12,11 @@
     "test:e2e": "node tests/e2e/run.mjs",
     "zip": "node scripts/zip.mjs",
     "release": "npm run typecheck && npm run build && npm test && npm run zip",
-    "test:perf": "node tests/perf/scroll.mjs"
+    "test:perf": "node tests/perf/scroll.mjs",
+    "site:build": "node website/build.mjs",
+    "site:serve": "node website/serve.mjs",
+    "site:test": "node website/build.mjs && node website/tests/site.test.mjs",
+    "site:typecheck": "tsc -p website --noEmit"
   },
   "dependencies": {
     "lucide": "^1.52.0",
