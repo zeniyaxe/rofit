@@ -4,11 +4,13 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 
 export const EXT = resolve(process.env.ROFIT_EXT || 'dist-test');
+/** Use a system Chrome/Chromium when Playwright's bundled browser isn't installed (e.g. ROFIT_CHROME=/usr/bin/chromium). */
+const executablePath = process.env.ROFIT_CHROME || undefined;
 
 export async function launch({ colorScheme = 'light', viewport = { width: 1400, height: 900 }, headless = true, reducedMotion = 'no-preference' } = {}) {
   const dir = mkdtempSync(join(tmpdir(), 'rofit-pw-'));
   const ctx = await chromium.launchPersistentContext(dir, {
-    headless: false, colorScheme, viewport, reducedMotion,
+    headless: false, colorScheme, viewport, reducedMotion, executablePath,
     args: ['--disable-renderer-backgrounding', '--disable-background-timer-throttling', '--disable-backgrounding-occluded-windows', `--disable-extensions-except=${EXT}`, `--load-extension=${EXT}`, ...(headless ? ['--headless=new'] : [])],
   });
   let [sw] = ctx.serviceWorkers();
