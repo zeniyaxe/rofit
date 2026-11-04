@@ -1,5 +1,53 @@
 # Changelog
 
+## 2.0.0 — visibility, search, library 2.0, rofit.site
+**Visibility you can trust** (research: `docs/research/outfit-access.md`)
+- Every outfit list gets a label: **Your outfits**, **Public**, **Visible to you**, **Saved earlier**, **Private**, **Unavailable** or **Visibility unknown**. To tell Public from Visible to you, RoFit asks for the first page once more without your session (Settings → Privacy, on by default).
+- When Roblox won't show a list to you, RoFit now also hides copies it cached on earlier visits. Your own library entries stay yours.
+- Share links need your OK for anything RoFit can't confirm is public, and can't be made for a private list.
+
+**Explorer**
+- New search: forgiving of typos, with `"phrases"`, `-exclusions` and `#IDs`, ranked by match quality. After outfits are read it also searches items, item types and creators, and shows why each result matched.
+- **Read every outfit** can look up item prices in batches of 100, unlocking price filters, cost on cards, and sorting by most expensive or cheapest. Optional: read automatically when a profile opens.
+- Filters panel: avatar type, item kinds, price range (only claims a bucket the known prices prove), buyable new, limiteds, in your library. Active filters show as removable chips.
+- Select all, and save a selection to a collection in one go.
+- The refresh button moved next to “Updated …”, so the toolbar no longer wraps.
+- Card prices never show “R$ 0+”: a total with unknown parts is a lower bound, and an all-off-sale outfit says “Off sale”.
+
+**Command palette and shortcuts**
+- `Ctrl K` / `⌘ K`: jump to an outfit, a saved look, a recent profile, any username or user ID on Roblox, or an action. `?` lists every shortcut; `J`/`K` step through outfits while one is open.
+
+**Inspector**
+- Similar outfits from the profile (once read) and your library.
+- **Share a snapshot link** (`https://rofit.site/o/#…`): the outfit travels in the link's fragment, which never reaches a server.
+- History is described as what it is: changes RoFit observed on this computer (now including scale and avatar type), never Roblox's edit history. Visits where nothing changed add nothing.
+- Item thumbnails now load for items whose data was first cached by a price lookup.
+
+**Library 2.0**
+- Favorites, collection management (rename, delete, with or without their outfits), bulk favorite / move / tag / export / remove, filter by person, tag and favorites, sort by cost.
+- Import backups, item manifests and share links with a dry-run report (new, already saved, unreadable) before anything is written; optional replace. Export all or just the selection.
+- Entries opened from share links are marked **Shared**.
+
+**Profiles, popup, settings**
+- Roblox's newer profile layout has no tab list; RoFit adds a **Saved Outfits** row under Currently Wearing there (nothing is fetched until you click). If Roblox leaves Currently Wearing out, the row still appears at the top of the profile and moves under Currently Wearing if it shows up later.
+- Toolbar popup: one search box for usernames, user IDs, profile links and your library; recent profiles (including ones Roblox failed to load); clear errors for unknown, banned and unreachable accounts.
+- Settings are grouped (Appearance, Motion, Explorer, Profiles, Library & data, Privacy, Diagnostics, Shortcuts, About) with search and deep links (`workspace.html#settings/motion`).
+- Motion is now **System / Full / Balanced / Calm** with a live preview. 1.x settings migrate without changing anyone's motion (`full` → System, `reduced` → Calm).
+- Workspace routes: `#library`, `#library/import/<link>`, `#library/open/<user:outfit>`, `#settings[/section]`, `#welcome`.
+
+**rofit.site** (new, `site/`)
+- Companion website: home, features, download (detects the installed version), docs, changelog, privacy policy and the share-link viewer. Static, no cookies, no analytics, strict CSP; images only from Roblox's CDN.
+- The extension talks to the site through a narrow bridge (`src/content/site.ts`): the site can learn that RoFit is installed and, after a click, ask it to open its import screen for one share link. Nothing is saved until you confirm in RoFit.
+
+**Reliability and security**
+- Fixed: outfit links (`…/profile#rofit/<id>`) didn't open on Roblox's current profile page, which rewrites the fragment when it loads (`#!#rofit%2F…`). Both spellings work now, and RoFit leaves fragments it didn't write alone.
+- Fixed: focus didn't always move into the sheet, dialogs and menus when they opened, so `Esc` and `Tab` could miss them. Focus now moves in reliably and returns to where it was when a dialog or the palette closes; `Esc` closes the topmost dialog even if focus wandered outside it.
+- Requests time out after 20 s instead of hanging; a frozen Roblox tab no longer stalls everything. Offline gets its own message.
+- Outfit details fall back from `v3` to `v4` when Roblox misbehaves (`v3` is deprecated).
+- The service worker only answers RoFit's own pages and the roblox.com content script; the rofit.site bridge can send exactly one kind of message, which is validated again in the worker.
+- The website's changelog renderer only links to `https:` URLs, site paths and anchors (`//host` and `/\host` don't count as site paths).
+- New tests: search ranking, share-link encoding and hostile payloads, deep-link parsing, access states and hiding cached copies after a refusal, settings migration, backup validation, v3/v4 details, thumbnail caching, bulk library edits, price labels, website pages and CSP, changelog escaping, viewer XSS cases, and the bridge end to end. The live-site regression suite covers the new toolbar, filters, palette, shortcuts, visibility badge, share link round trip and import.
+
 ## 1.2.0 — privacy clarity, signed-in requests, popup
 - **Why no outfits?** New explanation screen with the actual evidence: Roblox's own refusal text, whether it saw a signed-in viewer, presets-only, empty-vs-private. Roblox introduced outfit privacy in Nov 2025; RoFit shows what Roblox returns to you and never works around it (no fallback to older endpoints on a 403).
 - **Fixed: requests were anonymous.** A service worker's fetch drops SameSite=Lax cookies (verified), so Roblox saw RoFit as signed out; friends-only outfits and ownership checks could silently fail. Requests now run inside an open roblox.com tab (same-site, carries your session) and fall back to the worker. Settings → Diagnostics says which path was used.
