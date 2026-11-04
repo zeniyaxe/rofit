@@ -18,6 +18,7 @@ npm run test:perf    # frame times while scrolling/sorting 300 outfits (cv|nocv 
 npm run zip          # release/*.zip from dist/
 ```
 `tests/e2e/flow.mjs tag=x [dark=1]` captures screenshots of every surface into `shots/` — use it for visual review. Look at the screenshots; don't trust the DOM alone. Set `ROFIT_CHROME=/path/to/chromium` when Playwright's bundled browser isn't installed.
+CI (`.github/workflows/ci.yml`) runs typecheck, unit tests, the production build (and fails if the committed `dist/` doesn't match it) and the site build. The e2e suites need live roblox.com, so they aren't in CI: run them before merging.
 
 ## Architecture
 - `src/background/` service worker. **Only** place that talks to Roblox (`roblox.ts`) and the only owner of IndexedDB (`db.ts`). `service.ts` = handlers (sync + access, thumbs, details+history, asset resolution+provenance, library incl. bulk/collections, backups, user lookup). `index.ts` = message router (`trusted(sender)`: our own pages and roblox.com tabs only), the separate `site-import` listener for the rofit.site bridge, capability tracking in `storage.session`, daily prune alarm.
