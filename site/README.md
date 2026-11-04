@@ -42,6 +42,11 @@ what counts as valid. The version shown on the site comes from the root `package
 
 Any static host works. The site expects to live at `https://rofit.site` (the bridge only runs there).
 
+**Cloudflare Workers (static assets)**: the repo's `wrangler.jsonc` configures it.
+Build command `node site/build.mjs`, deploy command `npx wrangler deploy --assets ./site/dist`, branch `main`.
+`name` in `wrangler.jsonc` must match the Worker's name in the dashboard. `_headers` is honoured; unknown paths get `404.html`.
+Attach `rofit.site` under the Worker's *Domains & Routes*.
+
 **Cloudflare Pages** (recommended: it honours `_headers`)
 1. Create a Pages project from this repository.
 2. Build command `node site/build.mjs`, output directory `site/dist`, Node 20 or newer.

@@ -1,0 +1,12 @@
+// Cloudflare Workers static-assets deploy for rofit.site.
+// Build: node site/build.mjs   Deploy: npx wrangler deploy --assets ./site/dist
+// "name" must match the Worker's name in the Cloudflare dashboard.
+{
+  "name": "rofit",
+  "compatibility_date": "2025-10-01",
+  "assets": {
+    "directory": "./site/dist",
+    "html_handling": "auto-trailing-slash",
+    "not_found_handling": "404-page"
+  }
+}
