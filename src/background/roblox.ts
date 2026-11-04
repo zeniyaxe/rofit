@@ -22,11 +22,12 @@ export class RobloxError extends Error implements RpcError {
   detail?: string;
   code?: number;
   viewer?: RpcError['viewer'];
+  access?: RpcError['access'];
   constructor(kind: RpcError['kind'], message: string, status?: number, retryAfter?: number) {
     super(message);
     this.kind = kind; this.status = status; this.retryAfter = retryAfter;
   }
-  toJSON(): RpcError { return { kind: this.kind, message: this.message, status: this.status, retryAfter: this.retryAfter, detail: this.detail, code: this.code, viewer: this.viewer }; }
+  toJSON(): RpcError { return { kind: this.kind, message: this.message, status: this.status, retryAfter: this.retryAfter, detail: this.detail, code: this.code, viewer: this.viewer, access: this.access }; }
 }
 
 const sleep = (ms: number, signal?: AbortSignal) => new Promise<void>((res, rej) => {
@@ -95,23 +96,32 @@ export async function unregisterTab(id: number) { const t = await tabs(); if (t.
 /** Where the last request actually went; shown in diagnostics. */
 export const transportInfo = { via: 'worker' as 'tab' | 'worker', at: 0 };
 
+/** A request that takes longer than this is treated as failed: Roblox normally answers in well under a second. */
+export const REQUEST_TIMEOUT = 20_000;
+const timeoutAfter = <T>(p: Promise<T>, ms: number): Promise<T> => new Promise((res, rej) => {
+  const t = setTimeout(() => rej(Object.assign(new Error('timeout'), { name: 'TimeoutError' })), ms);
+  p.then((v) => { clearTimeout(t); res(v); }, (e) => { clearTimeout(t); rej(e); });
+});
+
 async function send(url: string, init: { method: string; body?: string; signal?: AbortSignal; csrf: string }): Promise<Response> {
   if (hasChrome()) {
     for (const id of [...(await tabs())].reverse()) {
       try {
-        const r = await chrome.tabs.sendMessage(id, { __rofit: 'fetch', url, method: init.method, body: init.body, csrf: init.csrf });
+        // A frozen or discarded tab never answers; don't let it hang the request, try the next transport instead.
+        const r = await timeoutAfter(chrome.tabs.sendMessage(id, { __rofit: 'fetch', url, method: init.method, body: init.body, csrf: init.csrf }), REQUEST_TIMEOUT);
         if (r?.ok) {
           transportInfo.via = 'tab'; transportInfo.at = Date.now();
           return new Response(r.text, { status: r.status, headers: { ...(r.csrf ? { 'x-csrf-token': r.csrf } : {}), ...(r.retryAfter ? { 'retry-after': r.retryAfter } : {}) } });
         }
         if (r?.error === 'blocked') break;
-      } catch { await unregisterTab(id); }
+      } catch (e) { if ((e as Error).name !== 'TimeoutError') await unregisterTab(id); }
     }
   }
   transportInfo.via = 'worker'; transportInfo.at = Date.now();
   const headers: Record<string, string> = {};
   if (init.method === 'POST') { headers['content-type'] = 'application/json'; if (init.csrf) headers['x-csrf-token'] = init.csrf; }
-  return fetch(url, { method: init.method, credentials: 'include', signal: init.signal, headers, body: init.body });
+  const signal = init.signal ? AbortSignal.any([init.signal, AbortSignal.timeout(REQUEST_TIMEOUT)]) : AbortSignal.timeout(REQUEST_TIMEOUT);
+  return fetch(url, { method: init.method, credentials: 'include', signal, headers, body: init.body });
 }
 
 interface HttpOpts { method?: 'GET' | 'POST'; body?: unknown; signal?: AbortSignal; retries?: number }
@@ -123,10 +133,15 @@ export async function http<T>(url: string, o: HttpOpts = {}): Promise<T> {
       try {
         return await send(url, { method: o.method ?? 'GET', signal: o.signal, csrf, body: o.body === undefined ? undefined : JSON.stringify(o.body) });
       } catch (e) {
+        if ((e as Error).name === 'TimeoutError') return 'timeout' as const;
         if ((e as Error).name === 'AbortError') throw new RobloxError('aborted', 'Cancelled');
         throw new RobloxError('network', 'Could not reach Roblox. Check your connection.');
       }
     });
+    if (res === 'timeout') {
+      if (attempt < Math.min(1, retries)) continue;
+      throw new RobloxError('timeout', 'Roblox took too long to answer. Try again in a moment.');
+    }
 
     if (res.status === 403 && o.method === 'POST') {
       const tok = res.headers.get('x-csrf-token');
@@ -217,26 +232,43 @@ export const assetThumbs = (ids: number[], size = '150x150') => thumbBatch('/v1/
 
 const hex = (v: unknown, fallback = 'A3A2A5') => (typeof v === 'string' && /^[0-9a-f]{6}$/i.test(v) ? v.toUpperCase() : fallback);
 
+/**
+ * Normalizes v3 (`bodyColor3s.headColor3`, top-level fields) and v4 (`outfitModel`, `bodyColors.headColor`) details.
+ * Exported for tests: both shapes were captured from the live API (docs/research/outfit-access.md, S11).
+ */
+export function parseDetails(raw: any, id: number): OutfitDetails {
+  const j = raw?.outfitModel ?? raw;
+  if (!j || !Array.isArray(j.assets)) throw new RobloxError('bad-response', 'Unexpected outfit details shape.');
+  const c3 = j.bodyColor3s, c4 = j.bodyColors ?? {};
+  const col = (k: string) => hex(c3 ? c3[k + 'Color3'] : c4[k + 'Color']);
+  const s = j.scale ?? {};
+  const bodyColors: BodyColors = {
+    head: col('head'), torso: col('torso'), rightArm: col('rightArm'), leftArm: col('leftArm'), rightLeg: col('rightLeg'), leftLeg: col('leftLeg'),
+  };
+  const n = (v: unknown, d: number) => (typeof v === 'number' ? v : d);
+  const scale: BodyScale = {
+    height: n(s.height, 1), width: n(s.width, 1), head: n(s.head, 1), depth: n(s.depth, 1),
+    proportion: n(s.proportion, 0), bodyType: n(s.bodyType, 0),
+  };
+  const idNum = Number(j.id);
+  return {
+    id: Number.isSafeInteger(idNum) && idNum > 0 ? idNum : id, name: String(j.name ?? ''),
+    assets: j.assets.filter((a: any) => a && typeof a.id === 'number').map((a: any) => ({ id: a.id, name: String(a.name ?? ''), assetTypeId: a.assetType?.id ?? 0, assetTypeName: a.assetType?.name ?? '' })),
+    bodyColors, scale, avatarType: j.playerAvatarType ?? 'R15', outfitType: j.outfitType ?? 'Avatar', fetchedAt: Date.now(),
+  };
+}
+
+/** v3 first (proven in 1.x), v4 when v3 misbehaves: Roblox documents v3 as deprecated in favour of v4. */
 export function outfitDetails(id: number, signal?: AbortSignal): Promise<OutfitDetails> {
   return track('details', async () => {
-    const j = await http<any>(`${H.avatar}/v3/outfits/${id}/details`, { signal });
-    if (!j || !Array.isArray(j.assets)) throw new RobloxError('bad-response', 'Unexpected outfit details shape.');
-    const c = j.bodyColor3s ?? {};
-    const s = j.scale ?? {};
-    const bodyColors: BodyColors = {
-      head: hex(c.headColor3), torso: hex(c.torsoColor3), rightArm: hex(c.rightArmColor3),
-      leftArm: hex(c.leftArmColor3), rightLeg: hex(c.rightLegColor3), leftLeg: hex(c.leftLegColor3),
-    };
-    const n = (v: unknown, d: number) => (typeof v === 'number' ? v : d);
-    const scale: BodyScale = {
-      height: n(s.height, 1), width: n(s.width, 1), head: n(s.head, 1), depth: n(s.depth, 1),
-      proportion: n(s.proportion, 0), bodyType: n(s.bodyType, 0),
-    };
-    return {
-      id: j.id ?? id, name: String(j.name ?? ''),
-      assets: j.assets.map((a: any) => ({ id: a.id, name: String(a.name ?? ''), assetTypeId: a.assetType?.id ?? 0, assetTypeName: a.assetType?.name ?? '' })),
-      bodyColors, scale, avatarType: j.playerAvatarType ?? 'R15', outfitType: j.outfitType ?? 'Avatar', fetchedAt: Date.now(),
-    };
+    try {
+      return parseDetails(await http<any>(`${H.avatar}/v3/outfits/${id}/details`, { signal }), id);
+    } catch (e) {
+      const k = (e as RobloxError).kind;
+      if (k !== 'server' && k !== 'bad-response' && k !== 'not-found') throw e;
+      try { return parseDetails(await http<any>(`${H.avatar}/v4/outfits/${id}/details`, { signal, retries: 1 }), id); }
+      catch { throw e; }
+    }
   });
 }
 
@@ -318,5 +350,49 @@ export function myAvatar(): Promise<OutfitDetails> {
       scale: { height: s.height ?? 1, width: s.width ?? 1, head: s.head ?? 1, depth: s.depth ?? 1, proportion: s.proportion ?? 0, bodyType: s.bodyType ?? 0 },
       avatarType: j.playerAvatarType ?? 'R15', outfitType: 'Avatar', fetchedAt: Date.now(),
     };
+  });
+}
+
+// --- who can see a list: one anonymous request (docs/research/outfit-access.md) -------------------------
+/**
+ * Asks for the first page of a user's outfits with no cookies at all, straight from the worker. If Roblox shows outfits
+ * to an anonymous caller they're public; if it shows them only to the signed-in viewer, they're visible because of the
+ * viewer's account. Never retried and never paginated: it's one request per profile refresh.
+ */
+export function anonymousOutfitCount(userId: number): Promise<number | 'hidden'> {
+  return track('access', () => limiter.run(async () => {
+    let res: Response;
+    try {
+      res = await fetch(`${H.avatar}/v2/avatar/users/${userId}/outfits?itemsPerPage=50&outfitType=Avatar&paginationToken=`, { credentials: 'omit', signal: AbortSignal.timeout(10_000) });
+    } catch (e) {
+      throw new RobloxError((e as Error).name === 'TimeoutError' ? 'timeout' : 'network', 'The visibility check couldn’t reach Roblox.');
+    }
+    if (res.status === 401 || res.status === 403) return 'hidden' as const;
+    if (res.status === 429) throw new RobloxError('rate-limited', 'Rate limited.', 429);
+    if (!res.ok) throw new RobloxError(res.status >= 500 ? 'server' : 'bad-response', `Roblox returned ${res.status}.`, res.status);
+    const j = await res.json().catch(() => null) as { data?: RawOutfit[] } | null;
+    if (!j || !Array.isArray(j.data)) throw new RobloxError('bad-response', 'Unexpected outfit list shape.');
+    return j.data.filter((o) => o && o.isEditable).length;
+  }));
+}
+
+export interface UserInfo { id: number; name: string; displayName: string; isBanned?: boolean }
+/** Exact username → user. Roblox's lookup endpoint, not its (heavily rate-limited) fuzzy search. */
+export function userByName(name: string): Promise<UserInfo | null> {
+  return track('users', async () => {
+    const j = await http<{ data?: { id: number; name: string; displayName: string }[] }>(`${H.users}/v1/usernames/users`, { method: 'POST', body: { usernames: [name], excludeBannedUsers: false }, retries: 1 });
+    const u = j.data?.[0];
+    return u && typeof u.id === 'number' ? { id: u.id, name: u.name, displayName: u.displayName } : null;
+  });
+}
+export function userById(id: number): Promise<UserInfo | null> {
+  return track('users', async () => {
+    try {
+      const u = await http<{ id: number; name: string; displayName: string; isBanned: boolean }>(`${H.users}/v1/users/${id}`, { retries: 1 });
+      return { id: u.id, name: u.name, displayName: u.displayName, isBanned: u.isBanned };
+    } catch (e) {
+      if ((e as RobloxError).kind === 'not-found') return null;
+      throw e;
+    }
   });
 }

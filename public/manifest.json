@@ -49,6 +49,15 @@
         "content.js"
       ],
       "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://rofit.site/*"
+      ],
+      "js": [
+        "site.js"
+      ],
+      "run_at": "document_end"
     }
   ],
   "content_security_policy": {

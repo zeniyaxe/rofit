@@ -20,6 +20,7 @@ const targets = [
   { entryPoints: { sheet: 'src/content/sheet.tsx' }, format: 'esm' },
   { entryPoints: { workspace: 'src/pages/workspace.tsx' }, format: 'iife' },
   { entryPoints: { popup: 'src/pages/popup.tsx' }, format: 'iife' },
+  { entryPoints: { site: 'src/content/site.ts' }, format: 'iife' },
 ];
 
 for (const t of targets) {
