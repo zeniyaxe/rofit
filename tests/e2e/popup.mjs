@@ -54,7 +54,7 @@ const popup = async (hash = '') => {
   const pp = await popup('#fake=156:builderman');
   await pp.screenshot({ path: 'shots/popup-here.png' });
   const t = await pp.locator('.rf-pop-now.live').innerText().catch(() => '');
-  ok('on a profile: offers that profile first, with what RoFit already knows', /This profile/.test(t) && /builderman/.test(t) && /5 saved outfits/.test(t), t.replace(/\n/g, ' / '));
+  ok('on a profile: offers that profile first, with what RoFit already knows', /This profile/i.test(t) && /builderman/.test(t) && /5 saved outfits/.test(t), t.replace(/\n/g, ' / '));
   ok('library shortcut in the footer', (await pp.locator('.rf-pop-lib').count()) === 1);
   await pp.close();
 }

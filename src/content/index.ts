@@ -73,6 +73,8 @@ function addTab() {
   a.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); open(undefined, a); });
   li.appendChild(a);
   list.appendChild(li);
+  // One entry per profile: if the tab list rendered after the row was placed, the tab wins.
+  document.querySelectorAll(`[${SEC}]`).forEach((x) => x.remove());
 }
 
 /**
@@ -89,15 +91,20 @@ function findWearingSection(): HTMLElement | null {
   return null;
 }
 
+/** How long a profile gets to render Currently Wearing before the Saved Outfits row stops waiting for it. */
+const SETTLE_MS = 2500;
+let keySince = 0;
+
 /**
  * Where the Saved Outfits row goes: right after Currently Wearing. Roblox leaves that section out when it fails to load
- * (or has nothing to show), so then the row starts the list of profile sections instead, once some have rendered.
+ * (or has nothing to show), so then the row starts the profile's sections instead: as soon as other sections have
+ * rendered, or once the page has had SETTLE_MS to render it. If Currently Wearing shows up later, the row moves below it.
  */
 function sectionSpot(): { anchor: HTMLElement; mode: 'after' | 'prepend' } | null {
   const wearing = findWearingSection();
   if (wearing?.parentElement) return { anchor: wearing, mode: 'after' };
   const content = document.querySelector<HTMLElement>('.profile-content');
-  if (content?.querySelector('.profile-carousel, h2')) return { anchor: content, mode: 'prepend' };
+  if (content && (content.querySelector('.profile-carousel, h2') || performance.now() - keySince > SETTLE_MS)) return { anchor: content, mode: 'prepend' };
   return null;
 }
 
@@ -213,8 +220,11 @@ function ensure() {
   if (key !== lastKey) {
     // Navigated to a different profile (or away): drop the old sheet and anything we injected.
     lastKey = key;
+    keySince = performance.now();
     sheetApi?.closeSheet(false, true);
     removeInjected();
+    // Re-check once the settle window has passed, even if Roblox stops mutating the page by then.
+    if (id) window.setTimeout(schedule, SETTLE_MS + 100);
   }
   if (!id) { obs?.disconnect(); obs = null; return; }
   if (!obs) {

@@ -25,6 +25,15 @@ export function timeAgo(t: number, now = Date.now()): string {
 export const dateStr = (t: number) => new Date(t).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
 export const plural = (n: number, one: string, many = one + 's') => `${nf.format(n)} ${n === 1 ? one : many}`;
 
+/** A remembered profile's outfit list as last seen, without overstating it: Roblox answers "none" and "hidden" alike. */
+export function profileOutfits(u: { outfitCount?: number; access?: { state: string } }): string {
+  const s = u.access?.state;
+  if (s === 'restricted') return 'Outfits private';
+  if (s === 'unavailable') return 'Unavailable';
+  if (u.outfitCount == null) return 'Profile';
+  return u.outfitCount ? plural(u.outfitCount, 'outfit') : 'No outfits shown';
+}
+
 export const itemUrl = (id: number) => `https://www.roblox.com/catalog/${id}`;
 export const outfitUrl = (userId: number, id: number) => `https://www.roblox.com/users/${userId}/profile#rofit/${id}`;
 

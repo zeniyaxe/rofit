@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { costLabel, errorText, plural, timeAgo } from '../../src/ui/format.ts';
+import { costLabel, errorText, plural, profileOutfits, timeAgo } from '../../src/ui/format.ts';
 import type { OutfitCost } from '../../src/shared/analysis.ts';
 import { markdown, inline, slug } from '../../site/src/markdown.mjs';
 
@@ -39,6 +39,15 @@ test('plural and timeAgo', () => {
   assert.equal(timeAgo(now - 3 * 3600_000, now), '3h ago');
   assert.equal(timeAgo(now - 2 * 86400_000, now), '2d ago');
   assert.equal(timeAgo(now + 60_000, now), 'just now', 'clock skew never shows negative time');
+});
+
+test('remembered profiles never present an empty answer as “0 outfits”', () => {
+  assert.equal(profileOutfits({ outfitCount: 5 }), '5 outfits');
+  assert.equal(profileOutfits({ outfitCount: 1, access: { state: 'public' } }), '1 outfit');
+  assert.equal(profileOutfits({ outfitCount: 0 }), 'No outfits shown');
+  assert.equal(profileOutfits({ outfitCount: 3, access: { state: 'restricted' } }), 'Outfits private');
+  assert.equal(profileOutfits({ access: { state: 'unavailable' } }), 'Unavailable');
+  assert.equal(profileOutfits({}), 'Profile');
 });
 
 test('site markdown escapes everything and only links to safe places', () => {

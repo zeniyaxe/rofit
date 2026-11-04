@@ -234,6 +234,29 @@ test('after Roblox refuses a list, cached copies stay hidden until it shows the 
   assert.equal((await h['outfits.cached']({ userId: 5151 })).outfits.length, 2);
 });
 
+test('a visit counts as recent even when Roblox fails briefly, and what was known about visibility is kept', async () => {
+  const h = handlers();
+  let phase: 'ok' | 'offline' = 'ok';
+  globalThis.fetch = (async (u: string) => {
+    if (phase === 'offline') throw new TypeError('Failed to fetch');
+    if (u.includes('/users/authenticated')) return json(401, {});
+    if (u.includes('/outfits')) return json(200, { data: [{ id: 1, name: 'a', isEditable: true, outfitType: 'Avatar' }], paginationToken: '' });
+    return json(200, { data: [] });
+  }) as any;
+  await h['outfits.sync']({ userId: 6161, userName: 'steady' });
+  const known = (await h['outfits.cached']({ userId: 6161 })).user?.access?.state;
+
+  phase = 'offline';
+  await assert.rejects(h['outfits.sync']({ userId: 7171, userName: 'flaky' }), (e: any) => e.kind === 'network');
+  await assert.rejects(h['outfits.sync']({ userId: 6161, force: true }), (e: any) => e.kind === 'network');
+  const recent = await h['users.recent']({ limit: 10 });
+  assert.ok(recent.some((u: any) => u.id === 7171 && u.name === 'flaky'), 'a profile that failed to load is still recently viewed');
+  const steady = await h['outfits.cached']({ userId: 6161 });
+  assert.equal(steady.user?.access?.state, known, 'a network error is not evidence about visibility');
+  assert.equal(steady.user?.name, 'steady');
+  assert.equal(steady.outfits.length, 1, 'cached outfits stay visible after a transient failure');
+});
+
 test('outfit thumbnails: completed ones are reused, pending ones re-asked, only missing ids requested', async () => {
   const h = handlers();
   await db.clear('thumbs');

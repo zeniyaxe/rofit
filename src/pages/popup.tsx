@@ -9,7 +9,7 @@ import { Spinner } from '../ui/primitives.tsx';
 import { useAsync, useMotion, useSettings } from '../ui/data.ts';
 import { resolveTheme, themeVars } from '../ui/theme.ts';
 import { motionClass } from '../shared/motion.ts';
-import { errorText, plural, timeAgo } from '../ui/format.ts';
+import { errorText, plural, profileOutfits, timeAgo } from '../ui/format.ts';
 
 const style = document.createElement('style');
 style.textContent = css;
@@ -74,7 +74,7 @@ function Popup() {
     if (!term) return [];
     const out: Row[] = [{ key: 'find', icon: 'search', title: `Find “${term.replace(/^@/, '')}” on Roblox`, sub: 'Open their profile with RoFit', run: () => find(term) }];
     const people = rank<UserRec>(recent.data ?? [], term, (u) => [{ text: u.name, weight: 1.2 }, { text: u.displayName }, { text: '', id: u.id }]).slice(0, 4);
-    for (const { item: u } of people) out.push({ key: 'u' + u.id, icon: 'user', title: u.displayName && u.displayName !== u.name ? `${u.displayName} (@${u.name})` : u.name, sub: `${u.outfitCount != null ? plural(u.outfitCount, 'outfit') : 'Profile'} · seen ${timeAgo(u.lastSeen)}`, run: () => openTab(profileUrl(u.id)) });
+    for (const { item: u } of people) out.push({ key: 'u' + u.id, icon: 'user', title: u.displayName && u.displayName !== u.name ? `${u.displayName} (@${u.name})` : u.name, sub: `${profileOutfits(u)} · seen ${timeAgo(u.lastSeen)}`, run: () => openTab(profileUrl(u.id)) });
     const saved = rank<LibraryEntry>(lib.data ?? [], term, (e): Field[] => [{ text: e.name, weight: 1.25 }, { text: e.userName }, { text: e.collection, weight: 0.8 }, ...e.tags.map((t) => ({ text: t })), { text: '', id: e.outfitId }]).slice(0, 5);
     for (const { item: e } of saved) out.push({ key: 'l' + e.key, icon: e.favorite ? 'star' : 'saved', title: e.name, sub: `Saved · by ${e.userName}${e.collection ? ' · ' + e.collection : ''}`, run: () => page('library/open/' + encodeURIComponent(e.key)) });
     return out;
@@ -146,7 +146,7 @@ function Popup() {
               {others.map((u, i) => (
                 <button class="rf-pop-row" key={u.id} style={{ '--i': i } as any} onClick={() => openTab(profileUrl(u.id))}>
                   <span class="rf-pop-av">{u.name.slice(0, 1).toUpperCase()}</span>
-                  <span class="rf-pop-name">{u.name}<small>{u.outfitCount != null ? plural(u.outfitCount, 'outfit') : 'profile'} · {timeAgo(u.lastSeen)}</small></span>
+                  <span class="rf-pop-name">{u.name}<small>{profileOutfits(u)} · {timeAgo(u.lastSeen)}</small></span>
                   <Ico n="right" size={16} class="rf-pop-chev" />
                 </button>
               ))}

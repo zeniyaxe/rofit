@@ -4,7 +4,7 @@ import { rank } from '../shared/search.ts';
 import { rpc } from '../shared/rpc.ts';
 import { Ico, type IconName } from './icons.tsx';
 import { Dialog, Spinner, Thumb, afterFrame, useReturnFocus } from './primitives.tsx';
-import { plural, timeAgo } from './format.ts';
+import { profileOutfits, timeAgo } from './format.ts';
 
 export interface Command { id: string; label: string; icon: IconName; hint?: string; keywords?: string; run: () => void }
 
@@ -51,7 +51,7 @@ export function Palette(p: {
     }
     const users = t ? rank(recent, t, (u) => [{ text: u.name, weight: 1.2 }, { text: u.displayName }, { text: '', id: u.id }]).slice(0, 5).map((x) => x.item) : recent.slice(0, 4);
     for (const u of users) {
-      out.push({ key: 'u' + u.id, section: 'Profiles', icon: 'user', label: u.displayName && u.displayName !== u.name ? `${u.displayName} (@${u.name})` : u.name, sub: `${u.outfitCount != null ? plural(u.outfitCount, 'outfit') : 'profile'} · viewed ${timeAgo(u.lastSeen)}`, run: go(() => p.onGoUser({ id: u.id, name: u.name })) });
+      out.push({ key: 'u' + u.id, section: 'Profiles', icon: 'user', label: u.displayName && u.displayName !== u.name ? `${u.displayName} (@${u.name})` : u.name, sub: `${profileOutfits(u)} · viewed ${timeAgo(u.lastSeen)}`, run: go(() => p.onGoUser({ id: u.id, name: u.name })) });
     }
     if (t && LOOKS_LIKE_USER.test(t)) {
       out.push({ key: 'find', section: 'Profiles', icon: 'search', label: `Find “${t.length > 40 ? t.slice(0, 40) + '…' : t}” on Roblox`, sub: 'Username, user ID or profile link', run: async () => {

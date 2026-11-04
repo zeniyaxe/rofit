@@ -73,10 +73,10 @@ async function syncOutfits(userId: number, userName: string | undefined, force: 
     if (k === 'forbidden' || k === 'unauthenticated' || k === 'not-found') err.viewer = await viewerState();
     const cached = prev.filter((o) => o.isEditable && !o.missingSince).length;
     err.access = { state: deriveAccess({ userId, visible: 0, error: k as any, cached }), at: Date.now() };
-    // Remember a refusal so cached copies stay hidden until Roblox shows the list again.
-    if (err.access.state === 'restricted' || err.access.state === 'unavailable') {
-      await db.put('users', { id: userId, name: userName ?? user?.name ?? '', displayName: user?.displayName ?? '', lastSeen: Date.now(), outfitCount: user?.outfitCount, lastSyncAt: user?.lastSyncAt, access: err.access } satisfies UserRec);
-    }
+    // Remember a refusal so cached copies stay hidden until Roblox shows the list again. A transient failure (rate limit,
+    // timeout, outage) says nothing about visibility, so it keeps what was known; either way the visit counts as recent.
+    const refused = err.access.state === 'restricted' || err.access.state === 'unavailable';
+    await db.put('users', { id: userId, name: userName ?? user?.name ?? '', displayName: user?.displayName ?? '', lastSeen: Date.now(), outfitCount: user?.outfitCount, lastSyncAt: user?.lastSyncAt, access: refused ? err.access : user?.access } satisfies UserRec);
     throw e;
   }
   const { outfits: raw, via } = listed;

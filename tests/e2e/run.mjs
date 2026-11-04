@@ -300,7 +300,9 @@ for (const [name, status, body, expect] of [
     const page = await openProfile(ctx, uid);
     for (const w of [1400, 900, 600, 420]) {
       await page.setViewportSize({ width: w, height: 900 });
-      const loaded = await page.goto('https://www.roblox.com/users/' + uid + '/profile', { waitUntil: 'domcontentloaded', timeout: 45000 }).then(() => true, () => false);
+      // One retry, as in openProfile: roblox.com occasionally stalls a page load from CI machines.
+      const go = () => page.goto('https://www.roblox.com/users/' + uid + '/profile', { waitUntil: 'domcontentloaded', timeout: 45000 });
+      const loaded = await go().catch(() => go()).then(() => true, () => false);
       if (!loaded) { ok('user ' + uid + ' @' + w + 'px: profile loaded', false, 'roblox.com did not answer'); continue; }
       const found = await page.waitForSelector(ENTRY, { timeout: 25000 }).then(() => true, () => false);
       if (!found) { ok('user ' + uid + ' @' + w + 'px: entry mounted', false); continue; }
