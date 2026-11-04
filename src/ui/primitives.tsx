@@ -4,6 +4,37 @@ import { Ico, type IconName } from './icons.tsx';
 import { useThumb } from './data.ts';
 import { useIndicator, usePresence } from './motion.tsx';
 
+/**
+ * Runs `fn` after the next frame, or after 50 ms if no frame comes (browsers hold animation frames back in
+ * background, occluded or headless tabs). Used to move focus once a layer has rendered; returns a cancel function.
+ */
+export function afterFrame(fn: () => void): () => void {
+  let done = false;
+  const run = () => { if (done) return; done = true; cancelAnimationFrame(raf); clearTimeout(t); fn(); };
+  const raf = requestAnimationFrame(run);
+  const t = setTimeout(run, 50);
+  return () => { done = true; cancelAnimationFrame(raf); clearTimeout(t); };
+}
+
+/**
+ * Puts focus back where it was when a layer (dialog, palette) opened, but only if the layer still holds focus as it
+ * closes, or focus was lost. A layer that hands over to another one (palette → shortcuts) doesn't steal it back.
+ */
+export function useReturnFocus(ref: { current: HTMLElement | null }) {
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const root = el.getRootNode() as ShadowRoot | Document;
+    const prev = root.activeElement as HTMLElement | null;
+    return () => {
+      const now = root.activeElement as HTMLElement | null;
+      if (now && now !== document.body && !el.contains(now)) return;
+      const back = prev?.isConnected && !el.contains(prev) ? prev : root.querySelector<HTMLElement>('.rf-shell');
+      back?.focus({ preventScroll: true });
+    };
+  }, []);
+}
+
 // ---- toast -----------------------------------------------------------------------------------
 type ToastFn = (msg: string, opts?: { tone?: 'ok' | 'warn' }) => void;
 export const ToastCtx = createContext<ToastFn>(() => {});
@@ -35,6 +66,27 @@ export interface MenuItem {
   label?: string; icon?: IconName; onClick?: () => void; danger?: boolean; disabled?: boolean; sep?: boolean; hint?: string; checked?: boolean;
 }
 
+/**
+ * Where a popup anchored to `btn` goes: below it (or above when there's no room), aligned to one edge.
+ * position:fixed is relative to the nearest transformed ancestor, not the viewport; a hidden probe finds that origin.
+ */
+export function anchorPos(btn: HTMLElement, align: 'left' | 'right', want = 220): { top: number; left?: number; right?: number; maxH: number } {
+  const r = btn.getBoundingClientRect();
+  const vh = window.innerHeight;
+  const below = vh - r.bottom - 12;
+  const flip = below < want && r.top > below;
+  const top = flip ? Math.max(8, r.top - 8 - Math.min(360, r.top - 16)) : r.bottom + 6;
+  const probe = document.createElement('div');
+  probe.style.cssText = 'position:fixed;inset:0;visibility:hidden;pointer-events:none';
+  btn.parentElement!.appendChild(probe);
+  const cb = probe.getBoundingClientRect();
+  probe.remove();
+  return {
+    top: top - cb.top, maxH: Math.max(160, flip ? r.top - 16 : below),
+    ...(align === 'right' ? { right: cb.right - r.right } : { left: r.left - cb.left }),
+  };
+}
+
 export function Menu({ items, label, icon = 'more', children, align = 'right', class: cls }: {
   items: MenuItem[]; label: string; icon?: IconName; children?: ComponentChildren; align?: 'left' | 'right'; class?: string;
 }) {
@@ -46,21 +98,7 @@ export function Menu({ items, label, icon = 'more', children, align = 'right', c
 
   useLayoutEffect(() => {
     if (!open || !btn.current) return;
-    const r = btn.current.getBoundingClientRect();
-    const vh = window.innerHeight;
-    const below = vh - r.bottom - 12;
-    const flip = below < 220 && r.top > below;
-    const top = flip ? Math.max(8, r.top - 8 - Math.min(360, r.top - 16)) : r.bottom + 6;
-    // position:fixed is relative to the nearest transformed ancestor, not the viewport. A hidden probe tells us where that origin is.
-    const probe = document.createElement('div');
-    probe.style.cssText = 'position:fixed;inset:0;visibility:hidden;pointer-events:none';
-    btn.current.parentElement!.appendChild(probe);
-    const cb = probe.getBoundingClientRect();
-    probe.remove();
-    setPos({
-      top: top - cb.top, maxH: Math.max(160, flip ? r.top - 16 : below),
-      ...(align === 'right' ? { right: cb.right - r.right } : { left: r.left - cb.left }),
-    });
+    setPos(anchorPos(btn.current, align));
   }, [open, align]);
 
   useEffect(() => {
@@ -78,10 +116,10 @@ export function Menu({ items, label, icon = 'more', children, align = 'right', c
     window.addEventListener('keydown', esc, true);
     window.addEventListener('pointerdown', close, true);
     pop.current?.addEventListener('keydown', key);
-    const raf = requestAnimationFrame(() => pop.current?.querySelector<HTMLButtonElement>('button:not(:disabled)')?.focus());
+    const cancel = afterFrame(() => pop.current?.querySelector<HTMLButtonElement>('button:not(:disabled)')?.focus({ preventScroll: true }));
     const rs = () => setOpen(false);
     window.addEventListener('resize', rs);
-    return () => { window.removeEventListener('keydown', esc, true); window.removeEventListener('pointerdown', close, true); window.removeEventListener('resize', rs); cancelAnimationFrame(raf); };
+    return () => { window.removeEventListener('keydown', esc, true); window.removeEventListener('pointerdown', close, true); window.removeEventListener('resize', rs); cancel(); };
   }, [open]);
 
   return (
@@ -106,24 +144,131 @@ export function Menu({ items, label, icon = 'more', children, align = 'right', c
   );
 }
 
+// ---- popover: an anchored panel that stays open while you work in it (filters, explanations) ----------
+export function Popover({ label, children, content, align = 'right', class: cls, width = 320, title }: {
+  label: string; children: ComponentChildren; content: ComponentChildren | ((close: () => void) => ComponentChildren);
+  align?: 'left' | 'right'; class?: string; width?: number; title?: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const [mounted, mstate] = usePresence(open, 130);
+  const [pos, setPos] = useState<{ top: number; left?: number; right?: number; maxH: number } | null>(null);
+  const btn = useRef<HTMLButtonElement>(null);
+  const pop = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => { if (open && btn.current) setPos(anchorPos(btn.current, align, width)); }, [open, align, width]);
+  useEffect(() => {
+    if (!open) return;
+    const close = (e: Event) => { const path = e.composedPath(); if (!path.includes(pop.current as EventTarget) && !path.includes(btn.current as EventTarget)) setOpen(false); };
+    const esc = (e: KeyboardEvent) => { if (e.key === 'Escape') { e.stopPropagation(); e.preventDefault(); setOpen(false); btn.current?.focus(); } };
+    window.addEventListener('keydown', esc, true);
+    window.addEventListener('pointerdown', close, true);
+    const cancel = afterFrame(() => pop.current?.querySelector<HTMLElement>('[data-autofocus], button:not(:disabled), input')?.focus({ preventScroll: true }));
+    const rs = () => setOpen(false);
+    window.addEventListener('resize', rs);
+    return () => { window.removeEventListener('keydown', esc, true); window.removeEventListener('pointerdown', close, true); window.removeEventListener('resize', rs); cancel(); };
+  }, [open]);
+  const shut = () => { setOpen(false); btn.current?.focus(); };
+  return (
+    <>
+      <button ref={btn} class={cls ?? 'rf-btn'} aria-label={label} title={title} aria-haspopup="dialog" aria-expanded={open} onClick={() => setOpen((o) => !o)}>{children}</button>
+      {mounted && pos && (
+        <div class="rf-menu rf-pop" data-state={mstate} role="dialog" aria-label={label} ref={pop}
+          style={{ top: pos.top + 'px', left: pos.left !== undefined ? pos.left + 'px' : undefined, right: pos.right !== undefined ? pos.right + 'px' : undefined, maxHeight: pos.maxH + 'px', width: `min(${width}px, calc(100vw - 24px))` }}>
+          {typeof content === 'function' ? content(shut) : content}
+        </div>
+      )}
+    </>
+  );
+}
+
 // ---- confirm dialog --------------------------------------------------------------------------
-export function Confirm({ title, body, confirm, onConfirm, onCancel: cancel }: { title: string; body: string; confirm: string; onConfirm: () => void; onCancel: () => void }) {
+export function Confirm({ title, body, confirm, onConfirm, onCancel: cancel, danger }: { title: string; body: ComponentChildren; confirm: string; onConfirm: () => void; onCancel: () => void; danger?: boolean }) {
   const ref = useRef<HTMLButtonElement>(null);
+  const box = useRef<HTMLDivElement>(null);
   const [closing, setClosing] = useState(false);
   const leave = (fn: () => void) => { setClosing(true); setTimeout(fn, 140); };
   const onCancel = () => leave(cancel);
-  useEffect(() => { ref.current?.focus(); }, []);
+  useReturnFocus(box);
+  useEffect(() => { ref.current?.focus({ preventScroll: true }); }, []);
   return (
     <div class="rf-scrim" data-state={closing ? 'closed' : 'open'} onClick={onCancel} onKeyDown={(e) => { if (e.key === 'Escape') { e.stopPropagation(); onCancel(); } }}>
-      <div class="rf-dialog" role="alertdialog" aria-modal="true" aria-label={title} onClick={(e) => e.stopPropagation()}>
+      <div ref={box} class="rf-dialog" role="alertdialog" aria-modal="true" aria-label={title} onClick={(e) => e.stopPropagation()}>
         <h3>{title}</h3>
-        <p>{body}</p>
+        <div class="rf-dialog-p">{body}</div>
         <div class="rf-dialog-actions">
           <button class="rf-btn" onClick={onCancel}>Cancel</button>
-          <button class="rf-btn primary" ref={ref} onClick={() => leave(onConfirm)}>{confirm}</button>
+          <button class={'rf-btn ' + (danger ? 'danger solid' : 'primary')} ref={ref} onClick={() => leave(onConfirm)}>{confirm}</button>
         </div>
       </div>
     </div>
+  );
+}
+
+// ---- generic dialog (focus trapped, Esc closes, exit animation) ----------------------------------
+export function Dialog({ title, onClose, children, actions, class: cls, label, initialFocus }: {
+  title: ComponentChildren; onClose: () => void; children: ComponentChildren; actions?: ComponentChildren; class?: string; label?: string;
+  /** CSS selector inside the dialog to focus first (default: first input, else first button). */
+  initialFocus?: string;
+}) {
+  const box = useRef<HTMLDivElement>(null);
+  const [closing, setClosing] = useState(false);
+  const close = useCallback(() => { setClosing(true); setTimeout(onClose, 140); }, [onClose]);
+  useReturnFocus(box);
+  useEffect(() => {
+    const el = box.current;
+    const pick = initialFocus ? el?.querySelector<HTMLElement>(initialFocus) : null;
+    const first = (pick && !(pick as HTMLButtonElement).disabled ? pick : null) || el?.querySelector<HTMLElement>('input:not([type=checkbox]),textarea') || el?.querySelector<HTMLElement>('button:not(:disabled)');
+    return afterFrame(() => first?.focus({ preventScroll: true }));
+  }, []);
+  useEffect(() => {
+    // Esc still closes the topmost dialog when focus has wandered outside it (say, to Roblox's top bar).
+    const onWin = (e: KeyboardEvent) => {
+      const scrim = box.current?.parentElement;
+      if (e.key !== 'Escape' || e.defaultPrevented || !scrim || e.composedPath().includes(scrim)) return;
+      const layers = (scrim.getRootNode() as ShadowRoot | Document).querySelectorAll('.rf-scrim[data-state=open]');
+      if (layers[layers.length - 1] !== scrim) return;
+      e.preventDefault(); e.stopPropagation(); close();
+    };
+    window.addEventListener('keydown', onWin, true);
+    return () => window.removeEventListener('keydown', onWin, true);
+  }, [close]);
+  const onKey = (e: KeyboardEvent) => {
+    if (e.key === 'Escape') { e.stopPropagation(); e.preventDefault(); close(); return; }
+    if (e.key !== 'Tab' || !box.current) return;
+    // Keep Tab inside the dialog.
+    const f = [...box.current.querySelectorAll<HTMLElement>('button:not(:disabled), input, textarea, select, a[href], [tabindex="0"]')];
+    if (!f.length) return;
+    const root = box.current.getRootNode() as ShadowRoot | Document;
+    const i = f.indexOf(root.activeElement as HTMLElement);
+    if (e.shiftKey && i <= 0) { e.preventDefault(); f[f.length - 1].focus(); }
+    else if (!e.shiftKey && i === f.length - 1) { e.preventDefault(); f[0].focus(); }
+  };
+  return (
+    <div class="rf-scrim" data-state={closing ? 'closed' : 'open'} onClick={close} onKeyDown={onKey}>
+      <div ref={box} class={'rf-dialog ' + (cls ?? '')} role="dialog" aria-modal="true" aria-label={label ?? (typeof title === 'string' ? title : undefined)} onClick={(e) => e.stopPropagation()}>
+        <div class="rf-dialog-h"><h3>{title}</h3><button class="rf-ib sm" aria-label="Close" onClick={close}><Ico n="close" size={16} /></button></div>
+        <div class="rf-dialog-b">{children}</div>
+        {actions && <div class="rf-dialog-actions">{actions}</div>}
+      </div>
+    </div>
+  );
+}
+
+/** Asks for one short value (a collection name, a tag), suggesting existing ones. */
+export function Prompt({ title, label, initial = '', suggestions = [], confirm, onConfirm, onCancel, hint, allowEmpty }: {
+  title: string; label: string; initial?: string; suggestions?: string[]; confirm: string; onConfirm: (v: string) => void; onCancel: () => void; hint?: string; allowEmpty?: boolean;
+}) {
+  const [v, setV] = useState(initial);
+  const ok = allowEmpty || v.trim().length > 0;
+  const go = () => { if (ok) onConfirm(v.trim()); };
+  const matches = suggestions.filter((s) => s && s !== v && s.toLowerCase().includes(v.trim().toLowerCase())).slice(0, 8);
+  return (
+    <Dialog title={title} onClose={onCancel} actions={<><button class="rf-btn" onClick={onCancel}>Cancel</button><button class="rf-btn primary" disabled={!ok} onClick={go}>{confirm}</button></>}>
+      <label class="rf-field"><span>{label}</span>
+        <input value={v} maxLength={80} onInput={(e) => setV((e.target as HTMLInputElement).value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); go(); } }} />
+      </label>
+      {hint && <p class="rf-muted rf-small">{hint}</p>}
+      {matches.length > 0 && <div class="rf-sugg">{matches.map((s) => <button key={s} class="rf-chip btn" onClick={() => setV(s)}>{s}</button>)}</div>}
+    </Dialog>
   );
 }
 

@@ -1,9 +1,8 @@
 // Library grouping + compare slider + settings, screenshots for review.
-import { launch, openProfile } from './harness.mjs';
+import { launch, openProfile, openRoFit } from './harness.mjs';
 const { ctx, id } = await launch();
 const page = await openProfile(ctx, 156);
-await page.waitForSelector('[data-rofit-tab]', { timeout: 25000 });
-await page.locator('[data-rofit-tab]').first().click();
+await openRoFit(page);
 await page.waitForSelector('.rf-card:not(.sk)', { state: 'attached', timeout: 25000 });
 await page.waitForTimeout(1500);
 for (const [i, coll] of [[0, 'Early days'], [1, 'Early days'], [2, '']]) {

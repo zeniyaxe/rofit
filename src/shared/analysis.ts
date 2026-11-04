@@ -1,4 +1,4 @@
-import type { AssetView, BodyColors, BodyScale, OutfitDetails, Snapshot } from './types.ts';
+import type { AssetRec, AssetView, BodyColors, BodyScale, OutfitDetails, Snapshot } from './types.ts';
 import { ASSET_TYPES, GROUP_ORDER, typeGroup, type Group } from './assetTypes.ts';
 
 /** Stable fingerprint of what an outfit actually contains (not its name). */
@@ -175,3 +175,73 @@ export function toStudioLua(d: OutfitDetails, title?: string): string {
   L.push('return d');
   return L.join('\n');
 }
+
+// ---- similarity across outfits (explorer "near-duplicates", inspector "similar outfits") ----------
+/** Body parts and animations are shared by most outfits of one person, so they'd make everything look alike. */
+const LOOK_NOISE = new Set<Group>(['Body parts', 'Animations']);
+export function lookIds(assets: { id: number; assetTypeId: number }[]): number[] {
+  const look = assets.filter((a) => !LOOK_NOISE.has(typeGroup(a.assetTypeId))).map((a) => a.id);
+  return look.length ? look : assets.map((a) => a.id);
+}
+
+export interface Similar<K> { key: K; score: number; shared: number }
+/** Candidates most like `target` by the items that define a look (Jaccard), best first. Deterministic: ties keep input order. */
+export function similarOutfits<K>(target: { id: number; assetTypeId: number }[], candidates: { key: K; assets: { id: number; assetTypeId: number }[] }[], min = 0.3, max = 6): Similar<K>[] {
+  const t = new Set(lookIds(target));
+  if (!t.size) return [];
+  const out: (Similar<K> & { i: number })[] = [];
+  candidates.forEach((c, i) => {
+    const ids = lookIds(c.assets);
+    let shared = 0;
+    for (const x of new Set(ids)) if (t.has(x)) shared++;
+    if (!shared) return;
+    const score = jaccard(t, ids);
+    if (score >= min && score < 1.0001) out.push({ key: c.key, score, shared, i });
+  });
+  out.sort((a, b) => b.score - a.score || b.shared - a.shared || a.i - b.i);
+  return out.slice(0, max).map(({ key, score, shared }) => ({ key, score, shared }));
+}
+
+// ---- per-outfit cost from known item records (explorer price filters and sorting) -----------------
+export interface OutfitCost { buyNow: number; resale: number; free: number; offsale: number; unknown: number; limiteds: number; known: number; total: number }
+export function outfitCost(assetIds: number[], recs: Map<number, AssetRec>): OutfitCost {
+  const ids = new Set(assetIds);
+  const c: OutfitCost = { buyNow: 0, resale: 0, free: 0, offsale: 0, unknown: 0, limiteds: 0, known: 0, total: ids.size };
+  for (const id of ids) {
+    const rec = recs.get(id);
+    const { kind, amount } = priceKind({ id, provenance: rec ? 'cached' : 'unknown', rec });
+    if (rec && rec.restriction !== 'none') c.limiteds++;
+    if (kind === 'unknown') { c.unknown++; continue; }
+    c.known++;
+    if (kind === 'free') c.free++;
+    else if (kind === 'onsale') c.buyNow += amount!;
+    else if (kind === 'resale') c.resale += amount!;
+    else c.offsale++;
+  }
+  return c;
+}
+
+/** What recreating an outfit costs: new items at list price plus limiteds at their lowest resale. */
+export const costTotal = (c: OutfitCost) => c.buyNow + c.resale;
+
+export type PriceBucket = 'any' | 'free' | '100' | '500' | '1000' | '5000' | 'over';
+export const PRICE_BUCKETS: { v: PriceBucket; label: string }[] = [
+  { v: 'any', label: 'Any price' }, { v: 'free', label: 'Free' }, { v: '100', label: 'Up to R$ 100' }, { v: '500', label: 'Up to R$ 500' },
+  { v: '1000', label: 'Up to R$ 1,000' }, { v: '5000', label: 'Up to R$ 5,000' }, { v: 'over', label: 'Over R$ 5,000' },
+];
+
+/**
+ * Does an outfit's cost fall in a bucket? Only claims what the data proves: an outfit with an item whose price is
+ * unknown has a lower bound, not a total, so it can only match "Over R$ 5,000" (when the known part already exceeds it).
+ */
+export function inBucket(c: OutfitCost, b: PriceBucket): boolean {
+  if (b === 'any') return true;
+  const t = costTotal(c);
+  if (b === 'over') return t > 5000;
+  if (c.unknown > 0 || c.offsale > 0) return false;
+  if (b === 'free') return t === 0 && c.free === c.total;
+  return t <= Number(b);
+}
+
+/** Every item can be bought new from Roblox today (or is free): no resale-only limiteds, nothing off sale or unknown. */
+export const buyableNew = (c: OutfitCost) => c.unknown === 0 && c.offsale === 0 && c.resale === 0;

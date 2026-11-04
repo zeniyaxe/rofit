@@ -1,4 +1,4 @@
-import { launch, openProfile } from './harness.mjs';
+import { launch, openProfile, openRoFit } from './harness.mjs';
 const out = [];
 const ok = (n, c, x = '') => { console.log(`${c ? 'PASS' : 'FAIL'}  ${n}${x ? ' — ' + x : ''}`); if (!c) process.exitCode = 1; };
 const cors = { 'access-control-allow-origin': '*' };
@@ -12,8 +12,7 @@ await ctx.route('https://avatar.roblox.com/v2/avatar/users/156/outfits**', (r) =
 await ctx.route('https://avatar.roblox.com/v3/outfits/9000**', (r) => r.fulfill({ status: 404, contentType: 'application/json', headers: cors, body: '{}' }));
 const page = await openProfile(ctx, 156);
 const errs = []; page.on('pageerror', (e) => errs.push(e.message));
-await page.waitForSelector('[data-rofit-tab]', { timeout: 25000 });
-await page.locator('[data-rofit-tab]').first().click();
+await openRoFit(page);
 await page.waitForSelector('.rf-card:not(.sk)', { state: 'attached', timeout: 30000 });
 await page.waitForTimeout(1500);
 const n = await page.locator('.rf-card:not(.sk)').count();

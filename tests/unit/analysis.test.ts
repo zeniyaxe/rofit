@@ -85,3 +85,25 @@ test('groupAssets orders groups predictably', () => {
   const g = groupAssets([{ assetTypeId: 27 }, { assetTypeId: 8 }, { assetTypeId: 11 }]);
   assert.deepEqual(g.map((x) => x.group), ['Accessories', 'Classic clothing', 'Body parts']);
 });
+
+test('price buckets only claim what prices prove', async () => {
+  const { inBucket, buyableNew, outfitCost } = await import('../../src/shared/analysis.ts');
+  const rec = (id: number, price: number | null, extra: Record<string, unknown> = {}) => [id, { id, name: 'x', assetTypeId: 8, price, isFree: price === 0, isOffSale: price == null, restriction: 'none', lowestResale: null, status: [], observedAt: 1, ...extra }] as const;
+  const recs = new Map<number, any>([rec(1, 50), rec(2, 0), rec(3, null), rec(4, null, { restriction: 'limited', lowestResale: 9000 })]);
+  const cheap = outfitCost([1, 2], recs);
+  assert.equal(inBucket(cheap, '100'), true);
+  assert.equal(inBucket(cheap, 'free'), false);
+  assert.equal(buyableNew(cheap), true);
+  const free = outfitCost([2], recs);
+  assert.equal(inBucket(free, 'free'), true);
+  const offsale = outfitCost([1, 3], recs);
+  assert.equal(inBucket(offsale, '100'), false, 'an off-sale item means the total is not a real total');
+  assert.equal(buyableNew(offsale), false);
+  const unknown = outfitCost([1, 99], recs);
+  assert.equal(inBucket(unknown, '5000'), false);
+  assert.equal(inBucket(unknown, 'any'), true);
+  const limited = outfitCost([1, 4], recs);
+  assert.equal(inBucket(limited, 'over'), true);
+  assert.equal(limited.limiteds, 1);
+  assert.equal(buyableNew(limited), false);
+});

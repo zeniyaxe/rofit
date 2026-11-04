@@ -4,6 +4,7 @@ import { makeHandlers } from './service.ts';
 import type { Reply, RpcType, Diagnostics } from '../shared/rpc.ts';
 import type { CapState, Capability, RpcError } from '../shared/types.ts';
 import { loadSettings } from '../shared/settings.ts';
+import { payloadFrom } from '../shared/share.ts';
 
 const CAP_KEY = 'caps';
 const ERR_KEY = 'errors';
@@ -24,6 +25,14 @@ onCapability((cap, st) => {
   }
 });
 
+/** Opens (or reuses) the workspace tab at a route; see pages/workspace.tsx for the routes. */
+async function openPage(route: string) {
+  const url = chrome.runtime.getURL('workspace.html') + (route ? '#' + route : '');
+  const tabs = await chrome.tabs.query({ url: chrome.runtime.getURL('workspace.html*') });
+  if (tabs[0]?.id) { await chrome.tabs.update(tabs[0].id, { url, active: true }); await chrome.windows.update(tabs[0].windowId, { focused: true }); }
+  else await chrome.tabs.create({ url });
+}
+
 const handlers = makeHandlers({
   openUrls: async (urls) => {
     // Only roblox.com catalog pages, only a handful, only on explicit request from the UI.
@@ -41,25 +50,37 @@ const handlers = makeHandlers({
       limiter: { cooldownMs: Math.max(0, limiter.cooldownUntil - Date.now()) }, transport: { via: transportInfo.via, at: transportInfo.at }, storageBytes,
     };
   },
-  openPage: async (route) => {
-    const url = chrome.runtime.getURL('workspace.html') + (route ? '#' + route : '');
-    const tabs = await chrome.tabs.query({ url: chrome.runtime.getURL('workspace.html*') });
-    if (tabs[0]?.id) { await chrome.tabs.update(tabs[0].id, { url, active: true }); await chrome.windows.update(tabs[0].windowId, { focused: true }); }
-    else await chrome.tabs.create({ url });
-  },
+  openPage,
 });
+
+// ---- who may talk to the worker -------------------------------------------------------------------
+// Extension pages and the roblox.com content script get the full RPC surface. The rofit.site bridge (content/site.ts)
+// gets exactly one message, 'site-import', which can only open the import dialog for a valid share link.
+const EXT_ORIGIN = new URL(chrome.runtime.getURL('')).origin;
+const SITE_ORIGIN = 'https://rofit.site';
+const originOf = (s: chrome.runtime.MessageSender) => { try { return s.origin ?? new URL(s.url ?? '').origin; } catch { return ''; } };
+const trusted = (s: chrome.runtime.MessageSender) => s.id === chrome.runtime.id && (originOf(s) === EXT_ORIGIN || originOf(s) === 'https://www.roblox.com');
 
 // Content scripts announce themselves so the worker can run Roblox requests inside a Roblox tab (see roblox.ts#send).
 chrome.runtime.onMessage.addListener((msg, sender) => {
-  if (msg?.__rofit === 'hello' && sender.id === chrome.runtime.id && sender.tab?.id !== undefined) registerTab(sender.tab.id);
+  if (msg?.__rofit === 'hello' && sender.id === chrome.runtime.id && originOf(sender) === 'https://www.roblox.com' && sender.tab?.id !== undefined) registerTab(sender.tab.id);
   return false;
+});
+
+chrome.runtime.onMessage.addListener((msg, sender, send) => {
+  if (msg?.__rofit !== 'site-import' || sender.id !== chrome.runtime.id) return false;
+  if (originOf(sender) !== SITE_ORIGIN || sender.frameId !== 0) { send({ ok: false, reason: 'origin' }); return false; }
+  const payload = typeof msg.payload === 'string' ? payloadFrom(msg.payload) : null;
+  if (!payload) { send({ ok: false, reason: 'invalid' }); return false; }
+  openPage('library/import/' + payload).then(() => send({ ok: true }), () => send({ ok: false, reason: 'unavailable' }));
+  return true;
 });
 chrome.tabs.onRemoved.addListener((id) => { unregisterTab(id); });
 
 chrome.runtime.onMessage.addListener((msg, sender, send) => {
   if (!msg || msg.__rofit !== true) return false;
-  // Only our own extension pages and content scripts may talk to the worker.
-  if (sender.id !== chrome.runtime.id) return false;
+  // Only our own extension pages and the roblox.com content script may talk to the worker.
+  if (!trusted(sender)) { send({ ok: false, error: { kind: 'forbidden', message: 'Not allowed from here' } } satisfies Reply<never>); return false; }
   const h = handlers[msg.type as RpcType] as ((r: unknown) => Promise<unknown>) | undefined;
   if (!h) { send({ ok: false, error: { kind: 'bad-response', message: 'Unknown request' } } satisfies Reply<never>); return false; }
   h(msg.req).then(

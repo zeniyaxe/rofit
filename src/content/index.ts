@@ -5,10 +5,12 @@
  */
 import { HANGER } from '../shared/hanger.ts';
 import { loadSettings, onSettings, DEFAULTS, type Settings } from '../shared/settings.ts';
+import { parseRoFitHash } from '../shared/deeplink.ts';
 
 const TAB = 'data-rofit-tab';
 const BTN = 'data-rofit-btn';
 const WRAP = 'data-rofit-wrap';
+const SEC = 'data-rofit-sec';
 
 let settings: Settings = DEFAULTS;
 let sheetApi: { openSheet(o: SheetOpts): void; closeSheet(restoreFocus?: boolean, instant?: boolean): void; isOpen(): boolean } | null = null;
@@ -71,6 +73,88 @@ function addTab() {
   a.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); open(undefined, a); });
   li.appendChild(a);
   list.appendChild(li);
+  // One entry per profile: if the tab list rendered after the row was placed, the tab wins.
+  document.querySelectorAll(`[${SEC}]`).forEach((x) => x.remove());
+}
+
+/**
+ * Roblox's 2025+ profile has no About/Creations tab list; its content is a stack of sections (Currently Wearing, …).
+ * There, the Outfits entry is a section of its own right after Currently Wearing, using Roblox's heading classes.
+ * It's a single button: nothing is fetched until it's clicked.
+ */
+function findWearingSection(): HTMLElement | null {
+  const direct = document.querySelector<HTMLElement>('.profile-currently-wearing');
+  if (direct) return direct;
+  for (const h of document.querySelectorAll<HTMLElement>('h2, h3')) {
+    if (h.textContent?.trim() === 'Currently Wearing') return (h.closest('[class*="profile-"]') as HTMLElement | null) ?? h.parentElement;
+  }
+  return null;
+}
+
+/** How long a profile gets to render Currently Wearing before the Saved Outfits row stops waiting for it. */
+const SETTLE_MS = 2500;
+let keySince = 0;
+
+/**
+ * Where the Saved Outfits row goes: right after Currently Wearing. Roblox leaves that section out when it fails to load
+ * (or has nothing to show), so then the row starts the profile's sections instead: as soon as other sections have
+ * rendered, or once the page has had SETTLE_MS to render it. If Currently Wearing shows up later, the row moves below it.
+ */
+function sectionSpot(): { anchor: HTMLElement; mode: 'after' | 'prepend' } | null {
+  const wearing = findWearingSection();
+  if (wearing?.parentElement) return { anchor: wearing, mode: 'after' };
+  const content = document.querySelector<HTMLElement>('.profile-content');
+  if (content && (content.querySelector('.profile-carousel, h2') || performance.now() - keySince > SETTLE_MS)) return { anchor: content, mode: 'prepend' };
+  return null;
+}
+
+function addSection() {
+  // A tab already exists (older layout): don't add a second entry.
+  if (document.querySelector(`[${TAB}]`)) return;
+  const spot = sectionSpot();
+  const existing = document.querySelector<HTMLElement>(`[${SEC}]`);
+  if (existing) {
+    // Currently Wearing can render after the row was placed: keep the row directly below it.
+    if (spot?.mode === 'after' && spot.anchor.nextElementSibling !== existing) spot.anchor.after(existing);
+    return;
+  }
+  if (!spot) return;
+  const heading = spot.anchor.querySelector('h2, h3');
+  const sec = document.createElement('section');
+  sec.setAttribute(SEC, '');
+  sec.setAttribute('aria-label', 'Saved outfits');
+  sec.style.cssText = 'margin: 24px 0 8px;';
+  const h = (heading?.cloneNode(false) as HTMLElement | undefined) ?? document.createElement('h2');
+  h.removeAttribute('id');
+  h.textContent = 'Saved Outfits';
+  h.style.marginBottom = '12px';
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.setAttribute('aria-haspopup', 'dialog');
+  b.style.cssText = 'display:flex;align-items:center;gap:12px;width:100%;max-width:520px;padding:12px 16px;border:0;border-radius:12px;'
+    + 'background:color-mix(in srgb, currentColor 7%, transparent);color:inherit;font:inherit;text-align:left;cursor:pointer;transition:background .15s';
+  b.addEventListener('mouseenter', () => { b.style.background = 'color-mix(in srgb, currentColor 11%, transparent)'; });
+  b.addEventListener('mouseleave', () => { b.style.background = 'color-mix(in srgb, currentColor 7%, transparent)'; });
+  const ic = document.createElement('span');
+  ic.style.cssText = 'display:flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:10px;flex:none;background:color-mix(in srgb, currentColor 9%, transparent)';
+  ic.appendChild(iconSvg());
+  const t = document.createElement('span');
+  t.style.cssText = 'display:flex;flex-direction:column;flex:1;min-width:0;line-height:1.3';
+  const t1 = document.createElement('b');
+  t1.textContent = 'Browse their saved outfits';
+  t1.style.fontWeight = '600';
+  const t2 = document.createElement('span');
+  t2.textContent = 'Opens RoFit: inspect, compare and keep outfits';
+  t2.style.cssText = 'font-size:13px;opacity:.7';
+  t.append(t1, t2);
+  const arrow = document.createElement('span');
+  arrow.textContent = '→';
+  arrow.setAttribute('aria-hidden', 'true');
+  arrow.style.cssText = 'font-size:18px;opacity:.6';
+  b.append(ic, t, arrow);
+  b.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); open(undefined, b); });
+  sec.append(h, b);
+  if (spot.mode === 'after') spot.anchor.after(sec); else spot.anchor.prepend(sec);
 }
 
 const svgNS = 'http://www.w3.org/2000/svg';
@@ -115,14 +199,19 @@ function addButtons() {
 
 function removeInjected() {
   document.querySelectorAll(`[${TAB}]`).forEach((a) => a.closest('li')?.remove());
+  document.querySelectorAll(`[${SEC}]`).forEach((x) => x.remove());
   document.querySelectorAll(`[${WRAP}]`).forEach((w) => w.remove());
   document.querySelectorAll(`[${BTN}]`).forEach((b) => b.remove());
 }
 
-let raf = 0;
+let pending = false, raf = 0, timer = 0;
+/** Batches Roblox's bursts of DOM changes into one ensure(): on the next frame, or a timer when the tab isn't painting. */
 function schedule() {
-  if (raf) return;
-  raf = requestAnimationFrame(() => { raf = 0; ensure(); });
+  if (pending) return;
+  pending = true;
+  const run = () => { if (!pending) return; pending = false; cancelAnimationFrame(raf); clearTimeout(timer); ensure(); };
+  raf = requestAnimationFrame(run);
+  timer = window.setTimeout(run, 120);
 }
 
 function ensure() {
@@ -131,15 +220,18 @@ function ensure() {
   if (key !== lastKey) {
     // Navigated to a different profile (or away): drop the old sheet and anything we injected.
     lastKey = key;
+    keySince = performance.now();
     sheetApi?.closeSheet(false, true);
     removeInjected();
+    // Re-check once the settle window has passed, even if Roblox stops mutating the page by then.
+    if (id) window.setTimeout(schedule, SETTLE_MS + 100);
   }
   if (!id) { obs?.disconnect(); obs = null; return; }
   if (!obs) {
     obs = new MutationObserver(schedule);
     obs.observe(document.body, { childList: true, subtree: true });
   }
-  if (settings.profileTab) addTab(); else document.querySelectorAll(`[${TAB}]`).forEach((a) => a.closest('li')?.remove());
+  if (settings.profileTab) { addTab(); addSection(); } else { document.querySelectorAll(`[${TAB}]`).forEach((a) => a.closest('li')?.remove()); document.querySelectorAll(`[${SEC}]`).forEach((x) => x.remove()); }
   if (settings.profileButton) addButtons(); else { document.querySelectorAll(`[${WRAP}]`).forEach((w) => w.remove()); document.querySelectorAll(`[${BTN}]`).forEach((b) => b.remove()); }
 }
 
@@ -151,7 +243,7 @@ async function proxyFetch(m: { url: string; method?: string; body?: string; csrf
   try {
     const post = m.method === 'POST';
     const r = await fetch(m.url, {
-      method: post ? 'POST' : 'GET', credentials: 'include', body: post ? m.body : undefined,
+      method: post ? 'POST' : 'GET', credentials: 'include', body: post ? m.body : undefined, signal: AbortSignal.timeout(18_000),
       headers: post ? { 'content-type': 'application/json', ...(m.csrf ? { 'x-csrf-token': m.csrf } : {}) } : undefined,
     });
     return { ok: true, status: r.status, csrf: r.headers.get('x-csrf-token'), retryAfter: r.headers.get('retry-after'), text: await r.text() };
@@ -168,8 +260,8 @@ chrome.runtime.onMessage.addListener((msg, sender, send) => {
 loadSettings().then((s) => {
   settings = s;
   ensure();
-  const m = location.hash.match(/^#rofit(?:\/(\d+))?$/);
-  if (m && profileUserId()) open(m[1] ? Number(m[1]) : undefined);
+  const link = parseRoFitHash(location.hash);
+  if (link && profileUserId()) open(link.outfit);
 });
 onSettings((s) => { settings = s; ensure(); });
 
