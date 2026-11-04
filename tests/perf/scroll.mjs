@@ -1,5 +1,5 @@
 // Frame-time measurement while scrolling/sorting a 300-outfit explorer. Usage: node tests/perf/scroll.mjs [cv|nocv]
-import { launch, openProfile } from '../e2e/harness.mjs';
+import { launch, openProfile, openRoFit } from '../e2e/harness.mjs';
 const mode = process.argv[2] || 'cv';
 const cors = { 'access-control-allow-origin': '*' };
 const all = Array.from({ length: 300 }, (_, i) => ({ id: 800000 + i, name: `Fit ${i} ${'x'.repeat(i % 5 * 6)}`, isEditable: true, outfitType: 'Avatar' }));
@@ -10,8 +10,7 @@ await ctx.route('https://avatar.roblox.com/v2/avatar/users/156/outfits**', (r) =
 });
 await ctx.route('https://thumbnails.roblox.com/v1/users/outfits**', (r) => r.fulfill({ status: 200, contentType: 'application/json', headers: cors, body: JSON.stringify({ data: [] }) }));
 const page = await openProfile(ctx, 156);
-await page.waitForSelector('[data-rofit-tab]', { timeout: 25000 });
-await page.locator('[data-rofit-tab]').first().click();
+await openRoFit(page);
 await page.waitForFunction(() => (document.querySelector('#rofit-host')?.shadowRoot?.querySelectorAll('.rf-card:not(.sk)').length ?? 0) >= 300, null, { timeout: 30000 });
 await page.waitForTimeout(2500);
 if (mode === 'nocv') await page.evaluate(() => { const s = document.createElement('style'); s.textContent = '.rf-cell{content-visibility:visible !important}'; document.querySelector('#rofit-host').shadowRoot.appendChild(s); });

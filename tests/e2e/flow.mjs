@@ -1,4 +1,4 @@
-import { launch, openProfile } from './harness.mjs';
+import { launch, openProfile, openRoFit, ENTRY } from './harness.mjs';
 import { mkdirSync } from 'node:fs';
 mkdirSync('shots', { recursive: true });
 const arg = (k, d) => (process.argv.find((a) => a.startsWith(k + '=')) || '').split('=')[1] ?? d;
@@ -9,14 +9,16 @@ const errors = [];
 page.on('pageerror', (e) => errors.push(e.message));
 page.on('console', (m) => { if (m.type() === 'error' && /chrome-extension|rofit/i.test(m.text())) errors.push(m.text()); });
 const shot = (n) => page.screenshot({ path: `shots/${tag}-${n}.png` });
-await page.waitForSelector('[data-rofit-tab]', { timeout: 25000 });
+await page.waitForSelector(ENTRY, { timeout: 25000 });
 if (dark) await page.evaluate(() => { document.body.classList.remove('light-theme'); document.body.classList.add('dark-theme'); });
-await page.locator('[data-rofit-tab]').first().click();
+await page.waitForTimeout(400);
+await shot('0-profile');
+await openRoFit(page);
 await page.waitForSelector('.rf-card', { timeout: 20000 });
 await page.waitForTimeout(1200);
 await shot('1-explorer');
 // index everything, then Items view
-await page.getByRole('button', { name: /^Index/ }).click();
+await page.getByRole('button', { name: /^Read \d+/ }).click();
 await page.waitForSelector('.rf-seg button[aria-label="Items"], .rf-seg button:has-text("Items")', { timeout: 60000 });
 await page.waitForFunction(() => !document.querySelector('.rf-progress'), null, { timeout: 90000 }).catch(() => {});
 await page.waitForTimeout(800);
