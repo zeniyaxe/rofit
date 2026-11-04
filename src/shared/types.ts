@@ -1,3 +1,5 @@
+import type { AccessInfo } from './access.ts';
+
 /** Where a piece of data came from. The UI never shows cached data as live. */
 export type Provenance = 'live' | 'cached' | 'last-known' | 'derived' | 'unknown';
 
@@ -99,26 +101,33 @@ export interface LibraryEntry {
   details: OutfitDetails;
   /** Snapshot of each asset as known when saved. */
   assets: Record<number, AssetRec>;
+  favorite?: boolean;
+  /** How it got here: saved from a profile (default), opened from a share link, or imported from a file. */
+  source?: 'profile' | 'share' | 'import';
 }
 
 export interface UserRec {
   id: number; name: string; displayName: string; lastSeen: number;
   outfitCount?: number; lastSyncAt?: number;
+  /** What RoFit last observed about who can see this account's outfits. */
+  access?: AccessInfo;
 }
 
 export type ErrKind =
   | 'rate-limited' | 'not-found' | 'forbidden' | 'unauthenticated'
-  | 'network' | 'server' | 'bad-response' | 'aborted';
+  | 'network' | 'timeout' | 'server' | 'bad-response' | 'aborted';
 export interface RpcError {
   kind: ErrKind; message: string; status?: number; retryAfter?: number;
   /** Roblox's own error text/code, when it gave one. */
   detail?: string; code?: number;
   /** Whether Roblox saw the request as signed in (the viewer's relationship can change what a user's outfits reveal). */
   viewer?: 'in' | 'out' | 'unknown';
+  /** For outfit-list failures: what the failure says about access (restricted, unavailable…). */
+  access?: AccessInfo;
 }
 
 export type Capability =
-  | 'list' | 'thumbs' | 'details' | 'catalog' | 'economy' | 'ownership' | 'resale' | 'myAvatar';
+  | 'list' | 'thumbs' | 'details' | 'catalog' | 'economy' | 'ownership' | 'resale' | 'myAvatar' | 'users' | 'access';
 export interface CapState { ok: boolean; at: number; error?: string }
 
 export const outfitKey = (userId: number, id: number) => `${userId}:${id}`;
