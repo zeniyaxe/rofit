@@ -1,5 +1,6 @@
 import { useState } from 'preact/hooks';
 import type { RpcError } from '../shared/types.ts';
+import type { AccessInfo } from '../shared/access.ts';
 import { Ico } from './icons.tsx';
 import { Spinner } from './primitives.tsx';
 import { errorText, plural } from './format.ts';
@@ -16,7 +17,7 @@ const LABEL: Record<Verdict, string> = { yes: 'Looks like this', maybe: 'Possibl
  */
 export function NoOutfits(p: {
   userName: string; error?: RpcError; presets: number; viewer?: 'in' | 'out' | 'unknown'; via?: string;
-  busy: boolean; onRetry: () => void; onShowPresets: () => void;
+  busy: boolean; onRetry: () => void; onShowPresets: () => void; access?: AccessInfo;
 }) {
   const [tech, setTech] = useState(false);
   const e = p.error;
@@ -66,7 +67,7 @@ export function NoOutfits(p: {
       </div>
       <h3>{priv ? `${p.userName}’s outfits are private` : gone ? 'User not found' : `No saved outfits to show for ${p.userName}`}</h3>
       <p class="rf-why-lead">
-        {priv ? 'Roblox only hands saved outfits to people the owner allows. RoFit shows what Roblox returns to you and never works around privacy.'
+        {priv ? 'Roblox only hands saved outfits to people the owner allows. RoFit shows what Roblox returns to you and never works around privacy, so copies it cached on earlier visits stay hidden too.'
           : gone ? 'Roblox has no such account.' : 'Here’s what RoFit could tell about why, from what Roblox actually returned.'}
       </p>
 
@@ -95,6 +96,7 @@ export function NoOutfits(p: {
           {e?.detail && <><dt>Roblox message</dt><dd>{e.detail}</dd></>}
           <dt>Viewer</dt><dd>{p.viewer === 'in' ? 'signed in' : p.viewer === 'out' ? 'signed out' : 'unknown'}</dd>
           {p.via && <><dt>Endpoint</dt><dd>{p.via === 'v1' ? 'avatar v1 (fallback)' : 'avatar v2'}</dd></>}
+          {(p.access ?? e?.access) && <><dt>Checked</dt><dd>{new Date((p.access ?? e?.access)!.at).toLocaleString()}</dd></>}
         </dl>
       </Collapse>
     </div>

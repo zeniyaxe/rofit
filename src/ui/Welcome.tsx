@@ -10,7 +10,7 @@ export function Welcome({ onDone }: { onDone: (route?: string) => void }) {
         <h1>Okay, you’re in.</h1>
         <p class="rf-lead">RoFit adds an <b>Outfits</b> tab to every Roblox profile, with the outfits that person actually saved.</p>
         <ol class="rf-steps">
-          <li><span>1</span><div><b>Open any profile</b><p>Look for <b>Outfits</b> next to About and Creations, or the hanger button by the ⋯ menu.</p></div></li>
+          <li><span>1</span><div><b>Open any profile</b><p>Look for the <b>Outfits</b> tab, the <b>Saved Outfits</b> row under Currently Wearing, or the hanger button by the ⋯ menu.</p></div></li>
           <li><span>2</span><div><b>Browse, then go deeper</b><p>Click an outfit to see every item, what it costs today, what’s off sale or gone, and how the body is set up. Compare two, or save one to your library.</p></div></li>
           <li><span>3</span><div><b>It stays on your computer</b><p>RoFit only talks to Roblox, with read-only requests. Your library, notes and history never leave this browser.</p></div></li>
         </ol>

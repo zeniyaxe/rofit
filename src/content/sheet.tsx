@@ -6,8 +6,10 @@ import { render } from 'preact';
 import { useEffect, useState } from 'preact/hooks';
 import css from '../ui/styles.css';
 import { Shell } from '../ui/Shell.tsx';
-import { useReducedMotion, useSettings } from '../ui/data.ts';
+import { useMotion, useSettings } from '../ui/data.ts';
 import { resolveTheme, themeVars } from '../ui/theme.ts';
+import { motionClass } from '../shared/motion.ts';
+import { isRoFitHash } from '../shared/deeplink.ts';
 
 interface Opts { userId: number; userName: string; initialOutfit?: number; returnFocus?: HTMLElement | null; onClose?: () => void }
 
@@ -32,7 +34,7 @@ function navBottom(): number {
 
 function Root({ o, close }: { o: Opts; close: () => void }) {
   const settings = useSettings();
-  const rm = useReducedMotion(settings.motion);
+  const motion = useMotion(settings.motion);
   const [, bump] = useState(0);
   useEffect(() => {
     // Follow Roblox if the user flips its theme while the sheet is open.
@@ -45,7 +47,7 @@ function Root({ o, close }: { o: Opts; close: () => void }) {
   }, []);
   const vars = { ...themeVars(resolveTheme(settings, true)), '--rf-top': navBottom() + 'px' };
   return (
-    <div class={'rf rf-sheet' + (rm ? ' rm' : '')} style={vars as any} role="dialog" aria-modal="true" aria-label={`${o.userName}’s outfits`}>
+    <div class={'rf rf-sheet' + motionClass(motion)} style={vars as any} role="dialog" aria-modal="true" aria-label={`${o.userName}’s outfits`}>
       <Shell userId={o.userId} userName={o.userName} initialOutfit={o.initialOutfit} onExit={close} />
     </div>
   );
@@ -69,7 +71,8 @@ export function openSheet(o: Opts) {
   prevOverflow = document.documentElement.style.overflow;
   document.documentElement.style.overflow = 'hidden';
   render(<Root o={o} close={() => closeSheet(true)} />, mount);
-  requestAnimationFrame(() => (shadow.querySelector('.rf-shell') as HTMLElement | null)?.focus());
+  // It's a modal dialog: focus moves in (the shell is rendered synchronously, so no need to wait for a frame).
+  (shadow.querySelector('.rf-shell') as HTMLElement | null)?.focus({ preventScroll: true });
 }
 
 let closing = false;
@@ -86,7 +89,7 @@ export function closeSheet(restoreFocus = true, instant = false) {
     mountEl = null;
     h.remove();
     document.documentElement.style.overflow = prevOverflow;
-    if (location.hash.startsWith('#rofit')) history.replaceState(history.state, '', location.pathname + location.search);
+    if (isRoFitHash(location.hash)) history.replaceState(history.state, '', location.pathname + location.search);
     if (restoreFocus) o?.returnFocus?.focus?.();
     o?.onClose?.();
   };

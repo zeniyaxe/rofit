@@ -5,6 +5,8 @@ import {
   LayoutGrid, List, RefreshCw, ChevronDown, ChevronRight, Library, Download, Upload, Trash2, Filter, History,
   TriangleAlert, Info, Link as LinkIcon, FileCode2, FileJson, Layers, Ruler, Palette, Tag, StickyNote, Lock, User, CircleCheck,
   CircleDashed, ArrowUpDown, Eye, EyeOff, Minus, Plus, Repeat2, ListChecks, Sparkle, Boxes, Hash, ShoppingBag, Clock,
+  Star, Command, Share2, Keyboard, FolderInput, Pencil, Globe, ShieldCheck, CheckCheck, SlidersHorizontal, ArrowRight,
+  Users, CornerDownLeft, WifiOff, ClipboardPaste, Coins, Gauge, Monitor,
 } from 'lucide';
 
 type Node = [string, Record<string, string | number>][];
@@ -29,6 +31,9 @@ const I = {
   code: FileCode2, json: FileJson, layers: Layers, scale: Ruler, palette: Palette, tag: Tag, note: StickyNote, lock: Lock,
   user: User, ok: CircleCheck, dashed: CircleDashed, sort: ArrowUpDown, eye: Eye, eyeOff: EyeOff, minus: Minus, plus: Plus,
   repeat: Repeat2, tasks: ListChecks, spark: Sparkle, boxes: Boxes, hash: Hash, bag: ShoppingBag, clock: Clock,
+  star: Star, command: Command, share: Share2, keyboard: Keyboard, move: FolderInput, edit: Pencil, globe: Globe,
+  shield: ShieldCheck, selectAll: CheckCheck, sliders: SlidersHorizontal, arrow: ArrowRight, users: Users, enter: CornerDownLeft,
+  offline: WifiOff, paste: ClipboardPaste, coins: Coins, gauge: Gauge, monitor: Monitor,
 } as const;
 
 export type IconName = keyof typeof I;

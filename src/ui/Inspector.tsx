@@ -1,14 +1,18 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'preact/hooks';
 import type { AssetView, BodyColors, BodyScale, LibraryEntry, OutfitDetails, Snapshot } from '../shared/types.ts';
-import { diffOutfits, groupAssets, priceKind, summarizePrices, toStudioLua, type ChangeSummary } from '../shared/analysis.ts';
+import { diffOutfits, groupAssets, priceKind, similarOutfits, summarizePrices, toStudioLua, type ChangeSummary } from '../shared/analysis.ts';
 import { typeName } from '../shared/assetTypes.ts';
 import { rpc } from '../shared/rpc.ts';
 import type { Settings } from '../shared/settings.ts';
+import { DURATION, type MotionLevel } from '../shared/motion.ts';
+import type { AccessInfo } from '../shared/access.ts';
 import { Ico } from './icons.tsx';
 import { Chip, Confirm, Empty, Menu, Spinner, Swatch, Thumb, useToast, type MenuItem } from './primitives.tsx';
 import { copy, dateStr, download, errorText, itemUrl, outfitUrl, plural, robux, timeAgo } from './format.ts';
-import { useAsync, useOutfitBundle } from './data.ts';
+import { thumbStore, useAsync, useOutfitBundle } from './data.ts';
 import { Collapse, fitSquare, flyGhost, whenLoaded } from './motion.tsx';
+import { AccessBadge } from './Access.tsx';
+import { ShareDialog } from './Share.tsx';
 
 export interface InspectorProps {
   userId: number; userName: string;
@@ -18,14 +22,21 @@ export interface InspectorProps {
   fromSrc?: string;
   saved: boolean; libEntry?: LibraryEntry;
   onSave: () => void; onUnsave: () => void; onClose: () => void; onCompare: (how: 'pick' | 'me') => void;
-  onLibUpdate: (patch: Partial<Pick<LibraryEntry, 'tags' | 'note' | 'collection'>>) => void;
+  onLibUpdate: (patch: Partial<Pick<LibraryEntry, 'tags' | 'note' | 'collection' | 'favorite'>>) => void;
   indexed: Map<number, OutfitDetails>;
   outfitName: (id: number) => string;
   onFilterItem: (f: { id: number; name: string }) => void;
   onDetails: (d: OutfitDetails) => void;
+  /** Item records Roblox just returned: feeds the explorer's price index. */
+  onViews?: (views: Record<number, AssetView>) => void;
   onOpenOutfit: (id: number) => void;
+  /** Saved outfits, for "similar outfits". */
+  libEntries: LibraryEntry[];
+  onOpenEntry: (e: LibraryEntry) => void;
+  /** What RoFit knows about who can see this outfit (drives the badge and sharing). */
+  access?: AccessInfo;
   narrow: boolean;
-  closing: boolean; reduced: boolean;
+  closing: boolean; motion: MotionLevel;
   /** Where this outfit's card currently is, so the render can fly back to it on close. */
   cardRect: (id: number) => DOMRect | undefined;
 }
@@ -47,10 +58,12 @@ export function Inspector(p: InspectorProps) {
   const [owned, setOwned] = useState<{ me: { id: number; name: string } | null; owned: Record<number, boolean> } | null>(null);
   const [ownedBusy, setOwnedBusy] = useState(false);
   const [confirm, setConfirm] = useState<null | { ids: number[] }>(null);
-  const [open, setOpen] = useState({ items: true, body: true, history: false, library: true, tech: false });
+  const [sharing, setSharing] = useState(false);
+  const [open, setOpen] = useState({ items: true, body: true, similar: true, history: false, library: true, tech: false });
   const scroller = useRef<HTMLDivElement>(null);
 
   useEffect(() => { if (d) p.onDetails(d); }, [d?.fetchedAt, d?.id]);
+  useEffect(() => { if (b.phase === 'done' && b.bundle && !b.usingFallback) p.onViews?.(b.bundle.views); }, [b.phase, b.bundle]);
   useEffect(() => { setOwned(null); scroller.current?.scrollTo({ top: 0 }); }, [p.outfit.id]);
 
   const list = d ? d.assets.map((a) => views[a.id] ?? { id: a.id, provenance: 'unknown', ref: a } as AssetView) : [];
@@ -70,16 +83,19 @@ export function Inspector(p: InspectorProps) {
     setOwnedBusy(false);
   };
 
+  // Same shape RoFit's Library → Import reads back (shared/backup.ts), so a manifest is also a one-outfit backup.
   const manifest = () => JSON.stringify({
+    app: 'rofit-inspector', kind: 'outfit-manifest', version: chrome.runtime.getManifest?.().version,
     outfit: { id: p.outfit.id, name: d?.name, user: { id: p.userId, name: p.userName }, avatarType: d?.avatarType, bodyColors: d?.bodyColors, scale: d?.scale },
-    items: list.map((v) => ({ id: v.id, name: v.rec?.name ?? v.ref?.name, type: typeName(v.ref?.assetTypeId ?? v.rec?.assetTypeId ?? 0), creator: v.rec?.creator?.name, price: v.rec?.price ?? null, offSale: v.rec?.isOffSale ?? null, restriction: v.rec?.restriction ?? null, provenance: v.provenance })),
+    items: list.map((v) => { const typeId = v.ref?.assetTypeId ?? v.rec?.assetTypeId ?? 0; return { id: v.id, name: v.rec?.name ?? v.ref?.name, typeId, type: typeName(typeId), creator: v.rec?.creator?.name, price: v.rec?.price ?? null, offSale: v.rec?.isOffSale ?? null, restriction: v.rec?.restriction ?? null, provenance: v.provenance }; }),
     exportedAt: new Date().toISOString(),
   }, null, 2);
 
   const doCopy = async (text: string, what: string) => { toast((await copy(text)) ? `Copied ${what}` : 'Couldn’t copy'); };
   const menu: MenuItem[] = d ? [
     { label: 'Copy outfit ID', icon: 'hash', onClick: () => doCopy(String(p.outfit.id), 'outfit ID') },
-    { label: 'Copy link to this outfit', icon: 'link', onClick: () => doCopy(outfitUrl(p.userId, p.outfit.id), 'link') },
+    { label: 'Copy profile link to this outfit', icon: 'link', hint: 'needs RoFit', onClick: () => doCopy(outfitUrl(p.userId, p.outfit.id), 'link') },
+    { label: 'Share a snapshot link…', icon: 'share', onClick: () => setSharing(true) },
     { sep: true },
     { label: 'Copy item IDs', icon: 'copy', onClick: () => doCopy(d.assets.map((a) => a.id).join(', '), `${d.assets.length} item IDs`) },
     { label: 'Copy item manifest (JSON)', icon: 'json', onClick: () => doCopy(manifest(), 'manifest') },
@@ -93,12 +109,13 @@ export function Inspector(p: InspectorProps) {
 
   // Shared element, in: a ghost of the card's image flies into the hero's spot; the real hero takes over once it has landed and loaded.
   const heroRef = useRef<HTMLDivElement>(null);
-  const reduced = p.reduced;
+  // Shared-element flights are the biggest movement in RoFit, so only Full motion plays them.
+  const fly = p.motion === 'full';
   useLayoutEffect(() => {
     const el = heroRef.current;
-    if (!el || !p.fromRect || !p.fromSrc || reduced || p.narrow) return;
+    if (!el || !p.fromRect || !p.fromSrc || !fly || p.narrow) return;
     el.style.opacity = '0';
-    const fl = flyGhost(el, p.fromSrc, p.fromRect, fitSquare(el.getBoundingClientRect()), 440);
+    const fl = flyGhost(el, p.fromSrc, p.fromRect, fitSquare(el.getBoundingClientRect()), DURATION.full.fly);
     let dead = false;
     fl.landed.then(() => whenLoaded(el, 600)).then(() => {
       if (dead) return;
@@ -111,11 +128,11 @@ export function Inspector(p: InspectorProps) {
   // Shared element, out: the render shrinks back into the card it came from while the panel slides away.
   useLayoutEffect(() => {
     const el = heroRef.current;
-    if (!p.closing || !el || reduced || p.narrow) return;
+    if (!p.closing || !el || !fly || p.narrow) return;
     const to = p.cardRect(p.outfit.id);
     const src = el.querySelector('img')?.currentSrc;
     if (!to || !src) return;
-    const fl = flyGhost(el, src, fitSquare(el.getBoundingClientRect()), to, 300);
+    const fl = flyGhost(el, src, fitSquare(el.getBoundingClientRect()), to, DURATION.full.flyBack);
     el.style.opacity = '0';
     fl.landed.then(() => fl.remove());
   }, [p.closing]);
@@ -131,6 +148,7 @@ export function Inspector(p: InspectorProps) {
         <button class={'rf-btn' + (p.saved ? ' on' : '')} onClick={p.saved ? p.onUnsave : p.onSave} aria-pressed={p.saved}>
           <Ico n={p.saved ? 'saved' : 'save'} size={16} />{p.saved ? 'Saved' : 'Save'}
         </button>
+        <button class="rf-ib" aria-label="Share" title="Share a snapshot link" disabled={!d} onClick={() => setSharing(true)}><Ico n="share" /></button>
         <Menu label="Compare" icon="compare" align="right" items={[
           { label: 'With another outfit…', icon: 'compare', hint: 'C', onClick: () => p.onCompare('pick') },
           { label: 'With what I’m wearing', icon: 'user', onClick: () => p.onCompare('me') },
@@ -148,6 +166,7 @@ export function Inspector(p: InspectorProps) {
             <span>{p.userName}</span>
             {d && <><i>·</i><span>{d.avatarType}</span><i>·</i><span>{plural(d.assets.length, 'item')}</span></>}
             {p.outfit.isEditable === false && <Chip tone="muted" title="Supplied by Roblox, not saved by this user">Roblox preset</Chip>}
+            {p.access && <AccessBadge info={p.access} />}
             {p.settings.technical && <><i>·</i><span class="rf-mono">#{p.outfit.id}</span></>}
           </div>
           {b.bundle && (
@@ -213,6 +232,9 @@ export function Inspector(p: InspectorProps) {
           </section>
         )}
 
+        {d && <Similar d={d} self={`${p.userId}:${p.outfit.id}`} indexed={p.indexed} userId={p.userId} entries={p.libEntries} outfitName={p.outfitName}
+          open={open.similar} onToggle={() => toggle('similar')} onOpenOutfit={p.onOpenOutfit} onOpenEntry={p.onOpenEntry} />}
+
         {d && p.libEntry && (
           <section class="rf-sec">
             <button class="rf-sec-h" aria-expanded={open.library} onClick={() => toggle('library')}>
@@ -232,6 +254,10 @@ export function Inspector(p: InspectorProps) {
         )}
       </div>
 
+      {sharing && d && (
+        <ShareDialog d={d} views={views} user={{ id: p.userId, name: p.userName }} onClose={() => setSharing(false)}
+          access={p.access?.state ?? 'unknown'} thumb={thumbStore.get(p.outfit.id, '420x420')?.url ?? p.libEntry?.thumb ?? undefined} />
+      )}
       {confirm && (
         <Confirm title={`Open ${plural(Math.min(confirm.ids.length, 10), 'item page')}?`} confirm="Open"
           body={`Opens the catalog page for each missing item in new tabs${confirm.ids.length > 10 ? ` (first 10 of ${confirm.ids.length})` : ''}.`}
@@ -359,6 +385,46 @@ function ItemRow({ v, pending, settings, owned, reuse, outfitName, onOpenOutfit,
 }
 
 // ---------------------------------------------------------------------------------------------
+/** Outfits that share the most look-defining items with this one: from this profile (once read) and your library. */
+function Similar({ d, self, indexed, userId, entries, outfitName, open, onToggle, onOpenOutfit, onOpenEntry }: {
+  d: OutfitDetails; self: string; indexed: Map<number, OutfitDetails>; userId: number; entries: LibraryEntry[]; outfitName: (id: number) => string;
+  open: boolean; onToggle: () => void; onOpenOutfit: (id: number) => void; onOpenEntry: (e: LibraryEntry) => void;
+}) {
+  const found = useMemo(() => {
+    const cands: { key: string; assets: { id: number; assetTypeId: number }[] }[] = [];
+    for (const [id, x] of indexed) if (`${userId}:${id}` !== self) cands.push({ key: `o:${id}`, assets: x.assets });
+    for (const e of entries) if (e.key !== self && !(e.userId === userId && indexed.has(e.outfitId))) cands.push({ key: `l:${e.key}`, assets: e.details.assets });
+    return similarOutfits(d.assets, cands, 0.3, 6);
+  }, [d, indexed, entries, self]);
+  if (!found.length) return null;
+  const byKey = new Map(entries.map((e) => [e.key, e]));
+  return (
+    <section class="rf-sec">
+      <button class="rf-sec-h" aria-expanded={open} onClick={onToggle}>
+        <Ico n="right" size={16} class="rf-chev" /><h3>Similar outfits</h3><span class="rf-muted">{found.length}</span>
+      </button>
+      <Collapse open={open}>
+        <div class="rf-sec-b">
+          <div class="rf-similar">
+            {found.map((s) => {
+              const lib = s.key.startsWith('l:') ? byKey.get(s.key.slice(2)) : undefined;
+              const id = lib ? lib.outfitId : Number(s.key.slice(2));
+              const name = lib ? lib.name : outfitName(id);
+              return (
+                <button key={s.key} class="rf-sim-card" onClick={() => (lib ? onOpenEntry(lib) : onOpenOutfit(id))} title={`${name}: ${s.shared} items in common`}>
+                  <Thumb id={id} src={lib?.thumb} />
+                  <span class="rf-sim-t"><b class="rf-ell">{name}</b><small>{Math.round(s.score * 100)}% alike{lib ? ` · ${lib.userId === userId ? 'saved' : lib.userName}` : ''}</small></span>
+                </button>
+              );
+            })}
+          </div>
+          <p class="rf-muted rf-small">Compares accessories, clothing and faces, not body parts or animations.</p>
+        </div>
+      </Collapse>
+    </section>
+  );
+}
+
 export function BodyFigure({ c }: { c: BodyColors }) {
   const f = (h: string) => '#' + h;
   return (
@@ -433,7 +499,7 @@ function History({ userId, id, current, refreshKey }: { userId: number; id: numb
       {snaps.map((s, i) => {
         const older = snaps[i + 1];
         const d = older ? diffOutfits(older, s) : null;
-        const label = !older ? 'First seen' : [d!.onlyB.length && `+${d!.onlyB.length}`, d!.onlyA.length && `−${d!.onlyA.length}`, d!.colors.length && 'colors', d!.scales.length && 'scale', older.name !== s.name && 'renamed'].filter(Boolean).join(' · ') || 'Updated';
+        const label = !older ? 'First seen by RoFit' : [d!.onlyB.length && `+${d!.onlyB.length}`, d!.onlyA.length && `−${d!.onlyA.length}`, d!.colors.length && 'colors', d!.scales.length && 'scale', d!.avatarTypeDiffers && s.avatarType, older.name !== s.name && 'renamed'].filter(Boolean).join(' · ') || 'Updated';
         return (
           <div class="rf-hrow" key={s.id}>
             <button class="rf-hbtn" aria-expanded={openI === i} onClick={() => setOpenI(openI === i ? null : i)}>
@@ -445,13 +511,15 @@ function History({ userId, id, current, refreshKey }: { userId: number; id: numb
                 {d && d.onlyA.map((x) => <div key={x} class="rem">− {older!.assetNames[x] ?? x}</div>)}
                 {older && older.name !== s.name && <div>Renamed “{older.name}” → “{s.name}”</div>}
                 {d && d.colors.map((c) => <div key={c.part} class="clr"><Swatch hex={c.a} />→<Swatch hex={c.b} /> {PART_LABELS[c.part]}</div>)}
-                {(!d || (!d.onlyA.length && !d.onlyB.length && !d.colors.length)) && <div class="rf-muted">{s.assetIds.map((x) => s.assetNames[x] ?? x).join(', ')}</div>}
+                {d && d.scales.map((x) => <div key={x.key}>{SCALE_LABELS[x.key][0]} {Math.round(x.a * 100)}% → {Math.round(x.b * 100)}%</div>)}
+                {d?.avatarTypeDiffers && <div>Avatar type {older!.avatarType} → {s.avatarType}</div>}
+                {(!d || (!d.onlyA.length && !d.onlyB.length && !d.colors.length && !d.scales.length && !d.avatarTypeDiffers)) && <div class="rf-muted">{s.assetIds.map((x) => s.assetNames[x] ?? x).join(', ')}</div>}
               </div>
             )}
           </div>
         );
       })}
-      <p class="rf-muted rf-small">Observed by RoFit on this computer, not Roblox’s own edit history.</p>
+      <p class="rf-muted rf-small">Each entry is when RoFit noticed a change on this computer, not when the owner made it. Roblox doesn’t publish outfit edit history. Visits where nothing changed add nothing.</p>
     </div>
   );
 }

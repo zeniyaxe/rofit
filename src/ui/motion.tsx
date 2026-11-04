@@ -4,12 +4,15 @@
  *  - useFlip:     collections glide to their new positions instead of snapping (sort/filter/search/layout)
  *  - useIndicator: one sliding thumb/underline shared by a group of buttons
  *  - Collapse:    height-animated disclosure (CSS grid rows, no JS measuring)
- * Everything animates transform/opacity only. Reduced motion removes travel and keeps fades (see .rm in styles.css).
+ * Everything animates transform/opacity only. Three levels (shared/motion.ts): Full; Balanced = shorter, no overshoot,
+ * no shared-element flights or stagger; Calm = no travel at all, fades only (see .mb / .rm in styles.css).
  */
 import type { ComponentChildren } from 'preact';
 import { useEffect, useLayoutEffect, useRef, useState } from 'preact/hooks';
+import { DURATION, type MotionLevel } from '../shared/motion.ts';
 
 export const EASE = 'cubic-bezier(.22, 1, .36, 1)';
+export type { MotionLevel };
 
 export function usePresence(show: boolean, ms: number): [boolean, 'open' | 'closed'] {
   const [mounted, setMounted] = useState(show);
@@ -46,7 +49,9 @@ export function useIndicator(ref: { current: HTMLElement | null }, dep: unknown,
  * refreshed on resize, so a sort after a window resize still starts from where things really were.
  * Only items that are (or were) on screen animate, capped, so 500-item collections stay cheap.
  */
-export function useFlip(ref: { current: HTMLElement | null }, signature: string, reduced: boolean) {
+export function useFlip(ref: { current: HTMLElement | null }, signature: string, level: MotionLevel) {
+  const reduced = level === 'calm';
+  const t = DURATION[level];
   const prev = useRef<Map<string, [number, number]>>(new Map());
   const read = () => {
     const m = new Map<string, [number, number]>();
@@ -74,11 +79,12 @@ export function useFlip(ref: { current: HTMLElement | null }, signature: string,
           const dx = from[0] - to[0], dy = from[1] - to[1];
           if ((dx || dy) && (visible(to[1]) || visible(from[1]))) {
             n++;
-            c.animate([{ transform: `translate(${dx}px, ${dy}px)` }, { transform: 'none' }], { duration: 420, easing: EASE });
+            c.animate([{ transform: `translate(${dx}px, ${dy}px)` }, { transform: 'none' }], { duration: t.flip, easing: EASE });
           }
         } else if (visible(to[1])) {
           n++;
-          c.animate([{ opacity: 0, transform: 'scale(.9)' }, { opacity: 1, transform: 'none' }], { duration: 320, easing: EASE });
+          // Balanced: fade in place; Full: fade and grow.
+          c.animate(level === 'full' ? [{ opacity: 0, transform: 'scale(.9)' }, { opacity: 1, transform: 'none' }] : [{ opacity: 0 }, { opacity: 1 }], { duration: t.enter, easing: EASE });
         }
       });
     } else if (!reduced && !old.size) {

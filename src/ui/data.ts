@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState, useCallback } from 'preact/hooks';
 import { rpc } from '../shared/rpc.ts';
 import type { ThumbInfo } from '../shared/rpc.ts';
-import type { AssetView, OutfitDetails, OutfitRec, RpcError } from '../shared/types.ts';
+import type { AssetRec, AssetView, OutfitDetails, OutfitRec, RpcError } from '../shared/types.ts';
 import { loadSettings, onSettings, DEFAULTS, type Settings } from '../shared/settings.ts';
 import type { ChangeSummary } from '../shared/analysis.ts';
+import type { AccessInfo } from '../shared/access.ts';
+import { motionLevel, type MotionLevel } from '../shared/motion.ts';
 
 // ---- settings --------------------------------------------------------------------------------
 export function useSettings(): Settings {
@@ -94,6 +96,8 @@ export interface OutfitList {
   via?: string;
   changes?: { added: number; removed: number; renamed: number };
   viewer?: 'in' | 'out' | 'unknown';
+  /** Last thing RoFit observed about who can see this list. */
+  access?: AccessInfo;
   refresh: () => void;
 }
 
@@ -108,17 +112,21 @@ export function useOutfits(userId: number, userName?: string): OutfitList {
         if (n === 0) {
           const c = await rpc('outfits.cached', { userId });
           if (dead) return;
-          if (c.outfits.length) set({ outfits: c.outfits, phase: 'syncing', fetchedAt: c.user?.lastSyncAt });
-          else set((s) => ({ ...s, phase: 'syncing' }));
+          if (c.outfits.length) set({ outfits: c.outfits, phase: 'syncing', fetchedAt: c.user?.lastSyncAt, access: c.user?.access });
+          else set((s) => ({ ...s, phase: 'syncing', access: c.user?.access }));
         } else set((s) => ({ ...s, phase: 'syncing' }));
         const r = await rpc('outfits.sync', { userId, userName, force: n > 0 });
         if (dead) return;
         set({
           outfits: r.outfits, phase: 'ready', fetchedAt: r.fetchedAt, via: r.via,
-          changes: { added: r.added.length, removed: r.removed.length, renamed: r.renamed.length }, viewer: r.viewer,
+          changes: { added: r.added.length, removed: r.removed.length, renamed: r.renamed.length }, viewer: r.viewer, access: r.access,
         });
       } catch (e) {
-        if (!dead) set((s) => ({ ...s, phase: 'error', error: e as RpcError }));
+        if (dead) return;
+        const err = e as RpcError;
+        // Private or gone: drop whatever an earlier visit cached. Anything else (offline, rate limit): keep it, labelled.
+        const refused = err.access?.state === 'restricted' || err.access?.state === 'unavailable';
+        set((s) => ({ ...s, outfits: refused ? [] : s.outfits, phase: 'error', error: err, access: err.access ?? (s.outfits.length ? { state: 'cached', at: Date.now() } : s.access) }));
       }
     })();
     return () => { dead = true; };
@@ -181,48 +189,101 @@ export function useOutfitBundle(userId: number, id: number, fallback?: { details
   return { ...st, refresh: useCallback(() => setN((x) => x + 1), []) };
 }
 
-/** Loads details for many outfits with limited concurrency. Backs “search inside outfits”. */
+export interface IndexProgress { phase: 'details' | 'prices'; done: number; total: number; failed: number }
+
+/**
+ * Loads details for many outfits with limited concurrency (backs search inside outfits), then, optionally, the price
+ * of every item they use in catalog batches of 100 (backs cost filters and sorting). Stops at the first rate limit.
+ * Item records already known are used straight away, with no network.
+ */
 export function useIndexer(userId: number) {
   const [details, setDetails] = useState<Map<number, OutfitDetails>>(new Map());
-  const [progress, setProgress] = useState<{ done: number; total: number; failed: number } | null>(null);
+  const [recs, setRecs] = useState<Map<number, AssetRec>>(new Map());
+  const [progress, setProgress] = useState<IndexProgress | null>(null);
+  const [stopped, setStopped] = useState<RpcError | null>(null);
   const abort = useRef(false);
+  const detailsRef = useRef(details);
+  detailsRef.current = details;
+  const recsRef = useRef(recs);
+  recsRef.current = recs;
+
+  const mergeRecs = useCallback((list: AssetRec[]) => {
+    if (!list.length) return;
+    setRecs((m) => { const n = new Map(m); for (const r of list) n.set(r.id, r); return n; });
+  }, []);
 
   useEffect(() => {
     let dead = false;
+    setDetails(new Map()); setRecs(new Map()); setStopped(null);
     if (userId <= 0) return;
-    rpc('outfits.allDetails', { userId }).then((all) => { if (!dead) setDetails(new Map(all.map((d) => [d.id, d]))); }, () => {});
+    rpc('outfits.allDetails', { userId }).then(async (all) => {
+      if (dead) return;
+      setDetails(new Map(all.map((d) => [d.id, d])));
+      const ids = [...new Set(all.flatMap((d) => d.assets.map((a) => a.id)))];
+      if (ids.length) { const known = await rpc('assets.known', { ids }).catch(() => []); if (!dead) mergeRecs(known); }
+    }, () => {});
     return () => { dead = true; };
   }, [userId]);
 
   const add = useCallback((d: OutfitDetails) => setDetails((m) => (m.get(d.id)?.fetchedAt === d.fetchedAt ? m : new Map(m).set(d.id, d))), []);
+  const addViews = useCallback((views: Record<number, AssetView>) => mergeRecs(Object.values(views).filter((v) => v.rec && v.provenance === 'live').map((v) => v.rec!)), [mergeRecs]);
 
-  const run = useCallback(async (ids: number[]) => {
+  const prices = useCallback(async (list: OutfitDetails[]) => {
+    const refs = new Map<number, OutfitDetails['assets'][number]>();
+    for (const d of list) for (const a of d.assets) if (!recsRef.current.has(a.id)) refs.set(a.id, a);
+    const todo = [...refs.values()];
+    if (!todo.length || abort.current) return;
+    let done = 0, failed = 0;
+    setProgress({ phase: 'prices', done, total: todo.length, failed });
+    for (let i = 0; i < todo.length && !abort.current; i += 100) {
+      const chunk = todo.slice(i, i + 100);
+      try {
+        const views = await rpc('assets.resolve', { ids: chunk.map((a) => a.id), refs: chunk, lite: true });
+        mergeRecs(Object.values(views).filter((v) => v.rec).map((v) => v.rec!));
+        failed += Object.values(views).filter((v) => !v.rec).length;
+      } catch (e) {
+        failed += chunk.length;
+        if ((e as RpcError).kind === 'rate-limited') { abort.current = true; setStopped(e as RpcError); }
+      }
+      done += chunk.length;
+      setProgress({ phase: 'prices', done, total: todo.length, failed });
+    }
+  }, [mergeRecs]);
+
+  const run = useCallback(async (ids: number[], withPrices = false) => {
     abort.current = false;
-    const todo = ids.filter((id) => !details.has(id));
+    setStopped(null);
+    const todo = ids.filter((id) => !detailsRef.current.has(id));
     let done = 0, failed = 0, next = 0;
-    setProgress({ done, total: todo.length, failed });
+    if (todo.length) setProgress({ phase: 'details', done, total: todo.length, failed });
+    const got: OutfitDetails[] = [];
     const worker = async () => {
       while (next < todo.length && !abort.current) {
         const id = todo[next++];
         try {
           const r = await rpc('outfits.details', { userId, id });
+          got.push(r.details);
           setDetails((m) => new Map(m).set(id, r.details));
         } catch (e) {
           failed++;
-          if ((e as RpcError).kind === 'rate-limited') { abort.current = true; }
+          if ((e as RpcError).kind === 'rate-limited') { abort.current = true; setStopped(e as RpcError); }
         }
-        setProgress({ done: ++done, total: todo.length, failed });
+        setProgress({ phase: 'details', done: ++done, total: todo.length, failed });
       }
     };
     await Promise.all([worker(), worker(), worker()]);
+    if (withPrices && !abort.current) {
+      const want = new Set(ids);
+      await prices([...detailsRef.current.values(), ...got].filter((d) => want.has(d.id)));
+    }
     setProgress(null);
-  }, [details, userId]);
+  }, [userId, prices]);
 
-  return { details, add, run, progress, cancel: () => { abort.current = true; } };
+  return { details, recs, add, addViews, run, progress, stopped, cancel: () => { abort.current = true; } };
 }
 
 // ---- small things ----------------------------------------------------------------------------
-export function useReducedMotion(settingMotion: Settings['motion']): boolean {
+export function useOsReducedMotion(): boolean {
   const [os, setOs] = useState(() => window.matchMedia('(prefers-reduced-motion: reduce)').matches);
   useEffect(() => {
     const m = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -230,7 +291,11 @@ export function useReducedMotion(settingMotion: Settings['motion']): boolean {
     m.addEventListener('change', f);
     return () => m.removeEventListener('change', f);
   }, []);
-  return os || settingMotion === 'reduced';
+  return os;
+}
+/** What motion actually plays: the setting resolved against the OS preference (shared/motion.ts). */
+export function useMotion(pref: Settings['motion']): MotionLevel {
+  return motionLevel(pref, useOsReducedMotion());
 }
 
 export function useDebounced<T>(v: T, ms = 150): T {
