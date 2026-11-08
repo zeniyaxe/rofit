@@ -5,3 +5,5 @@ scratch/
 site/dist/
 .playwright-mcp/
 *.log
+site/.astro/
+site/src/demo-dist/

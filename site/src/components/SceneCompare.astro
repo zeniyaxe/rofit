@@ -1,0 +1,114 @@
+---
+import { star, pair, item, money as rb, capturedLabel } from '../lib/real';
+
+const [A, B] = pair;
+const ids = [...new Set([...A.assets.map((a) => a.id), ...B.assets.map((a) => a.id)])];
+const nameOf = (id: number) => A.assets.concat(B.assets).find((a) => a.id === id)!;
+const rows = ids
+  .map((id) => ({ id, ref: nameOf(id), it: item(id), inA: A.assets.some((a) => a.id === id), inB: B.assets.some((a) => a.id === id) }))
+  .map((r, i) => ({ ...r, group: r.inA && r.inB ? 'both' : r.inA ? 'a' : 'b', order: i }));
+const price = (it: ReturnType<typeof item>) => (!it || !it.resolved ? 'no data' : !it.forSale ? 'off sale' : it.price === 0 ? 'Free' : it.price != null ? rb(it.price) : 'no price');
+---
+<section class="compare" id="compare" aria-labelledby="cmp-h">
+  <div class="wrap grid">
+    <div class="cmp-copy rv">
+      <h2 id="cmp-h">Spot the difference.</h2>
+      <p>Drag across two saved looks. Switch to Difference and the pieces sort themselves into what’s only in one, and what they share.</p>
+      <div class="mode" role="radiogroup" aria-label="Compare view">
+        <button role="radio" aria-checked="true" data-mode="slider" class="on">Slider</button>
+        <button role="radio" aria-checked="false" data-mode="diff">Difference</button>
+      </div>
+    </div>
+
+    <div class="rig rv" style="--i:1">
+      <div class="mirror2">
+        <div class="glass2" id="cmp-glass" data-split="50" style="--split:50%">
+          <div class="side a" aria-label={A.name}><img class="fig2" src={A.thumb} alt={`${A.name}, saved by ${star.displayName}`} width="420" height="420" /><b class="lab">{A.name}</b></div>
+          <div class="side b" aria-label={B.name}><img class="fig2" src={B.thumb} alt={`${B.name}, saved by ${star.displayName}`} width="420" height="420" /><b class="lab">{B.name}</b></div>
+          <i class="bar" aria-hidden="true"><span class="knob"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 7l-5 5 5 5M16 7l5 5-5 5" /></svg></span></i>
+          <label class="sr" for="cmp-range">Reveal slider between {A.name} and {B.name}</label>
+          <input id="cmp-range" type="range" min="0" max="100" step="0.5" value="50" />
+        </div>
+      </div>
+
+      <ul class="rows" id="cmp-rows" aria-label="Pieces in either outfit">
+        {rows.map((r) => (
+          <li class={'row ' + r.group} data-id={r.id} data-group={r.group} style={`--o:${r.order}`}>
+            <span class="th">{r.it?.thumb && <img src={r.it.thumb} alt="" width="44" height="44" loading="lazy" />}</span>
+            <span class="nm"><b>{r.it?.name ?? r.ref.name}</b><small>{r.it?.creator?.name ?? r.ref.typeName} · {price(r.it)}</small></span>
+            <span class="pres" aria-label={r.group === 'both' ? 'in both' : r.group === 'a' ? `only in ${A.name}` : `only in ${B.name}`}>
+              <i class={r.inA ? 'on' : ''} title={A.name}></i><i class={r.inB ? 'on' : ''} title={B.name}></i>
+            </span>
+            <em class="sign" aria-hidden="true">{r.group === 'both' ? '=' : r.group === 'a' ? '−' : '+'}</em>
+          </li>
+        ))}
+        <li class="gh gh-a" aria-hidden="true">Only in {A.name}</li>
+        <li class="gh gh-both" aria-hidden="true">In both</li>
+        <li class="gh gh-b" aria-hidden="true">Only in {B.name}</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<style>
+  .compare { padding: clamp(80px, 12vw, 160px) 0 0; }
+  .grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: clamp(24px, 4vw, 48px); justify-items: center; }
+  h2 { font-size: clamp(2rem, 4.2vw, 4rem); letter-spacing: -.035em; }
+  .cmp-copy { text-align: center; }
+  .cmp-copy p { margin-top: 18px; color: var(--ink-2); max-width: 56ch; margin-inline: auto; }
+  .mode { display: inline-grid; grid-auto-flow: column; gap: 4px; padding: 4px; border-radius: 12px; background: var(--wall-2); margin-top: 28px; position: relative; }
+  .mode button { min-height: 44px; padding: 0 20px; border-radius: 9px; font-weight: 700; color: var(--ink-2); transition: background .2s, color .2s, box-shadow .2s, transform .3s var(--spring); }
+  .mode button.on { background: var(--paper); color: var(--ink); box-shadow: 0 1px 3px rgb(0 0 0 / .18); }
+  .mode button:active { transform: scale(.96); }
+
+  .rig { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 300px); gap: 22px; align-items: stretch; width: min(100%, 980px); height: clamp(420px, 56vw, 570px); }
+  .mirror2 { display: flex; padding: 12px; border-radius: 22px 22px 6px 6px; background: linear-gradient(135deg, #e7ebf6, #aab3c8 45%, #dde2ee 60%, #8d97ad); box-shadow: 0 30px 60px rgb(10 15 60 / .22); }
+  .glass2 { position: relative; flex: 1; min-height: 0; border-radius: 12px 12px 2px 2px; overflow: hidden; background: var(--paper); touch-action: pan-y; user-select: none; cursor: ew-resize; container-type: inline-size; }
+  .side { position: absolute; inset: 0; display: grid; place-items: center; transition: opacity .3s; }
+  .side.a { background: radial-gradient(120% 100% at 50% 100%, #dfe5ff, transparent 70%), var(--paper); }
+  .side.b { clip-path: inset(0 0 0 var(--split)); background: radial-gradient(120% 100% at 50% 100%, #ffe9d2, transparent 70%), var(--paper); }
+  .fig2 { display: block; width: 100%; height: auto; object-fit: contain; max-height: 100%; transform: scale(1.08); transition: transform .55s var(--ease); }
+  .row .th img { width: 100%; height: 100%; object-fit: contain; background: #eef0f5; }
+  .lab { position: absolute; top: 14px; font-size: 13px; font-weight: 800; padding: 4px 10px; border-radius: 8px; background: var(--ink); color: var(--wall); }
+  .a .lab { left: 14px; } .b .lab { right: 14px; }
+  .bar { position: absolute; top: 0; bottom: 0; left: var(--split); width: 3px; margin-left: -1.5px; background: var(--curtain); pointer-events: none; transition: opacity .3s; }
+  .knob { position: absolute; top: 50%; left: 50%; width: 46px; height: 46px; margin: -23px; border-radius: 50%; background: var(--curtain); color: #fff; display: grid; place-items: center; box-shadow: 0 6px 16px rgb(20 40 160 / .4), 0 0 0 4px var(--paper); }
+  #cmp-range { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; margin: 0; cursor: ew-resize; }
+  .glass2:has(#cmp-range:focus-visible) .knob { outline: 3px solid var(--alert); outline-offset: 3px; }
+
+  /* difference mode: the two looks stand apart, the divider goes */
+  .compare.diff .side.a { clip-path: inset(0 50% 0 0); }
+  .compare.diff .side.b { clip-path: inset(0 0 0 50%); }
+  .compare.diff .side.a .fig2 { transform: translateX(-26%); } .compare.diff .side.b .fig2 { transform: translateX(26%); }
+  .compare.diff .side .fig2 { transition: transform .8s var(--spring); }
+  .compare.diff .bar { opacity: 0; }
+
+  .rows { list-style: none; margin: 0; padding: 0; position: relative; display: grid; align-content: start; gap: 6px; overflow: auto; padding: 4px; scrollbar-gutter: stable; }
+  .row { display: grid; grid-template-columns: 44px 1fr auto 26px; gap: 10px; align-items: center; padding: 4px 10px 4px 4px; border-radius: 12px; background: var(--paper); box-shadow: 0 1px 0 var(--line); order: var(--o); transition: box-shadow .3s, background .3s; }
+  .row .th { display: block; border-radius: 9px; overflow: hidden; height: 44px; }
+  .nm { display: grid; min-width: 0; line-height: 1.2; }
+  .nm b { font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .nm small { font-size: 12px; color: var(--ink-3); }
+  .pres { display: inline-flex; gap: 3px; }
+  .pres i { width: 8px; height: 22px; border-radius: 3px; background: var(--wall-3); }
+  .pres i.on:first-child { background: var(--curtain); } .pres i.on:last-child { background: var(--alert); }
+  .sign { font-style: normal; font-weight: 800; width: 24px; height: 24px; border-radius: 7px; display: grid; place-items: center; background: var(--wall-2); color: var(--ink-3); transition: background .3s, color .3s; }
+  .gh { display: none; font-size: 12px; font-weight: 800; letter-spacing: .03em; text-transform: uppercase; color: var(--ink-3); padding: 8px 4px 2px; }
+
+  .compare.diff .rows { gap: 6px; }
+  .compare.diff .row.a { order: calc(10 + var(--o)); } .compare.diff .row.both { order: calc(30 + var(--o)); } .compare.diff .row.b { order: calc(50 + var(--o)); }
+  .compare.diff .gh { display: block; animation: rise .5s var(--ease) backwards; }
+  .compare.diff .gh-a { order: 9; } .compare.diff .gh-both { order: 29; } .compare.diff .gh-b { order: 49; }
+  .compare.diff .row.a .sign { background: var(--bad); color: #fff; } .compare.diff .row.b .sign { background: var(--ok); color: #fff; }
+  :root[data-theme='dark'] .compare.diff .row.b .sign { color: #04251a; } :root[data-theme='dark'] .compare.diff .row.a .sign { color: #2a0610; }
+  /* changed rows hold an amber outline until they are looked at, like a changed gate on a board */
+  .compare.diff .row.a:not(.seen), .compare.diff .row.b:not(.seen) { box-shadow: 0 0 0 2px var(--alert), 0 6px 18px rgb(255 157 28 / .22); }
+  @keyframes rise { from { opacity: 0; transform: translateY(8px); } }
+
+  @media (max-width: 700px) { .rig { grid-template-columns: 1fr; height: auto; } .glass2 { min-height: clamp(300px, 88vw, 440px); } .rows { max-height: 300px; } }
+</style>
+
+<script>
+  import { initCompare } from '../scripts/compare';
+  initCompare();
+</script>

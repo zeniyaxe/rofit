@@ -1,0 +1,35 @@
+---
+import Doc from '../layouts/Doc.astro';
+import { LINKS, LEGAL } from '../config';
+import { facts, networkCallSites } from '../lib/privacy';
+---
+<Doc title="Security" lead="How RoFit is built to stay harmless, how to check it, and how to report a problem." meta={`Last updated ${LEGAL.updated} · Describes RoFit ${facts.version}`}>
+  {/* LEGAL/SECURITY REVIEW FLAG: confirm a reporting channel and response promises before publishing. See site/LEGAL-REVIEW.md. */}
+  <h2>Design choices that limit harm</h2>
+  <ul>
+    <li><strong>Read-only.</strong> RoFit never writes to your Roblox account. It cannot equip an outfit or change settings.</li>
+    <li><strong>No credentials.</strong> It has no cookie permission and never touches your password or session token.</li>
+    <li><strong>Small reach.</strong> It can talk to six Roblox API hosts and nothing else. The Roblox page can’t read RoFit’s stored data; the page only hosts RoFit’s interface inside an isolated shadow root.</li>
+    <li><strong>No remote code.</strong> The extension’s content security policy is <code>{facts.csp}</code>. No <code>eval</code>, no scripts fetched at run time.</li>
+    <li><strong>A proxy that says no.</strong> RoFit’s requests run inside your Roblox tab so they carry your session. That tab only forwards requests to RoFit’s own six hosts, only from RoFit’s own background worker, and only to those hosts, and only GET requests plus the catalog’s batch lookup.</li>
+  </ul>
+
+  <h2>Verify it yourself</h2>
+  <ul>
+    <li>Look at the extension’s permissions on <code>chrome://extensions</code>.</li>
+    <li>Read the source. Network calls exist in {networkCallSites.length} files: {networkCallSites.map((x, i) => <><code>{x.file}</code>{i < networkCallSites.length - 1 ? ' and ' : ''}</>)}.</li>
+    <li>Open the browser’s Network panel while using RoFit: you should see requests to <code>*.roblox.com</code> and nothing else.</li>
+  </ul>
+
+  <h2>Reporting a vulnerability</h2>
+  <p>
+    {LINKS.securityEmail
+      ? <>Email <a href={`mailto:${LINKS.securityEmail}`}>{LINKS.securityEmail}</a> with steps to reproduce.</>
+      : <>A private reporting address isn’t set up yet. Until it is, please open a <a href={LINKS.issues} rel="noopener">GitHub issue</a> without exploit details and ask for a private channel.</>}
+    Don’t post anything that would put other people’s accounts at risk.
+  </p>
+  <p class="callout"><strong>Not promised yet:</strong> a response time or a bug bounty. Neither exists, so none is claimed.</p>
+
+  <h2>Supply chain</h2>
+  <p>The shipped bundle contains Preact (MIT) and Lucide icons (ISC) and no other third-party code. Build tools are development-only. Licences are in the repository’s <code>licenses</code> folder.</p>
+</Doc>

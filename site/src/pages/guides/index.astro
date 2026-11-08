@@ -1,0 +1,17 @@
+---
+import Doc from '../../layouts/Doc.astro';
+import { GUIDES } from '../../lib/guides';
+---
+<Doc title="Guides" lead="Short, specific answers for using RoFit." toc={false}>
+  <ul class="gl">
+    {GUIDES.map((g) => <li><a href={`/guides/${g.slug}`}><b>{g.title}</b><span>{g.blurb}</span></a></li>)}
+  </ul>
+</Doc>
+<style is:global>
+  .gl { list-style: none; padding: 0 !important; display: grid; gap: 0 !important; }
+  .gl a { display: grid; gap: 4px; padding: 20px 0; border-top: 1px solid var(--line); text-decoration: none; color: var(--ink) !important; font-weight: 400 !important; transition: transform .25s var(--ease); }
+  .gl li:last-child a { border-bottom: 1px solid var(--line); }
+  .gl a:hover { transform: translateX(10px); }
+  .gl b { font-family: var(--f-display); font-size: 1.3rem; letter-spacing: -.02em; }
+  .gl span { color: var(--ink-2); }
+</style>

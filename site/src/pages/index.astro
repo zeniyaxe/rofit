@@ -1,0 +1,25 @@
+---
+import Base from '../layouts/Base.astro';
+import Hero from '../components/Hero.astro';
+import SceneRail from '../components/SceneRail.astro';
+import SceneCompare from '../components/SceneCompare.astro';
+import SceneShare from '../components/SceneShare.astro';
+import ScenePrivate from '../components/ScenePrivate.astro';
+import Demo from '../components/Demo.astro';
+import Proof from '../components/Proof.astro';
+import InstallCta from '../components/InstallCta.astro';
+---
+<Base>
+  <Hero />
+  <SceneRail />
+  <SceneCompare />
+  <SceneShare />
+  <ScenePrivate />
+  <Demo />
+  <Proof />
+  <InstallCta />
+  <script>
+    import { initScenes } from '../scripts/scenes';
+    initScenes();
+  </script>
+</Base>

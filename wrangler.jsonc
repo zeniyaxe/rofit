@@ -1,5 +1,5 @@
 // Cloudflare Workers static-assets deploy for rofit.site.
-// Build: node site/build.mjs   Deploy: npx wrangler deploy --assets ./site/dist
+// Build: npm --prefix site run build   Deploy: npx wrangler deploy --assets ./site/dist
 // "name" must match the Worker's name in the Cloudflare dashboard.
 {
   "name": "rofit",

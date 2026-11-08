@@ -1,0 +1,29 @@
+---
+import Doc from '../layouts/Doc.astro';
+import { LINKS } from '../config';
+---
+<Doc title="Support" lead="Most questions have an answer below. For the rest, here is where to ask." toc={false}>
+  <h2>Quick answers</h2>
+  <h3>The Outfits tab isn’t on the profile.</h3>
+  <p>Reload the Roblox page after installing. Roblox changes its page layout from time to time; if the tab still doesn’t appear, the toolbar button opens the same workspace for the current profile. Please report it so it can be fixed.</p>
+  <h3>A profile shows no outfits.</h3>
+  <p>That usually means the player keeps them private. RoFit won’t get around it. <a href="/guides/no-outfits">The guide explains every reason it can happen.</a></p>
+  <h3>Prices look wrong or missing.</h3>
+  <p>Prices come from Roblox and are labelled live, cached or last-known. Anything Roblox no longer returns shows as unavailable rather than guessed.</p>
+  <h3>Is it safe? What does it collect?</h3>
+  <p>Nothing is collected. <a href="/privacy">Privacy</a> and <a href="/security">Security</a> show how to verify that.</p>
+
+  <h2>Contact</h2>
+  <ul>
+    <li><strong>Bugs and ideas:</strong> <a href={LINKS.issues} rel="noopener">GitHub issues</a>. Say which browser and RoFit version you use, what you expected and what happened.</li>
+    {LINKS.supportEmail
+      ? <li><strong>Email:</strong> <a href={`mailto:${LINKS.supportEmail}`}>{LINKS.supportEmail}</a></li>
+      : <li><strong>Email:</strong> not set up yet.</li>}
+    {LINKS.discord ? <li><strong>Discord:</strong> <a href={LINKS.discord} rel="noopener">join</a></li> : <li><strong>Community chat:</strong> none yet.</li>}
+  </ul>
+  {LINKS.donate && <>
+    <h2>Donate</h2>
+    <p>RoFit is free and stays free. If it’s useful, you can chip in through <a href={LINKS.donate} rel="noopener">a store page on Roblox</a>, so it is paid in Robux and Roblox handles the payment. Donating unlocks nothing and isn’t expected.</p>
+  </>}
+  <p class="callout">Never send your Roblox password, cookie or any security code to anyone about RoFit. RoFit never needs them, and nobody from the project will ask.</p>
+</Doc>

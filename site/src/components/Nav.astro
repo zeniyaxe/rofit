@@ -1,0 +1,38 @@
+---
+import { LINKS } from '../config';
+import Hanger from './Hanger.astro';
+const { curtain = false, valance = false } = Astro.props;
+const path = Astro.url.pathname.replace(/\/$/, '') || '/';
+const cur = (p: string) => (path === p || (p !== '/' && path.startsWith(p)) ? 'page' : undefined);
+---
+<header class={'nav' + (curtain ? ' over-curtain' : '') + (valance ? ' over-valance' : '')} id="nav">
+  <div class="wrap">
+    <a class="brand" href="/" aria-label="RoFit home"><span class="mark"><Hanger size={20} /></span>RoFit</a>
+    <button class="menu-btn" id="menu-btn" aria-label="Menu" aria-expanded="false" aria-controls="nav-links">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 8h16M4 16h16" /></svg>
+    </button>
+    <nav class="nav-links" id="nav-links" aria-label="Main">
+      <a href="/#demo">Try it</a>
+      <a href="/features" aria-current={cur('/features')}>Features</a>
+      <a href="/docs" aria-current={cur('/docs')}>Docs</a>
+      <a href="/privacy" aria-current={cur('/privacy')}>Privacy</a>
+      <a href="/roadmap" aria-current={cur('/roadmap')}>Roadmap</a>
+      {LINKS.donate && <a href={LINKS.donate} rel="noopener" class="don-link">Donate</a>}
+      <a class="btn btn-curtain" href="/download">Install</a>
+    </nav>
+  </div>
+</header>
+
+<script>
+  const nav = document.getElementById('nav')!;
+  const on = () => nav.classList.toggle('scrolled', scrollY > 8);
+  on(); addEventListener('scroll', on, { passive: true });
+  const btn = document.getElementById('menu-btn')!;
+  const links = document.getElementById('nav-links')!;
+  btn.addEventListener('click', () => {
+    const open = links.classList.toggle('open');
+    btn.setAttribute('aria-expanded', String(open));
+  });
+  links.addEventListener('click', (e) => { if ((e.target as HTMLElement).closest('a')) { links.classList.remove('open'); btn.setAttribute('aria-expanded', 'false'); } });
+  addEventListener('keydown', (e) => { if (e.key === 'Escape' && links.classList.contains('open')) { links.classList.remove('open'); btn.setAttribute('aria-expanded', 'false'); btn.focus(); } });
+</script>

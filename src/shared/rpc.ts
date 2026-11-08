@@ -9,6 +9,7 @@ export interface ThumbInfo { state: string; url: string | null }
 
 /** Request type → response. The UI and the service worker both import this so the contract stays checked. */
 export interface Rpc {
+  'user.worn': { req: { userId: number }; res: { assets: { id: number; name: string; assetTypeId: number; assetTypeName: string }[]; avatarType: string; thumb: ThumbInfo | null } };
   'outfits.cached': { req: { userId: number }; res: { outfits: OutfitRec[]; user?: UserRec } };
   'outfits.sync': { req: { userId: number; userName?: string; force?: boolean }; res: { outfits: OutfitRec[]; source: 'live' | 'cached'; fetchedAt: number; via: 'v1' | 'v2' | 'cache'; removed: number[]; added: number[]; renamed: { id: number; from: string; to: string }[]; /** Present when nothing visible came back: was Roblox seeing a signed-in viewer? */ viewer?: 'in' | 'out' | 'unknown'; /** Why this viewer can see the list (docs/research/outfit-access.md). */ access?: AccessInfo } };
   'outfits.thumbs': { req: { ids: number[]; size?: '150x150' | '420x420' }; res: Record<number, ThumbInfo> };

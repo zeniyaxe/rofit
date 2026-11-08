@@ -1,0 +1,167 @@
+---
+import { star, hero, knownItems, buyNow, money } from '../lib/real';
+
+const others = star.outfits.filter((o) => o.id !== hero.id).slice(0, 4);
+const slots = [
+  { o: others[0], x: 110 }, { o: others[1], x: 220 }, { o: hero, x: 330, pick: true }, { o: others[2], x: 770 }, { o: others[3], x: 880 },
+].filter((s) => s.o);
+
+// Diagram coordinates (viewBox 1000 x 760). The picked render ends centred at (500, 384), 520 px wide.
+const CX = 500, CY = 384, IMG = 520;
+const sides: ('l' | 'r')[] = ['l', 'l', 'r', 'r', 'r'];
+const tys = [200, 380, 110, 300, 490];
+const anchors = [[450, 300], [440, 400], [560, 320], [555, 420], [500, 500]];
+const items = knownItems(hero).slice(0, 5).map((it, i) => {
+  const side = sides[i], tagX = side === 'l' ? 20 : 690, edge = side === 'l' ? tagX + 300 : tagX, ty = tys[i];
+  const fx = tagX + 4 + 30, fy = ty + 34; // centre of the little picture slot inside the tag
+  const stub = !it.forSale ? 'off sale' : it.price === 0 ? 'Free' : it.price != null ? money(it.price) : 'no price';
+  return { it, side, tagX, edge, tagY: ty, ey: ty + 34, ax: anchors[i][0], ay: anchors[i][1], dx: fx - CX, dy: fy - CY, stub, off: !it.forSale || it.limited };
+});
+const total = buyNow(hero);
+const offsale = items.filter((i) => !i.it.forSale).length;
+const flag = (i: (typeof items)[number]) => (!i.it.forSale ? ' · off sale' : i.it.limited ? ' · limited' : '');
+---
+<section class="scene" id="rail" data-scene data-phases="0 .16 .4 .74 .92 1" aria-labelledby="rail-h">
+  <div class="stage">
+    <div class="caps" aria-live="polite">
+      <h2 id="rail-h" class="sr">How RoFit shows an outfit</h2>
+      <p class="cap" data-n="1"><b>Pick a fit.</b><span>Every outfit someone saved hangs on the rail.</span></p>
+      <p class="cap" data-n="2"><b>See all of it.</b><span>Choose one and it comes off the hanger.</span></p>
+      <p class="cap" data-n="3"><b>Then pull it apart.</b><span>Each piece, who made it, what it costs, whether you can still get it.</span></p>
+      <p class="cap" data-n="4"><b>Know what it takes.</b><span>RoFit adds up what’s for sale today and says what isn’t.</span></p>
+    </div>
+
+    <svg class="art" viewBox="0 0 1000 760" role="img" aria-label={`${hero.name}, a saved outfit by ${star.displayName}, lifted from a rail and pulled apart into its ${items.length} items.`} preserveAspectRatio="xMidYMid meet">
+      <g class="railg">
+        <rect x="30" y="52" width="940" height="7" rx="3.5" fill="var(--steel)" />
+        <rect x="24" y="44" width="10" height="24" rx="3" fill="var(--steel-dark)" /><rect x="966" y="44" width="10" height="24" rx="3" fill="var(--steel-dark)" />
+        {slots.map((s, i) => (
+          <g class={'hang' + (s.pick ? ' picked' : '')} style={`--i:${i}`} transform={`translate(${s.x} 0)`}>
+            <g class="sway">
+              <g transform="translate(-12 58) scale(1)" fill="none" stroke="var(--wood)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 10.5V9.5a2.5 2.5 0 1 0-2.5-2.5" transform="translate(0 -6)" /><path d="M12 10.5 3 17a1.3 1.3 0 0 0 .8 2.4h16.4A1.3 1.3 0 0 0 21 17l-9-6.5Z" transform="translate(0 -6)" /></g>
+              {!s.pick && <image href={s.o.thumb} x="-55" y="84" width="110" height="110" />}
+              {!s.pick && <text x="0" y="214" text-anchor="middle" class="nm">{s.o.name.length > 16 ? s.o.name.slice(0, 15) + '…' : s.o.name}</text>}
+            </g>
+          </g>
+        ))}
+      </g>
+
+      <!-- the picked outfit travelling from its hanger to the middle -->
+      <g class="mover">
+        <g class="fig">
+          <ellipse cx={CX} cy={CY + IMG / 2 - 8} rx="110" ry="12" fill="#000" opacity=".14" class="shadow" />
+          <image class="body" href={hero.thumb} x={CX - IMG / 2} y={CY - IMG / 2} width={IMG} height={IMG} />
+        </g>
+      </g>
+
+      <!-- callouts -->
+      {items.map((l, i) => (
+        <g class="call" style={`--i:${i}`}>
+          <path class="ln" pathLength="1" d={`M ${l.ax} ${l.ay} L ${l.edge} ${l.ey}`} />
+          <circle class="dot" cx={l.ax} cy={l.ay} r="5" />
+          <foreignObject x={l.tagX} y={l.tagY} width="300" height="76">
+            <div class={'dtag tag' + (l.off ? ' alert' : '')} xmlns="http://www.w3.org/1999/xhtml">
+              <span class="slot"></span>
+              <span class="nm2"><b>{l.it.name}</b><small>{l.it.creator?.name ?? 'Unknown creator'}{flag(l)}</small></span>
+              <span class="stub num">{l.stub}</span>
+            </div>
+          </foreignObject>
+        </g>
+      ))}
+      <!-- the pieces fly out of the render and land in their tags -->
+      {items.map((l, i) => (
+        <image class="fly" href={l.it.thumb!} x={CX - 30} y={CY - 30} width="60" height="60" style={`--dx:${l.dx};--dy:${l.dy}`} />
+      ))}
+
+      <g class="total">
+        <foreignObject x="290" y="660" width="420" height="70">
+          <div class="dtag tag total-tag" xmlns="http://www.w3.org/1999/xhtml">
+            <span class="nm2"><b>{hero.assets.length} items</b><small>{hero.assets.length - items.length > 0 ? `${hero.assets.length - items.length} not shown` : offsale ? `${offsale} off sale, not counted` : 'all for sale'}</small></span>
+            <span class="stub num">{money(total)}</span>
+          </div>
+        </foreignObject>
+      </g>
+    </svg>
+
+    <ul class="mlist" aria-label="Pieces in this outfit">
+      {items.map((l, i) => (
+        <li style={`--i:${i}`}><span class="th"><img src={l.it.thumb!} alt="" width="44" height="44" loading="lazy" /></span><span><b>{l.it.name}</b><small>{l.it.creator?.name ?? 'Unknown creator'}{flag(l)}</small></span><em class="num">{l.stub}</em></li>
+      ))}
+      <li class="mtotal"><span><b>{hero.assets.length} items</b><small>{offsale ? `${offsale} off sale, not counted` : 'what’s for sale today'}</small></span><em class="num">{money(total)}</em></li>
+    </ul>
+  </div>
+</section>
+
+<style>
+  .scene { position: relative; height: 430svh; --p: 0; --p1: 0; --p2: 0; --p3: 0; --p4: 0; --p5: 0; }
+  .stage { position: sticky; top: 0; height: 100svh; display: grid; place-items: center; overflow: hidden; padding-top: var(--nav-h); }
+  .art { width: min(100% - 26vw, calc((100svh - var(--nav-h) - 8px) * 1.3158)); justify-self: end; margin-right: 2vw; height: auto; max-height: calc(100svh - var(--nav-h)); overflow: visible; }
+
+  .caps { position: absolute; z-index: 5; left: var(--gutter); top: calc(var(--nav-h) + 6svh); width: min(24vw, 340px); pointer-events: none; }
+  .cap { position: absolute; left: 0; top: 0; opacity: 0; transform: translateY(18px); transition: opacity .5s var(--ease), transform .7s var(--ease); display: grid; gap: 12px; }
+  .cap b { font-family: var(--f-display); font-weight: 800; font-size: clamp(1.6rem, 2.7vw, 2.7rem); letter-spacing: -.035em; line-height: 1.04; }
+  .cap span { color: var(--ink-2); max-width: 30ch; font-size: clamp(.98rem, 1.1vw, 1.12rem); }
+  .scene[data-step='1'] .cap[data-n='1'], .scene[data-step='2'] .cap[data-n='2'], .scene[data-step='3'] .cap[data-n='3'], .scene[data-step='4'] .cap[data-n='4'], .scene[data-step='5'] .cap[data-n='4'] { opacity: 1; transform: none; }
+
+  .nm { font-family: var(--f-body); font-weight: 700; font-size: 15px; fill: var(--ink-2); }
+  .sway { transform-origin: 0 58px; animation: sway 5.5s ease-in-out infinite; animation-delay: calc(var(--i) * -1.1s); }
+  @keyframes sway { 0%, 100% { transform: rotate(-1.6deg); } 50% { transform: rotate(1.6deg); } }
+  :global(html:not([data-motion='full'])) .sway { animation: none; }
+  .hang { transition: opacity .4s; }
+  .hang:not(.picked) { opacity: calc(1 - var(--p2) * .62 - var(--p3) * .38); }
+
+  /* mover: starts on its hanger (top, left of centre), ends as the big figure in the middle */
+  .mover { transform-box: view-box; }
+  .fig { transform-box: view-box; transform-origin: 500px 384px; }
+  .mover { transform: translate(calc((1 - var(--p2)) * -170px), calc((1 - var(--p2)) * (-220px - var(--p1) * 16px))); }
+  .mover .fig { scale: calc(.308 + .692 * var(--p2) + var(--p1) * (1 - var(--p2)) * .05); }
+  .shadow { opacity: calc(.14 * var(--p2)); }
+  .mover .body { opacity: calc(1 - var(--p3) * .25); }
+  .fly { opacity: var(--p3); transform: translate(calc(var(--p3) * var(--dx) * 1px), calc(var(--p3) * var(--dy) * 1px)) scale(calc(.55 + .45 * var(--p3))); transform-box: fill-box; transform-origin: center; filter: drop-shadow(0 4px 8px rgb(15 17 30 / .22)); }
+
+  .call { opacity: 0; }
+  .call .ln { fill: none; stroke: var(--ink); stroke-width: 1.6; stroke-dasharray: 1; stroke-dashoffset: calc(1 - var(--p3)); opacity: .55; }
+  .call .dot { fill: var(--curtain); opacity: var(--p3); }
+  .call foreignObject { opacity: var(--p3); transform: translateY(calc((1 - var(--p3)) * 14px)); }
+  .call { opacity: 1; }
+  .total foreignObject { opacity: var(--p4); transform: translateY(calc((1 - var(--p4)) * 16px)) scale(calc(.94 + .06 * var(--p4))); transform-origin: center; }
+
+  .dtag { display: grid; grid-auto-flow: column; grid-template-columns: 1fr auto; align-items: stretch; border-radius: 10px; background: var(--paper); box-shadow: 0 1px 0 var(--line), 0 8px 20px rgb(15 17 30 / .12); overflow: hidden; font-family: var(--f-body); color: var(--ink); height: 68px; }
+  .dtag { grid-template-columns: auto 1fr auto; }
+  .dtag .slot { display: block; width: 68px; background: #eef0f5; }
+  .dtag .nm2 { display: grid; align-content: center; padding: 0 12px 0 4px; min-width: 0; line-height: 1.25; }
+  .total-tag .nm2 { padding-left: 16px; }
+  .dtag b { font-size: 16px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .dtag small { font-size: 13px; color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .dtag .stub { display: grid; place-items: center; padding: 0 16px; min-width: 88px; font-size: 17px; font-weight: 800; background: var(--ink); color: var(--wall); }
+  .dtag.alert .stub { background: var(--alert); color: #1b1200; font-size: 14px; }
+  .total-tag .stub { background: var(--curtain); color: #fff; font-size: 22px; }
+
+  .mlist { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+  /* static fallback = finished composition, no pinning */
+  .scene.static, :global(html:not(.js)) .scene { height: auto; }
+  .scene.static .stage, :global(html:not(.js)) .stage { position: relative; height: auto; padding: calc(var(--nav-h) + 20px) 0 40px; }
+  .scene.static .caps, :global(html:not(.js)) .caps { position: relative; left: auto; top: auto; width: min(100% - var(--gutter) * 2, 640px); margin: 0 auto 18px; }
+  .scene.static .cap, :global(html:not(.js)) .cap { position: relative; opacity: 1; transform: none; display: none; }
+  .scene.static .cap[data-n='3'], :global(html:not(.js)) .cap[data-n='3'] { display: grid; }
+  :global(html:not(.js)) .scene { --p1: 1; --p2: 1; --p3: 1; --p4: 1; --p5: 1; }
+
+  @media (max-width: 860px) {
+    .scene { height: 380svh; }
+    .caps { left: var(--gutter); right: var(--gutter); width: auto; top: calc(var(--nav-h) + 3svh); }
+    .stage { align-content: start; }
+    .art { width: 124%; max-width: none; margin-top: 12svh; margin-left: -12%; margin-right: -12%; }
+    .call, .total { display: none; }
+    .mlist { display: grid; width: auto; height: auto; overflow: visible; clip-path: none; white-space: normal; position: absolute; left: var(--gutter); right: var(--gutter); bottom: 2svh; gap: 8px; list-style: none; margin: 0; padding: 0; opacity: var(--p3); transform: translateY(calc((1 - var(--p3)) * 24px)); }
+    .mlist li { display: grid; grid-template-columns: 44px 1fr auto; gap: 10px; align-items: center; background: var(--paper); border-radius: 10px; padding: 4px 12px 4px 4px; box-shadow: 0 1px 0 var(--line); }
+    .mlist .th { background: #eef0f5; border-radius: 8px; display: grid; place-items: center; height: 44px; overflow: hidden; }
+    .mlist .th img { width: 100%; height: 100%; object-fit: contain; }
+    .mlist b { display: block; font-size: 14px; line-height: 1.2; } .mlist small { color: var(--ink-3); font-size: 12px; }
+    .mlist em { font-style: normal; font-weight: 800; font-size: 14px; }
+    .mlist .mtotal { grid-template-columns: 1fr auto; padding: 8px 14px; background: var(--curtain); color: #fff; }
+    .mlist .mtotal small { color: var(--on-curtain-2); }
+    .scene.static .art, :global(html:not(.js)) .art { margin-top: 0; }
+    .scene.static .mlist, :global(html:not(.js)) .mlist { position: relative; left: auto; right: auto; bottom: auto; margin: 10px var(--gutter) 0; opacity: 1; transform: none; }
+  }
+</style>

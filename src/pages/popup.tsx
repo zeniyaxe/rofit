@@ -1,3 +1,4 @@
+import { ACCOUNT_URL, DONATE_URL, ISSUES_URL, SITE_URL } from '../shared/links.ts';
 import { render } from 'preact';
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import css from '../ui/styles.css';
@@ -98,6 +99,7 @@ function Popup() {
         <b>RoFit</b>
         <span class="rf-grow" />
         <button class="rf-ib" aria-label="Open settings" title="Settings" onClick={() => page('settings')}><Ico n="settings" size={18} /></button>
+        <a class="rf-ib" href={ACCOUNT_URL} target="_blank" rel="noopener noreferrer" title="RoFit settings on Roblox" aria-label="RoFit settings on Roblox"><Ico n="user" size={18} /></a>
       </header>
 
       <div class="rf-pop-search">
@@ -161,8 +163,11 @@ function Popup() {
           <em>{count.data != null ? plural(count.data, 'saved outfit') : ''}</em>
           <Ico n="right" size={16} class="rf-pop-chev" />
         </button>
+        <div class="rf-poplinks"><a href={SITE_URL} target="_blank" rel="noopener noreferrer">Official site</a> · <a href={ISSUES_URL} target="_blank" rel="noopener noreferrer">Report a problem</a> · <a href={DONATE_URL} target="_blank" rel="noopener noreferrer">Donate</a></div>
       </footer>
     </div>
   );
 }
 render(<Popup />, document.getElementById('root')!);
+
+void chrome.action.setBadgeText({ text: '' }).catch(() => {});

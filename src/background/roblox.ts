@@ -396,3 +396,16 @@ export function userById(id: number): Promise<UserInfo | null> {
     }
   });
 }
+
+export interface WornNow { assets: { id: number; name: string; assetTypeId: number; assetTypeName: string }[]; avatarType: string }
+export function wornNow(userId: number): Promise<WornNow> {
+  return track('worn', async () => {
+    const j = await http<any>(`${H.avatar}/v1/users/${userId}/avatar`, { retries: 1 });
+    return {
+      assets: (j.assets ?? []).map((a: any) => ({ id: a.id, name: String(a.name ?? ''), assetTypeId: a.assetType?.id ?? 0, assetTypeName: a.assetType?.name ?? '' })),
+      avatarType: j.playerAvatarType ?? 'R15',
+    };
+  });
+}
+
+export const userAvatarThumb = (userId: number, size = '420x420') => thumbBatch('/v1/users/avatar', 'userIds', [userId], size, 'thumbs');

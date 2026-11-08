@@ -1,0 +1,21 @@
+---
+import Doc from '../layouts/Doc.astro';
+import { releases } from '../lib/changelog';
+const list = releases();
+---
+<Doc title="Changelog" lead="What changed in each version, straight from the extension’s own release notes." toc={false}>
+  {list.map((r, i) => (
+    <section class="rel" id={'v' + r.version}>
+      <h2><span class="ver">{r.version}</span>{r.title && <span class="ttl">{r.title}</span>}{i === 0 && <span class="new">Latest</span>}</h2>
+      <div set:html={r.html} />
+    </section>
+  ))}
+</Doc>
+<style is:global>
+  .rel { padding-top: 8px; }
+  .rel h2 { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 14px; margin-top: 2em; }
+  .rel .ver { font-family: var(--f-display); }
+  .rel .ttl { font-family: var(--f-body); font-weight: 600; font-size: .62em; letter-spacing: 0; color: var(--ink-2); }
+  .rel .new { font-family: var(--f-body); font-size: 12px; letter-spacing: .04em; text-transform: uppercase; background: var(--curtain); color: #fff; padding: 3px 9px; border-radius: 6px; }
+  .rel h4 { font-size: 15px; margin-top: 1.4em; font-family: var(--f-body); }
+</style>

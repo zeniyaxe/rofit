@@ -37,8 +37,8 @@ export function profileOutfits(u: { outfitCount?: number; access?: { state: stri
 export const itemUrl = (id: number) => `https://www.roblox.com/catalog/${id}`;
 export const outfitUrl = (userId: number, id: number) => `https://www.roblox.com/users/${userId}/profile#rofit/${id}`;
 
-export function download(name: string, text: string, mime = 'application/json') {
-  const url = URL.createObjectURL(new Blob([text], { type: mime }));
+export function download(name: string, text: string | Blob, mime = 'application/json') {
+  const url = URL.createObjectURL(text instanceof Blob ? text : new Blob([text], { type: mime }));
   const a = document.createElement('a');
   a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 2000);

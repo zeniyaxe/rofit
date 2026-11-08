@@ -1,3 +1,4 @@
+import { WornNow } from './WornNow.tsx';
 import { useState } from 'preact/hooks';
 import type { RpcError } from '../shared/types.ts';
 import type { AccessInfo } from '../shared/access.ts';
@@ -16,7 +17,7 @@ const LABEL: Record<Verdict, string> = { yes: 'Looks like this', maybe: 'Possibl
  * cases and identically in others, so every reason carries what RoFit actually observed and says how sure it is.
  */
 export function NoOutfits(p: {
-  userName: string; error?: RpcError; presets: number; viewer?: 'in' | 'out' | 'unknown'; via?: string;
+  userName: string; userId?: number; error?: RpcError; presets: number; viewer?: 'in' | 'out' | 'unknown'; via?: string;
   busy: boolean; onRetry: () => void; onShowPresets: () => void; access?: AccessInfo;
 }) {
   const [tech, setTech] = useState(false);
@@ -89,6 +90,7 @@ export function NoOutfits(p: {
         {p.presets > 0 && <button class="rf-btn" onClick={p.onShowPresets}>Show {plural(p.presets, 'preset')}</button>}
       </div>
 
+      {!gone && p.userId ? <WornNow key={p.userId} userId={p.userId} userName={p.userName} /> : null}
       <button class="rf-linkbtn rf-why-tech" aria-expanded={tech} onClick={() => setTech(!tech)}>{tech ? 'Hide' : 'Show'} what Roblox said</button>
       <Collapse open={tech}>
         <dl class="rf-techdl">

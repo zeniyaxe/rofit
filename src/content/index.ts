@@ -1,3 +1,4 @@
+import { startAccountIntegration } from './account.ts';
 /**
  * Profile integration. Deliberately tiny: it finds the right places on roblox.com profiles,
  * puts a native-looking Outfits tab and action button there, and loads the real UI (sheet.js)
@@ -236,10 +237,27 @@ function ensure() {
 }
 
 // ---- request proxy for the worker ---------------------------------------------------------------
-// Only our six read-only API hosts, only from our own extension, only GET or the catalog batch POST.
+// Restrict the Roblox tab proxy to the endpoints used by our RPC layer.
+const GET_OK: RegExp[] = [
+  /^https:\/\/avatar\.roblox\.com\/v1\/avatar(?:\?|$)/,
+  /^https:\/\/avatar\.roblox\.com\/v1\/users\/\d+\/(?:avatar|outfits)(?:\?|$)/,
+  /^https:\/\/avatar\.roblox\.com\/v2\/avatar\/users\/\d+\/outfits(?:\?|$)/,
+  /^https:\/\/avatar\.roblox\.com\/v3\/outfits\/\d+\/details(?:\?|$)/,
+  /^https:\/\/avatar\.roblox\.com\/v4\/outfits\/\d+\/details(?:\?|$)/,
+  /^https:\/\/thumbnails\.roblox\.com\/v1\/(?:users\/(?:outfits|avatar)|assets)\?/,
+  /^https:\/\/catalog\.roblox\.com\/v1\/catalog\/items\/details(?:\?|$)/,
+  /^https:\/\/economy\.roblox\.com\/v2\/assets\/\d+\/details(?:\?|$)/,
+  /^https:\/\/economy\.roblox\.com\/v1\/assets\/\d+\/resale-data(?:\?|$)/,
+  /^https:\/\/inventory\.roblox\.com\/v1\/users\/\d+\/items\/Asset\/\d+\/is-owned(?:\?|$)/,
+  /^https:\/\/users\.roblox\.com\/v1\/users\/\d+(?:\?|$)/,
+  /^https:\/\/users\.roblox\.com\/v1\/users\/authenticated(?:\?|$)/,
+];
+const LOOKUP_POST = /^https:\/\/users\.roblox\.com\/v1\/usernames\/users(?:\?|$)/;
+const POST_OK = /^https:\/\/catalog\.roblox\.com\/v1\/catalog\/items\/details(?:\?|$)/;
 const API_HOST = /^https:\/\/(avatar|thumbnails|catalog|economy|inventory|users)\.roblox\.com\//;
+const allowed = (url: string, method?: string) => API_HOST.test(url) && (method === 'POST' ? (POST_OK.test(url) || LOOKUP_POST.test(url)) : (!method || method === 'GET') && GET_OK.some((r) => r.test(url)));
 async function proxyFetch(m: { url: string; method?: string; body?: string; csrf?: string }) {
-  if (!API_HOST.test(m.url) || (m.method && m.method !== 'GET' && m.method !== 'POST')) return { ok: false, error: 'blocked' };
+  if (!allowed(m.url, m.method)) return { ok: false, error: 'blocked' };
   try {
     const post = m.method === 'POST';
     const r = await fetch(m.url, {
@@ -279,3 +297,5 @@ chrome.runtime.onMessage.addListener((msg, sender) => {
   if (sender.id !== chrome.runtime.id || msg?.__rofit !== 'open') return;
   open();
 });
+
+startAccountIntegration();

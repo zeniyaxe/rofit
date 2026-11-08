@@ -41,25 +41,6 @@ function h<K extends keyof HTMLElementTagNameMap>(tag: K, props?: Record<string,
 }
 
 // ---- small page behaviours ---------------------------------------------------------------------
-function navToggle() {
-  const btn = document.querySelector<HTMLButtonElement>('.menu-btn');
-  const nav = document.getElementById('nav');
-  if (!btn || !nav) return;
-  btn.addEventListener('click', () => {
-    const open = !nav.classList.contains('open');
-    nav.classList.toggle('open', open);
-    btn.setAttribute('aria-expanded', String(open));
-  });
-}
-
-async function copyText(text: string): Promise<boolean> {
-  try { await navigator.clipboard.writeText(text); return true; } catch { return false; }
-}
-function flash(btn: HTMLButtonElement, label: string) {
-  const prev = [...btn.childNodes];
-  btn.replaceChildren(ico(Check as IconNode), label);
-  setTimeout(() => btn.replaceChildren(...prev), 1600);
-}
 function copyButtons() {
   document.addEventListener('click', async (e) => {
     const btn = (e.target as Element | null)?.closest?.<HTMLButtonElement>('button[data-copy]');
@@ -111,7 +92,7 @@ const newer = (a: string, b: string) => {
 
 function downloadPage() {
   const box = document.getElementById('detect');
-  const latest = document.body.dataset.latest ?? '';
+  const latest = box?.closest<HTMLElement>('[data-release-version]')?.dataset.releaseVersion ?? '';
   if (!box) return;
   const show = (cls: string, ...kids: Kid[]) => { box.className = `note detect ${cls}`; box.replaceChildren(...kids.filter(Boolean) as (Node | string)[]); box.hidden = false; };
   whenInstalled((v) => {
@@ -242,7 +223,6 @@ async function viewerPage(root: HTMLElement) {
   await render();
 }
 
-navToggle();
 copyButtons();
 watchRoFit();
 if (document.getElementById('detect')) downloadPage();

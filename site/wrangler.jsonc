@@ -1,0 +1,6 @@
+{
+  // Cloudflare static assets deploy. Nothing here is connected to an account; deploy only when the owner says so.
+  "name": "rofit-site",
+  "compatibility_date": "2026-10-01",
+  "assets": { "directory": "./dist", "not_found_handling": "404-page", "html_handling": "auto-trailing-slash" }
+}

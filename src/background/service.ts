@@ -400,6 +400,11 @@ export function makeHandlers(extra: { diag: () => Promise<Rpc['diag.get']['res']
       if (!me) return { me: null, avatar: null };
       return { me, avatar: await rbx.myAvatar() };
     },
+    'user.worn': async (r) => {
+      const w = await rbx.wornNow(r.userId);
+      const t = (await rbx.userAvatarThumb(r.userId).catch(() => ({} as Record<number, { state: string; url: string | null }>)))[r.userId];
+      return { ...w, thumb: t ?? null };
+    },
     'history.list': async (r) => (await db.getAllByIndex<Snapshot>('snapshots', 'outfitKey', outfitKey(r.userId, r.id))).sort((a, b) => b.at - a.at),
     'library.list': () => db.getAll<LibraryEntry>('library').then((l) => l.sort((a, b) => b.savedAt - a.savedAt)),
     'library.keys': async () => (await db.getAll<LibraryEntry>('library')).map((l) => l.key),

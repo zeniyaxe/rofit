@@ -127,7 +127,7 @@ export interface RpcError {
 }
 
 export type Capability =
-  | 'list' | 'thumbs' | 'details' | 'catalog' | 'economy' | 'ownership' | 'resale' | 'myAvatar' | 'users' | 'access';
+  | 'list' | 'thumbs' | 'details' | 'catalog' | 'economy' | 'ownership' | 'resale' | 'myAvatar' | 'users' | 'access' | 'worn';
 export interface CapState { ok: boolean; at: number; error?: string }
 
 export const outfitKey = (userId: number, id: number) => `${userId}:${id}`;

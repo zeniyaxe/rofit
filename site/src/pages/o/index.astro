@@ -1,0 +1,13 @@
+---
+import '../../styles/ported.css';
+import Doc from '../../layouts/Doc.astro';
+import { viewer } from '../../pages.mjs';
+
+---
+<Doc title="Shared outfit" lead="Open a snapshot shared from RoFit." toc={false}>
+  <div class="ported">
+  <Fragment set:html={viewer()} />
+  </div>
+
+</Doc>
+<script>import '../../app.ts';</script>

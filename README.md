@@ -4,7 +4,7 @@ A Manifest V3 extension (Chrome, Edge, Brave) for exploring **the outfits a Robl
 
 Saved outfits are the whole point. RoFit does not substitute bundles, inventory, the currently-worn avatar or catalog favorites, and it never works around Roblox's outfit privacy.
 
-Website: [rofit.site](https://rofit.site) (source in [`site/`](site/README.md)): download, docs, privacy policy and the share-link viewer.
+Website: [rofit.site](https://rofit.site) (source in [`site/`](site/README.md)): interactive demos, download, docs, release notes, privacy policy and the share-link viewer.
 
 ## Install
 

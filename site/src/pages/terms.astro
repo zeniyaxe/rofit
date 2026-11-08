@@ -1,0 +1,43 @@
+---
+import Doc from '../layouts/Doc.astro';
+import { LEGAL, LINKS } from '../config';
+---
+<Doc title="Terms" lead="The rules for using RoFit and this site, written to be read." meta={`Last updated ${LEGAL.updated}`}>
+  {/* LEGAL REVIEW FLAG: plain-language draft. Licence, warranty/liability wording, governing law and operator identity need the owner's decision and ideally a lawyer. See site/LEGAL-REVIEW.md. */}
+
+  <h2>What RoFit is</h2>
+  <p>RoFit is a free browser extension that adds an Outfits view to Roblox profiles. It is an independent project. It is not made, endorsed or sponsored by Roblox Corporation, and “Roblox” is a trademark of Roblox Corporation.</p>
+
+  <h2>Using it</h2>
+  <ul>
+    <li>RoFit is for looking at information Roblox already makes available to you. Do not use it to harass anyone, to try to get around a player’s privacy settings, or to break Roblox’s rules.</li>
+    <li>You are responsible for how you use what you see, including anything you share with the image card. Be considerate about posting other people’s outfits.</li>
+    <li>RoFit shows what Roblox returns. Roblox decides what is available, and may change or remove it at any time, which can change what RoFit shows or stop it working.</li>
+  </ul>
+
+  <h2>Prices and data</h2>
+  <p>Prices, ownership and availability come from Roblox and may be out of date, incomplete or wrong. RoFit labels where each figure came from. Do not make purchases based only on RoFit; check the item on Roblox first.</p>
+
+  <h2>No warranty</h2>
+  <p>RoFit is provided “as is”, without any warranty that it is accurate, will keep working, or is suited to any purpose. To the extent the law allows, the project is not liable for losses arising from using it.</p>
+
+  <h2>Source code and licence</h2>
+  <p>The source is on <a href={LINKS.github} rel="noopener">GitHub</a>. The licence that applies to the code has not been chosen yet, so until one is published, assume the code is not licensed for reuse.</p>
+
+  <h2>Roblox’s own terms</h2>
+  <p>Using Roblox is governed by Roblox’s terms. RoFit does not replace or change them.</p>
+
+  <h2>This website</h2>
+  <p>Avatar pictures and item images on this site come from real public Roblox profiles, labelled and dated, described below. The logo, page artwork and illustrations are made for RoFit. Please do not present this site or the extension as yours or as made by Roblox.</p>
+
+  <h2>Real Roblox profiles in the demo</h2>
+  <p>The demo can show real Roblox profiles. They are labelled as such and dated. Everything shown is what Roblox exposed to any signed-out visitor on that date, fetched once from Roblox’s public endpoints and stored as static files. The site makes no Roblox requests when you visit it. Nothing private is shown, and nothing is shown about anyone whose outfits Roblox did not make public.</p>
+  <p>The featured players, the creators of the items they wear, and Roblox Corporation are not affiliated with, sponsoring or endorsing RoFit, and being shown is not an endorsement by them. Avatar images and item names belong to their respective owners. To have a profile removed from the demo, email <a href="mailto:support@rofit.site">support@rofit.site</a> and it will be taken out of the next build.</p>
+
+  <h2>Changes</h2>
+  <p>These terms may change. The date at the top shows when they last did.</p>
+
+  <h2>Contact</h2>
+  <p>See the <a href="/support">support page</a>.</p>
+  <p class="callout"><strong>Not yet decided:</strong> the licence, the legal operator and the governing law. They are left out rather than guessed.</p>
+</Doc>

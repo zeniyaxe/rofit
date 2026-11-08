@@ -17,6 +17,9 @@ jobs:
         with:
           node-version: 24
           cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            site/package-lock.json
       - run: npm ci
       - run: npm run typecheck
       - run: npm test
@@ -30,4 +33,8 @@ jobs:
             exit 1
           fi
       - name: Build rofit.site
-        run: node site/build.mjs
+        working-directory: site
+        run: |
+          npm ci
+          npm test
+          npm run build

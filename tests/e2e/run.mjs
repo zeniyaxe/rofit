@@ -24,7 +24,7 @@ const watch = (page) => {
   ok('manifest is MV3 with scoped permissions', manifest.manifest_version === 3 && manifest.permissions.join() === 'storage,alarms,activeTab' && manifest.host_permissions.every((h) => /^https:\/\/[a-z]+\.roblox\.com\/\*$/.test(h)));
   const matches = manifest.content_scripts.flatMap((c) => c.matches).sort().join();
   ok('content scripts run on roblox.com profiles and rofit.site only', matches === 'https://rofit.site/*,https://www.roblox.com/*', matches);
-  ok('only sheet.js is web-accessible, and only to roblox.com', JSON.stringify(manifest.web_accessible_resources.map((w) => [w.resources, w.matches])) === '[[["sheet.js"],["https://www.roblox.com/*"]]]');
+  ok('only sheet.js and account.js are web-accessible, and only to roblox.com', JSON.stringify(manifest.web_accessible_resources.map((w) => [w.resources, w.matches])) === '[[["sheet.js","account.js"],["https://www.roblox.com/*"]]]');
 
   const page = await openProfile(ctx, 156);
   watch(page);

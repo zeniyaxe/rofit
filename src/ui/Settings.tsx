@@ -172,6 +172,7 @@ function PrivacyNotes() {
 }
 
 const CAPS: Record<Capability, [string, string]> = {
+  worn: ["Currently worn avatar", "Roblox avatar API"],
   list: ['Outfit lists', 'avatar.roblox.com v2 (v1 fallback)'],
   details: ['Outfit details', 'avatar.roblox.com v3 (v4 fallback)'],
   access: ['Public check', 'avatar.roblox.com v2, without your session'],
@@ -256,6 +257,7 @@ function About() {
   const [ver] = useState(() => chrome.runtime.getManifest().version);
   return (
     <div class="rf-about">
+      <a href={chrome.runtime.getURL("workspace.html#welcome")} target="_blank" rel="noopener noreferrer">Replay welcome</a>
       <div class="rf-about-h"><span class="rf-logo sm"><Ico n="outfit" size={18} /></span><div><b>RoFit {ver}</b><span class="rf-muted rf-small">Browse, inspect, compare and keep the outfits people save on Roblox.</span></div></div>
       <p class="rf-setp">Not affiliated with Roblox Corporation. RoFit reads the same public endpoints the Roblox website uses and shows only what Roblox returns to you.</p>
       <p class="rf-muted rf-small">Built with Preact (MIT) and Lucide icons (ISC); licence texts ship in the extension’s <code>licenses/</code> folder.</p>

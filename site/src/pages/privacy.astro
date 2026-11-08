@@ -1,0 +1,66 @@
+---
+import Doc from '../layouts/Doc.astro';
+import { facts, PERMISSION_WORDS, HOST_WORDS } from '../lib/privacy';
+import { LEGAL, LINKS } from '../config';
+const hostName = (h: string) => h.replace('https://', '').replace('/*', '');
+---
+<Doc title="Privacy" lead="RoFit collects nothing. No account, no analytics, no server of ours that your data goes to. Here is exactly what that means." meta={`Last updated ${LEGAL.updated} · Describes RoFit ${facts.version}`}>
+  {/* LEGAL REVIEW FLAG: plain-language draft written by the project. See site/LEGAL-REVIEW.md before relying on it. */}
+
+  <h2>The short version</h2>
+  <ul>
+    <li>RoFit does not collect, transmit, sell or share personal data. There is no RoFit server to send it to.</li>
+    <li>The only network requests RoFit makes go to Roblox, to read information Roblox already shows you.</li>
+    <li>What you save (settings, your library of outfits, notes and tags) stays in your browser on your device.</li>
+    <li>This website has no analytics, no cookies and no trackers. It stores your theme and motion choice in your browser, only if you change them.</li>
+  </ul>
+
+  <h2>What the extension does with data</h2>
+  <h3>It reads from Roblox</h3>
+  <p>When you open a profile’s Outfits, RoFit asks Roblox for that player’s saved outfits, the items in them, pictures and prices. These requests go straight from your browser to Roblox, using the Roblox tab you already have open, so Roblox sees them as coming from you. RoFit does not receive a copy and cannot see your password or your Roblox cookies.</p>
+  <h3>Visibility and sharing</h3>
+  <p>RoFit can check an outfit list without your Roblox session to see whether it is public. If Roblox refuses access, cached copies of the profile list stay hidden. Sharing a snapshot puts it in the link fragment, which browsers keep out of server requests. The shared-outfit viewer may load images from Roblox’s CDN. The extension can report its installed version to this site and open a share import for review when you choose Save to RoFit.</p>
+  <h3>It remembers things on your device</h3>
+  <p>RoFit keeps a cache of what Roblox returned, your settings, and the outfits you choose to save to your library, in your browser’s own storage (IndexedDB and extension storage). It never leaves your device unless you export it yourself. A daily cleanup deletes cache entries that are too old. <em>Settings → Privacy &amp; storage</em> can erase everything, and removing the extension deletes it too.</p>
+  <h3>What it does not do</h3>
+  <ul>
+    <li>It does not change your avatar or any account setting. It only reads.</li>
+    <li>It does not read your cookies or password, and has no permission to.</li>
+    <li>It does not load or run code from the internet. Everything it runs ships inside the extension.</li>
+    <li>It does not bypass outfit privacy. If a player has made their outfits private, RoFit shows what Roblox returned and nothing more.</li>
+  </ul>
+
+  <h2>Permissions, in plain words</h2>
+  <p>This table is generated from the extension’s manifest when this site is built, so it cannot drift from what the extension requests.</p>
+  <table>
+    <thead><tr><th>Permission</th><th>What it is for</th></tr></thead>
+    <tbody>
+      {facts.permissions.map((p) => <tr><td><code>{p}</code></td><td><strong>{PERMISSION_WORDS[p].name}.</strong> {PERMISSION_WORDS[p].why}</td></tr>)}
+      {facts.hostPermissions.map((h) => <tr><td><code>{hostName(h)}</code></td><td>{HOST_WORDS[h]}</td></tr>)}
+      {facts.contentMatches.map((m) => <tr><td><code>{m.replace('/*', '')}</code></td><td>The pages RoFit adds to: the Outfits tab and button on profiles, and a “RoFit settings” entry on the account settings page.</td></tr>)}
+    </tbody>
+  </table>
+
+  <h2>Roblox and your account</h2>
+  <p>Roblox handles its own data under its own terms and privacy policy. RoFit does not change what Roblox collects about you. Because RoFit’s requests run in your Roblox tab, Roblox may see them the same way it sees any request from that tab.</p>
+
+  <h2>Real profiles shown in the demo</h2>
+  <p>The website’s homepage and demo show a small number of real, public Roblox profiles: the player’s name, their public saved outfits and the items in them, as Roblox showed any signed-out visitor on the date shown. It is captured once and served as static files, so your visit sends nothing to Roblox. It is not personal data you give us, and nothing private is included. A featured player can ask for removal at <a href="mailto:support@rofit.site">support@rofit.site</a>.</p>
+
+  <h2>Children</h2>
+  <p>RoFit has no accounts and collects no information, including from children. Roblox sets its own age rules for its service.</p>
+
+  <h2>This website</h2>
+  <p>rofit.site is a static site. It sets no cookies and loads no third-party scripts, fonts or trackers. Pages are served by the host the project chooses, which, like any web host, may keep ordinary server logs under its own policy. Your display preferences (theme, motion) are stored with <code>localStorage</code> on your device.</p>
+  <p>If you email the project, the message and your address are used only to answer you.</p>
+
+  <h2>Changes to this policy</h2>
+  <p>If the extension’s data practices change, this page changes before the update ships, and the <a href="/changelog">changelog</a> says so. The version of the extension this page describes is at the top.</p>
+
+  <h2>Questions</h2>
+  <p>
+    {LINKS.supportEmail ? <>Write to <a href={`mailto:${LINKS.supportEmail}`}>{LINKS.supportEmail}</a>, or </> : <>A contact address will be listed on the <a href="/support">support page</a>. For now, </>}
+    <a href={LINKS.issues} rel="noopener">open an issue on GitHub</a>.
+  </p>
+  <p class="callout"><strong>Operator:</strong> {LEGAL.operator}. A named legal operator and jurisdiction have not been published yet.</p>
+</Doc>

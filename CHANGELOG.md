@@ -48,6 +48,26 @@
 - The website's changelog renderer only links to `https:` URLs, site paths and anchors (`//host` and `/\host` don't count as site paths).
 - New tests: search ranking, share-link encoding and hostile payloads, deep-link parsing, access states and hiding cached copies after a refusal, settings migration, backup validation, v3/v4 details, thumbnail caching, bulk library edits, price labels, website pages and CSP, changelog escaping, viewer XSS cases, and the bridge end to end. The live-site regression suite covers the new toolbar, filters, palette, shortcuts, visibility badge, share link round trip and import.
 
+## 1.5.0 — Local build · private profiles, tighter proxy, smaller pages
+- **Private outfits no longer a dead end.** When Roblox hides someone's saved outfits (often because their inventory is private, which Roblox ties together), RoFit now also shows **what they're wearing right now**: a render and every item with price and creator, clearly labelled "not a saved outfit". That is public on every profile, so nothing is bypassed. Saved outfits still only appear when Roblox returns them.
+- **Clearer wording** on the "why no outfits" screen about inventory privacy.
+- **Safer request proxy:** the roblox.com tab now forwards only the exact endpoints RoFit uses (plus the catalog batch lookup), not everything on those six hosts.
+- **Donate** (popup and settings) opens the project's Roblox store page; the popup footer links got icons.
+- Slightly smaller bundles (stylesheet is minified once).
+
+## 1.4.0 — Local build · welcome, what's new, official site
+- **Welcome page redone:** staggered title, a self-playing demo of the product (tab appears, gets clicked, outfits load, one opens), links to rofit.site and GitHub. Calm mode shows the finished state.
+- **What's new tab** after real updates (new major.minor), opened in the background; patch updates only light the toolbar badge, which the popup clears. Settings → About → Replay welcome.
+- **Official site** (rofit.site) in the popup, About, welcome and manifest.
+- Popup: Settings, Official site, Library, Star/Donate, Report a problem, GitHub.
+- Settings panel inside roblox.com/my/account now lays out in the page (no overlay), grows with its content and stays short; storage and diagnostics stay on RoFit's own page.
+
+## 1.3.0 — Local build · popup, native settings, outfit cards
+- **Toolbar popup redone:** big RoFit wordmark, an "Open outfits" action when you're on a profile, **Extension Settings**, **Star on GitHub** (or **Donate**, see `src/shared/links.ts`), Library and GitHub icons.
+- **Settings now live inside Roblox's own account settings** (roblox.com/my/account): a "RoFit settings" entry in its left list opens a compact, native-styled panel. The entry is found by its neighbours' labels, not class names, and #!/rofit falls back to RoFit's own settings page if Roblox's list can't be found. Also available as Settings in the popup.
+- **New settings:** default order, read outfits automatically (bounded), keyboard shortcuts on/off, and an About section (GitHub, report a problem, optional Donate).
+- **Shareable outfit card:** Inspector → More → Save as image / Copy image. A 1200×675 PNG with the render, items, prices and total, drawn locally on a canvas.
+
 ## 1.2.0 — privacy clarity, signed-in requests, popup
 - **Why no outfits?** New explanation screen with the actual evidence: Roblox's own refusal text, whether it saw a signed-in viewer, presets-only, empty-vs-private. Roblox introduced outfit privacy in Nov 2025; RoFit shows what Roblox returns to you and never works around it (no fallback to older endpoints on a 403).
 - **Fixed: requests were anonymous.** A service worker's fetch drops SameSite=Lax cookies (verified), so Roblox saw RoFit as signed out; friends-only outfits and ownership checks could silently fail. Requests now run inside an open roblox.com tab (same-site, carries your session) and fall back to the worker. Settings → Diagnostics says which path was used.

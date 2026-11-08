@@ -1,0 +1,21 @@
+---
+import Base from '../layouts/Base.astro';
+---
+<Base title="Not found" noindex>
+  <section class="lost">
+    <div class="wrap">
+      <p class="code">404</p>
+      <h1>This hanger is empty.</h1>
+      <p>That page isn’t here. It may have moved, or the link may be mistyped.</p>
+      <p class="row"><a class="btn btn-solid" href="/">Back to the fitting room</a><a class="btn btn-ghost" href="/guides">Browse the guides</a></p>
+    </div>
+  </section>
+</Base>
+<style>
+  .lost { padding: calc(var(--nav-h) + 90px) 0 40px; min-height: 70svh; }
+  .code { font-family: var(--f-display); font-weight: 800; color: var(--curtain); font-size: 20px; }
+  h1 { font-size: clamp(2.4rem, 6vw, 5rem); margin-top: 10px; max-width: 14ch; }
+  p { color: var(--ink-2); margin-top: 16px; max-width: 46ch; }
+  .row { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 28px; }
+  .btn-ghost { color: var(--ink); }
+</style>

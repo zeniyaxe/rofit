@@ -96,6 +96,15 @@ chrome.runtime.onMessage.addListener((msg, sender, send) => {
 chrome.runtime.onInstalled.addListener(async (d) => {
   chrome.alarms.create('rofit-prune', { periodInMinutes: 60 * 24 });
   if (d.reason === 'install') await chrome.tabs.create({ url: chrome.runtime.getURL('workspace.html#welcome') });
+  if (d.reason === 'update') {
+    // A real release (new major.minor) gets a What's new tab, opened in the background so it never steals focus;
+    // patches only light the toolbar badge. The popup clears it.
+    const [pa, pb] = (d.previousVersion ?? '0.0').split('.');
+    const [a, b] = chrome.runtime.getManifest().version.split('.');
+    if (pa !== a || pb !== b) await chrome.tabs.create({ url: chrome.runtime.getURL('workspace.html#whatsnew'), active: false });
+    await chrome.action.setBadgeBackgroundColor({ color: '#335fff' });
+    await chrome.action.setBadgeText({ text: 'NEW' });
+  }
 });
 
 chrome.alarms.onAlarm.addListener(async (a) => {

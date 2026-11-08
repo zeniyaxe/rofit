@@ -1,0 +1,26 @@
+{
+  "name": "rofit-site",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node scripts/build-demo.mjs && astro dev",
+    "build": "node scripts/build-demo.mjs && node scripts/check-claims.mjs && astro build",
+    "preview": "astro preview",
+    "test": "node scripts/check-claims.mjs && node --test tests/",
+    "test:e2e": "node tests/e2e/run.mjs"
+  },
+  "dependencies": {
+    "@fontsource-variable/bricolage-grotesque": "^5.3.0",
+    "@fontsource-variable/figtree": "^5.3.0",
+    "@fontsource-variable/gabarito": "^5.3.0",
+    "@fontsource-variable/onest": "^5.3.1",
+    "@fontsource-variable/unbounded": "^5.3.0",
+    "astro": "^7.3.6"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.2",
+    "playwright": "^1.63.0",
+    "typescript": "^7.0.2"
+  }
+}

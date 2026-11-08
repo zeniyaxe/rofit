@@ -297,14 +297,14 @@ export function Explorer(p: Props) {
 
       <div class="rf-scroll" id="rf-explorer-scroll">
         {list.phase === 'error' && !list.outfits.length ? (
-          <NoOutfits userName={p.userName} error={list.error} presets={0} viewer={list.error?.viewer} busy={false} onRetry={list.refresh} onShowPresets={() => saveSettings({ showPresets: true })} />
+          <NoOutfits userId={p.userId} userName={p.userName} error={list.error} presets={0} viewer={list.error?.viewer} busy={false} onRetry={list.refresh} onShowPresets={() => saveSettings({ showPresets: true })} />
         ) : loading ? (
           <div class={'rf-grid ' + st.density}>{Array.from({ length: 12 }, (_, i) => <div class="rf-card sk" key={i}><div class="rf-thumb"><div class="rf-skel" /></div><div class="rf-sk-l" /></div>)}</div>
         ) : view === 'items' && indexedCount > 0 ? (
           <ItemsView details={p.details} pool={pool} onFilter={(x) => { p.setItemFilter(x); setView('outfits'); }} onOpen={p.onOpen} onToggle={p.onToggle} multi={p.multi} />
         ) : rows.length === 0 ? (
           pool.length === 0 ? (
-            <NoOutfits userName={p.userName} presets={presets.length} viewer={list.viewer} via={list.via} busy={list.phase === 'syncing'} onRetry={list.refresh} onShowPresets={() => saveSettings({ showPresets: true })} access={list.access} />
+            <NoOutfits userId={p.userId} userName={p.userName} presets={presets.length} viewer={list.viewer} via={list.via} busy={list.phase === 'syncing'} onRetry={list.refresh} onShowPresets={() => saveSettings({ showPresets: true })} access={list.access} />
           ) : (
             <Empty icon="search" title="No outfits match" body={
               needsPrices && unpriced > 0 ? `Price filters only use outfits whose items all have prices. ${plural(unpriced, 'outfit')} aren’t priced yet.`

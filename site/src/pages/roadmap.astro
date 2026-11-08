@@ -1,0 +1,31 @@
+---
+import Doc from '../layouts/Doc.astro';
+---
+<Doc title="Roadmap" lead="What’s waiting on a decision, what might come next, and what RoFit will deliberately never do. No dates, because dates would be guesses." toc={false}>
+  <h2>Waiting on the project owner</h2>
+  <ul>
+    <li><strong>Chrome Web Store listing.</strong> The extension is ready to package. Publishing needs a store account and the listing text, which the owner has to supply.</li>
+    <li><strong>A source licence.</strong> None is published yet, so the code isn’t licensed for reuse.</li>
+    <li><strong>A support address and a private place to report vulnerabilities.</strong></li>
+  </ul>
+
+  <h2>Possible next</h2>
+  <ul>
+    <li><strong>A Firefox build.</strong> It needs a manifest variant and testing on real Firefox. Nothing has been built, so it isn’t offered.</li>
+    <li><strong>A signed-in check of the account-settings entry.</strong> It is built and tested against the page structure, but needs a check while signed in before it can be called solid.</li>
+    <li><strong>More guides</strong> as people ask questions.</li>
+  </ul>
+
+  <h2>Done</h2>
+  <p>Everything in the <a href="/changelog">changelog</a>: saved-outfit browsing, inspector, compare, library, share cards, privacy explanations, settings, welcome.</p>
+
+  <h2>Not building</h2>
+  <p>These are decisions, not gaps.</p>
+  <ul>
+    <li><strong>Wearing or equipping an outfit.</strong> It would need writes to your account, and one misclick could change your avatar. RoFit stays read-only.</li>
+    <li><strong>Getting around outfit privacy.</strong> If a player hides their outfits, they stay hidden.</li>
+    <li><strong>Analytics, accounts or ads.</strong> There is nowhere to send data and nothing to sign up for.</li>
+    <li><strong>Price-watch alerts.</strong> They would need background polling of Roblox.</li>
+    <li><strong>Interactive 3D.</strong> Roblox has no supported public API for it. Outfit images are Roblox’s own renders.</li>
+  </ul>
+</Doc>

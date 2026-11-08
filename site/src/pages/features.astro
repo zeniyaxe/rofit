@@ -1,0 +1,12 @@
+---
+import '../styles/ported.css';
+import Doc from '../layouts/Doc.astro';
+import { features } from '../pages.mjs';
+
+---
+<Doc title="Features" lead="Explore what RoFit can do." toc={false}>
+  <div class="ported">
+  <Fragment set:html={features()} />
+  </div>
+<p><a href="/#demo">Try the interactive demo</a></p>
+</Doc>

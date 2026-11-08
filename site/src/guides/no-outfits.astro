@@ -1,0 +1,29 @@
+<p>You open a profile, press Outfits, and there’s nothing. That has several causes, and RoFit tells you which ones the evidence supports instead of guessing.</p>
+<p class="callout"><strong>Short version:</strong> since late 2025 Roblox lets players limit who can see their saved outfits. An empty list often means “hidden from you”, not “none”. RoFit doesn’t and won’t work around that.</p>
+
+<h2>The reasons</h2>
+<h3>1. The player made their outfits private</h3>
+<p>Roblox answered the request with a refusal. RoFit shows Roblox’s own refusal text. This is the most common cause, and the only fix is on the player’s side.</p>
+<h3>2. They share outfits only with friends, and you’re not one</h3>
+<p>From the outside this looks the same as case 1. It can’t be told apart without access you don’t have.</p>
+<h3>3. You’re signed out of Roblox in this browser</h3>
+<p>Friends-only outfits stay hidden from signed-out visitors. RoFit’s requests carry your Roblox session through the tab you have open. Sign in on roblox.com, reload, and try “Check again”.</p>
+<h3>4. They only have Roblox’s built-in presets</h3>
+<p>Roblox supplies default outfits like Robloxian 2.0. RoFit hides these unless you ask, because they aren’t saves. A profile with only presets counts as having no saved outfits.</p>
+<h3>5. They really have none</h3>
+<p>Some players never save an outfit.</p>
+<h3>6. Roblox didn’t answer</h3>
+<p>Rate limits (HTTP 429), a network error or an outage. RoFit reports this separately from a refusal and backs off. Wait a minute and check again.</p>
+<h3>7. The profile doesn’t exist</h3>
+<p>A deleted or banned account answers as not found.</p>
+
+<h2>Telling them apart in RoFit</h2>
+<p>The empty screen lists each reason as “Looks like this” or “Ruled out”, with the evidence: what Roblox said, whether it saw you as signed in, and whether only presets exist. You can see it live in <a href="/#demo">the demo</a> by choosing the profile named <em>quiet</em>.</p>
+
+<h2>What RoFit will never do</h2>
+<ul>
+  <li>Try a different endpoint to get around a refusal.</li>
+  <li>Guess a player’s outfits from their inventory, favourites or what they’re wearing, and present them as saved outfits.</li>
+  <li>Read your cookies or tokens to make requests look different.</li>
+</ul>
+<p>If you want to see someone’s outfits, ask them to share them.</p>

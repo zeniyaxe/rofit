@@ -5,6 +5,7 @@ import { typeName } from '../shared/assetTypes.ts';
 import { rpc } from '../shared/rpc.ts';
 import type { Settings } from '../shared/settings.ts';
 import { DURATION, type MotionLevel } from '../shared/motion.ts';
+import { renderCard, type CardData } from './shareCard.ts';
 import type { AccessInfo } from '../shared/access.ts';
 import { Ico } from './icons.tsx';
 import { Chip, Confirm, Empty, Menu, Spinner, Swatch, Thumb, useToast, type MenuItem } from './primitives.tsx';
@@ -92,9 +93,35 @@ export function Inspector(p: InspectorProps) {
   }, null, 2);
 
   const doCopy = async (text: string, what: string) => { toast((await copy(text)) ? `Copied ${what}` : 'Couldn’t copy'); };
+  // Shareable card: drawn locally on a canvas, nothing leaves the browser.
+  const makeCard = async (): Promise<Blob> => {
+    const rootEl = (scroller.current?.closest('.rf') ?? document.body) as Element;
+    const data: CardData = {
+      title: d!.name || p.outfit.name, owner: p.userName, meta: `${d!.avatarType} · ${plural(d!.assets.length, 'item')}`,
+      avatarUrl: heroRef.current?.querySelector('img')?.currentSrc || undefined,
+      items: list.map((v) => {
+        const pk = priceKind(v);
+        return {
+          name: v.rec?.name ?? v.ref?.name ?? String(v.id), sub: typeName(v.ref?.assetTypeId ?? v.rec?.assetTypeId ?? 0, v.ref?.assetTypeName),
+          price: pk.kind === 'onsale' ? robux(pk.amount!) : pk.kind === 'free' ? 'Free' : pk.kind === 'resale' ? robux(pk.amount!) : undefined,
+          flag: pk.kind === 'resale' ? 'resale' : pk.kind === 'offsale' ? 'off sale' : pk.kind === 'unknown' ? 'no data' : undefined, thumb: v.rec?.thumb,
+        };
+      }),
+      total: sumAll.buyCount > 0 ? robux(sumAll.buyNow) : sumAll.free > 0 ? 'Free' : 'Nothing on sale',
+      totalNote: sumAll.buyCount > 0 ? 'to buy new today' + (sumAll.resaleCount ? ` · +${robux(sumAll.resale)} from resellers` : '') : 'none of these can be bought new right now',
+    };
+    return renderCard(rootEl, data);
+  };
+  const saveImage = async () => { try { download(`rofit-${p.outfit.id}.png`, await makeCard(), 'image/png'); toast('Saved the outfit card'); } catch { toast('Couldn’t make the card', { tone: 'warn' }); } };
+  const copyImage = async () => { try { await navigator.clipboard.write([new ClipboardItem({ 'image/png': makeCard() })]); toast('Copied the outfit card'); } catch { toast('Couldn’t copy the image', { tone: 'warn' }); } };
+
   const menu: MenuItem[] = d ? [
     { label: 'Copy outfit ID', icon: 'hash', onClick: () => doCopy(String(p.outfit.id), 'outfit ID') },
     { label: 'Copy profile link to this outfit', icon: 'link', hint: 'needs RoFit', onClick: () => doCopy(outfitUrl(p.userId, p.outfit.id), 'link') },
+    ...(p.access?.state === 'public' || p.access?.state === 'owner' ? [
+      { label: 'Save as image', icon: 'download' as const, hint: 'PNG', onClick: saveImage },
+      { label: 'Copy image', icon: 'copy' as const, onClick: copyImage },
+    ] : []),
     { label: 'Share a snapshot link…', icon: 'share', onClick: () => setSharing(true) },
     { sep: true },
     { label: 'Copy item IDs', icon: 'copy', onClick: () => doCopy(d.assets.map((a) => a.id).join(', '), `${d.assets.length} item IDs`) },

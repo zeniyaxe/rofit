@@ -1,0 +1,4 @@
+/* Demo-only adjustments around the real RoFit UI. */
+.rf-demo { position: relative; height: 100%; display: flex; flex-direction: column; background: var(--rf-bg); font-family: inherit; }
+.rf-demo .rf-shell { flex: 1; min-height: 0; }
+.rf-demo-note { position: absolute; left: 50%; bottom: 18px; transform: translateX(-50%); z-index: 50; padding: 10px 16px; border-radius: 10px; background: var(--rf-fg); color: var(--rf-bg); font-weight: 600; font-size: 13px; box-shadow: 0 8px 24px rgb(0 0 0 / .25); animation: rf-toast .4s var(--rf-spring) backwards; max-width: calc(100% - 32px); text-align: center; }

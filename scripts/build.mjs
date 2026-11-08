@@ -15,6 +15,7 @@ const common = {
 };
 
 const targets = [
+  { entryPoints: { account: 'src/content/account.tsx' }, format: 'esm' },
   { entryPoints: { background: 'src/background/index.ts' }, format: 'esm' },
   { entryPoints: { content: 'src/content/index.ts' }, format: 'iife' },
   { entryPoints: { sheet: 'src/content/sheet.tsx' }, format: 'esm' },

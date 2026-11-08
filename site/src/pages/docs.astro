@@ -1,0 +1,13 @@
+---
+import '../styles/ported.css';
+import Doc from '../layouts/Doc.astro';
+import { docs } from '../pages.mjs';
+
+---
+<Doc title="Docs" lead="Learn how to use RoFit." toc={false}>
+  <div class="ported">
+  <Fragment set:html={docs()} />
+  </div>
+<p><a href="/guides/">Browse the illustrated guides</a></p>
+</Doc>
+<script>import '../app.ts';</script>

@@ -1,0 +1,13 @@
+---
+import '../styles/ported.css';
+import Doc from '../layouts/Doc.astro';
+import { download } from '../pages.mjs';
+import pkg from '../../../package.json';
+---
+<Doc title="Download" lead="Install or update RoFit." toc={false}>
+  <div class="ported">
+  <div data-release-version={pkg.version}><Fragment set:html={download({ version: pkg.version })} /></div>
+  </div>
+
+</Doc>
+<script>import '../app.ts';</script>

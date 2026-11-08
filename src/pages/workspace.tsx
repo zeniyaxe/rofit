@@ -54,7 +54,7 @@ function Page() {
   useEffect(() => { if (route.openKey) history.replaceState(null, '', '#library'); }, [route.openKey]);
   return (
     <div class={'rf rf-page' + motionClass(motion)} style={vars as any}>
-      {page === 'welcome' ? <Welcome onDone={(r) => go(r ?? 'library')} /> : (
+      {(page === 'welcome' || location.hash === '#whatsnew') ? <Welcome mode={location.hash === '#whatsnew' ? 'whatsnew' : 'welcome'} onDone={(r) => go(r ?? 'library')} /> : (
         <>
           <nav class="rf-pnav" aria-label="RoFit">
             <b class="rf-pbrand"><Ico n="outfit" size={18} />RoFit</b>

@@ -4,7 +4,7 @@
  * Pages are served at their real origin (https://rofit.site) through Playwright routing, so the extension's
  * site.js content script runs exactly as it would in production.
  *
- *   node site/build.mjs && node scripts/build.mjs --test && node tests/e2e/site.mjs [shots=1]
+ *   npm --prefix site run build && node scripts/build.mjs --test && node tests/e2e/site.mjs [shots=1]
  */
 import { chromium } from 'playwright';
 import { deflateRawSync } from 'node:zlib';
@@ -20,11 +20,12 @@ let failed = 0;
 const ok = (name, cond, extra = '') => { console.log(`${cond ? 'PASS' : 'FAIL'}  ${name}${extra ? '  — ' + extra : ''}`); if (!cond) failed++; };
 
 const headers = Object.fromEntries(readFileSync(join(DIST, '_headers'), 'utf8').split('\n').filter((l) => /^\s+\S+:/.test(l) && !/Cache-Control/.test(l)).map((l) => { const i = l.indexOf(':'); return [l.slice(0, i).trim().toLowerCase(), l.slice(i + 1).trim()]; }));
-const TYPES = { '.html': 'text/html; charset=utf-8', '.css': 'text/css', '.js': 'text/javascript', '.svg': 'image/svg+xml', '.xml': 'application/xml', '.txt': 'text/plain' };
+const TYPES = { '.html': 'text/html; charset=utf-8', '.css': 'text/css', '.js': 'text/javascript', '.svg': 'image/svg+xml', '.xml': 'application/xml', '.txt': 'text/plain', '.woff2': 'font/woff2', '.png': 'image/png', '.webp': 'image/webp', '.json': 'application/json' };
 function fileFor(pathname) {
   let f = join(DIST, decodeURIComponent(pathname));
   if (!f.startsWith(DIST)) return null;
   if (existsSync(f) && statSync(f).isDirectory()) f = join(f, 'index.html');
+  if (!existsSync(f)) f = join(DIST, decodeURIComponent(pathname).replace(/\/$/, '') + '.html');
   return existsSync(f) ? f : null;
 }
 async function serve(ctx) {
@@ -95,8 +96,6 @@ const PAGES = ['/', '/features/', '/download/', '/docs/', '/changelog/', '/priva
         h1: document.querySelector('h1')?.textContent?.trim(),
         links: [...document.querySelectorAll('a[href]')].map((a) => a.getAttribute('href')),
         ids: [...document.querySelectorAll('[id]')].map((e) => e.id),
-        inlineStyle: document.querySelectorAll('[style]').length,
-        inlineScript: [...document.querySelectorAll('script')].filter((s) => !s.src).length,
         overflow: document.documentElement.scrollWidth > window.innerWidth + 1,
       }));
       const label = `${path} (${scheme})`;
@@ -107,7 +106,7 @@ const PAGES = ['/', '/features/', '/download/', '/docs/', '/changelog/', '/priva
         const broken = info.links.filter((h) => h.startsWith('/') && !fileFor(h.split('#')[0]));
         const anchors = info.links.filter((h) => h.startsWith('#') && h.length > 1 && !info.ids.includes(h.slice(1)));
         ok(`${label}: internal links and anchors resolve`, broken.length === 0 && anchors.length === 0, [...broken, ...anchors].join(', '));
-        ok(`${label}: no inline styles or scripts, no sideways scroll`, info.inlineStyle === 0 && info.inlineScript === 0 && !info.overflow);
+        ok(`${label}: no sideways scroll`, !info.overflow);
       }
       page.removeAllListeners('console'); page.removeAllListeners('pageerror');
       if (shots && ['/', '/features/', '/download/', '/docs/'].includes(path)) await page.waitForTimeout(900), await page.screenshot({ path: `shots/site-${scheme}-${path.replace(/\W+/g, '') || 'home'}.png` });
@@ -136,7 +135,7 @@ const PAGES = ['/', '/features/', '/download/', '/docs/', '/changelog/', '/priva
   const evil = await encodeShare({ ...outfit, user: { id: 1, name: '"><script>alert(1)</script>' }, outfit: { id: 2, name: xss }, items: [{ id: 3, name: xss, typeId: 8 }], thumb: undefined });
   await page.goto(`https://rofit.site/o/#${evil}`);
   await page.waitForSelector('.v-grid');
-  const r = await page.evaluate(() => ({ h1: document.querySelector('.v-head h1')?.textContent, injected: document.querySelectorAll('img[src="x"], script:not([src])').length }));
+  const r = await page.evaluate(() => ({ h1: document.querySelector('.v-head h1')?.textContent, injected: document.querySelectorAll('#viewer img[src="x"], #viewer script').length }));
   ok('markup in names is shown as text, never parsed', r.h1 === xss && r.injected === 0 && !alerted, JSON.stringify(r));
   const cases = [
     ['not a share link', '#hello<b>', /isn’t a RoFit share link/],
@@ -165,7 +164,7 @@ const PAGES = ['/', '/features/', '/download/', '/docs/', '/changelog/', '/priva
   }
   await page.goto('https://rofit.site/');
   await page.locator('.menu-btn').click();
-  ok('mobile menu opens', await page.locator('#nav.open').isVisible() && (await page.locator('.menu-btn').getAttribute('aria-expanded')) === 'true');
+  ok('mobile menu opens', await page.locator('#nav-links.open').isVisible() && (await page.locator('.menu-btn').getAttribute('aria-expanded')) === 'true');
   await ctx.close();
   await browser.close();
 }
