@@ -202,3 +202,61 @@ summary::marker { color: var(--ink-3); }
 
 /* Leave breathing room below the sticky navigation for section links. */
 html { scroll-padding-top: calc(var(--nav-h) + 24px); }
+
+/* ---- motion v3: scroll-directed scenes & tactile controls ---------------------------------------------
+   Progressive: content is always visible and readable; motion only layers on top.
+   Only runs at data-motion='full' (System resolves to full unless the OS asks to reduce). */
+:root { --spring: linear(0, .0175, .0659 2.3%, .1381 3.6%, .4245 8%, .5574 10.3%, .6763, .7759 15.1%, .8541 17.7%, .9147 20.5%, .9568 23.4%, .9837 26.4%, 1.0007 29.6%, 1.0153 34.4%, 1.0198 40%, 1.0168 46.6%, 1.0056 59.3%, .9994 74.2%, 1); }
+
+/* buttons: press in, settle out; primary buttons get a light sweep on hover */
+.btn { position: relative; overflow: hidden; transition: transform .34s var(--spring), box-shadow .2s, background .15s, color .15s; }
+.btn:active { transform: scale(.96); transition-duration: .07s; }
+.btn svg { transition: transform .34s var(--spring); }
+.btn:hover svg { transform: translateX(2px); }
+.btn-solid::after, .btn-white::after { content: ''; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(110deg, transparent 35%, rgb(255 255 255 / .28) 50%, transparent 65%); transform: translateX(-120%); }
+:root[data-motion='full'] .btn-solid:hover::after, :root[data-motion='full'] .btn-white:hover::after { transform: translateX(120%); transition: transform .8s cubic-bezier(.22, 1, .36, 1); }
+
+/* nav: an underline that draws from the cursor side; the bar condenses when scrolled */
+.nav-links a { position: relative; }
+.nav-links a::after { content: ''; position: absolute; left: 10px; right: 10px; bottom: 4px; height: 2px; border-radius: 2px; background: currentColor; transform: scaleX(0); transform-origin: right; transition: transform .34s cubic-bezier(.22, 1, .36, 1); opacity: .7; }
+.nav-links a:hover::after, .nav-links a[aria-current='page']::after { transform: scaleX(1); transform-origin: left; }
+.nav { transition: background .25s, box-shadow .25s, backdrop-filter .25s; }
+.nav.scrolled { box-shadow: 0 8px 30px -18px rgb(0 0 0 / .5); }
+
+/* focus: always visible, never clipped by overflow:hidden buttons */
+:focus-visible { outline: 2px solid var(--accent, currentColor); outline-offset: 3px; }
+
+/* scroll-linked reveals where supported (no JS, no scroll hijacking): sections drift up and sharpen as they enter */
+@supports (animation-timeline: view()) {
+  :root[data-motion='full'] .rv.in { animation: v3-enter linear both; animation-timeline: view(); animation-range: entry 0% entry 55%; }
+  @keyframes v3-enter { from { opacity: .35; transform: translateY(28px) scale(.985); filter: blur(3px); } }
+  /* outfit rail and mirror get gentle depth while they cross the viewport */
+  :root[data-motion='full'] .rail { animation: v3-rail linear both; animation-timeline: view(); animation-range: cover 0% cover 100%; }
+  @keyframes v3-rail { from { transform: translateX(3%); } to { transform: translateX(-3%); } }
+  :root[data-motion='full'] .mirror { animation: v3-mirror linear both; animation-timeline: view(); animation-range: entry 0% cover 50%; }
+  @keyframes v3-mirror { from { transform: perspective(1400px) rotateX(8deg) translateY(30px); opacity: .6; } }
+}
+/* tags/chips and table-of-contents links respond to touch */
+.tag { transition: transform .3s var(--spring), background .15s; }
+.tag:hover { transform: translateY(-1px); }
+.toc a { transition: background .15s, color .15s, padding-left .25s cubic-bezier(.22, 1, .36, 1); }
+.toc a:hover, .toc a.on { padding-left: 14px; }
+.toc a.on { box-shadow: inset 2px 0 0 var(--accent, currentColor); }
+
+/* prose: comfortable measure, calmer code blocks */
+.prose { max-width: 72ch; }
+.prose pre { border-radius: 12px; padding: 14px 16px; overflow-x: auto; border: 1px solid var(--line); }
+.prose h2 { scroll-margin-top: calc(var(--nav-h) + 24px); }
+
+/* motion off / reduced: no travel, no sweeps, no scroll-linked depth */
+:root[data-motion='reduced'] .btn, :root[data-motion='off'] .btn,
+:root[data-motion='reduced'] .btn svg, :root[data-motion='off'] .btn svg { transform: none !important; transition-duration: .01s; }
+:root[data-motion='reduced'] .toc a:hover, :root[data-motion='off'] .toc a:hover { padding-left: 10px; }
+
+/* small phones: no horizontal overflow, comfortable touch targets */
+@media (max-width: 480px) {
+  .btn { min-height: 44px; }
+  .wrap { width: min(1120px, 100% - 28px); }
+}
+
