@@ -38,7 +38,7 @@ const price = (id: number, it: ReturnType<typeof item>) =>
         {rows.map((r) => (
           <li class={'row ' + r.group} data-id={r.id} data-group={r.group} style={`--o:${r.order}`}>
             <span class="th">{r.it?.thumb && <img src={r.it.thumb} alt="" width="44" height="44" loading="lazy" />}</span>
-            <span class="nm"><b>{r.it?.name ?? r.ref.name}</b><small>{r.it?.creator?.name ?? r.ref.typeName} · {price(r.id)}</small></span>
+            <span class="nm"><b>{r.it?.name ?? r.ref.name}</b><small>{r.it?.creator?.name ?? r.ref.typeName} · {price(r.id, r.it)}</small></span>
             <span class="pres" aria-label={r.group === 'both' ? 'in both' : r.group === 'a' ? `only in ${A.name}` : `only in ${B.name}`}>
               <i class={r.inA ? 'on' : ''} title={A.name}></i><i class={r.inB ? 'on' : ''} title={B.name}></i>
             </span>
@@ -71,9 +71,9 @@ const price = (id: number, it: ReturnType<typeof item>) =>
   .side.a { background: radial-gradient(ellipse at 50% 80%, color-mix(in srgb, #8398c8 28%, transparent), transparent 68%), var(--paper); }
   .side.b { clip-path: inset(0 0 0 var(--split)); background: radial-gradient(ellipse at 50% 80%, color-mix(in srgb, #b79b80 28%, transparent), transparent 68%), var(--paper); }
   /* Register the shared torso and legs to the seam, independent of each PNG’s transparent margins. */
-  .side.a { --align-x: -1.2%; --align-y: 4%; }
-  .side.b { --align-x: -5.3%; --align-y: 3%; }
-  .fig2 { display: block; width: min(100cqw, 435px, 66vw); height: auto; aspect-ratio: 1; object-fit: contain; transform: translate(var(--align-x), var(--align-y)); transition: transform .55s var(--ease); }
+  .side.a { --align-x: .3%; --align-y: 3.6%; }
+  .side.b { --align-x: -6.4%; --align-y: 5.4%; --align-scale-y: .95; }
+  .fig2 { display: block; width: min(100cqw, 435px, 66vw); height: auto; aspect-ratio: 1; object-fit: contain; transform: translate(var(--align-x), var(--align-y)) scaleY(var(--align-scale-y, 1)); transition: transform .55s var(--ease); }
   .row .th img { width: 100%; height: 100%; object-fit: contain; background: #eef0f5; }
   .labels { position: absolute; inset: 10px 10px auto; display: flex; justify-content: space-between; gap: 6px; pointer-events: none; }
   .labels b { max-width: 48%; font-size: clamp(.66rem, 2.2vw, .8rem); line-height: 1.2; padding: 5px 8px; border-radius: 7px; background: var(--wall); color: var(--ink); }

@@ -1,7 +1,7 @@
 ---
 import Hanger from './Hanger.astro';
 import { LINKS } from '../config';
-import { star, hero as pickO, buyNow, knownItems, money, capturedLabel } from '../lib/real';
+import { star, hero as pickO, buyNow, knownItems, money } from '../lib/real';
 
 const others = star.outfits.filter((o) => o.id !== pickO.id).slice(0, 5);
 const six = [...others.slice(0, 3), pickO, ...others.slice(3)];
@@ -25,20 +25,18 @@ const unavailable = pickO.assets.length - knownItems(pickO).filter((item) => ite
         {LINKS.chromeStore ? 'Available for Chrome.' : 'Chrome and Firefox listings coming soon.'}
         <span> Free · Source on GitHub</span>
       </p>
-      <p class="status disc">Real public profile shown, captured {capturedLabel}. Not affiliated with or endorsed by the player, the item creators or Roblox.
-      </p>
     </div>
 
-    <div class="mirror" aria-hidden="true" id="mirror">
-      <div class="frame">
+    <div class="mirror" id="mirror">
+      <div class="frame" aria-hidden="true">
         <div class="glass">
           <div class="pf">
             <div class="pf-head">
               {star.headshot && <img class="pf-av" src={star.headshot} alt="" width="56" height="56" />}
-              <div><b>{star.displayName}</b><small>@{star.name} · real public profile</small></div>
+              <div><b>{star.displayName}</b><small>@{star.name}</small></div>
             </div>
             <div class="pf-tabs" role="presentation">
-              <span class="t-out"><Hanger size={16} /> Outfits</span>
+              <span class="t-out" id="t-out"><Hanger size={16} /> Outfits</span>
               <span class="count">{star.outfits.length} saved looks</span>
             </div>
             <div class="pf-grid">
@@ -49,11 +47,14 @@ const unavailable = pickO.assets.length - knownItems(pickO).filter((item) => ite
                 </div>
               ))}
             </div>
-            <div class="pf-tag tag"><span>{pickO.assets.length} items</span><span class="stub num">{money(cost)}{unavailable ? ` · ${unavailable} unavailable` : ''}</span></div>
+            <div class="pf-tag"><span>{pickO.assets.length} items</span><span class="num">{money(cost)}{unavailable ? ` · ${unavailable} unavailable` : ''}</span></div>
           </div>
+          <svg id="cursor" class="tour-pointer" width="24" height="24" viewBox="0 0 24 24"><path d="M4 3l15 8-7 2-2 7z" fill="#121a32" stroke="#fff" stroke-width="1.5" stroke-linejoin="round"/></svg>
+          <span id="ripple" class="tour-ripple"></span>
         </div>
       </div>
     </div>
+    <button type="button" class="tour-replay" id="hero-replay" hidden>↻ Replay walkthrough</button>
   </div>
 </section>
 
@@ -68,10 +69,9 @@ const unavailable = pickO.assets.length - knownItems(pickO).filter((item) => ite
   .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 26px; }
   .status { margin-top: 18px; font-size: .85rem; color: #e1e7ff; font-weight: 650; }
   .status span { font-weight: 500; }
-  .status.disc { margin-top: 6px; font-size: .75rem; font-weight: 500; max-width: 54ch; }
   .mirror { min-width: 0; width: 100%; max-width: 630px; justify-self: center; }
   .frame { border-radius: 22px; padding: clamp(6px, 1vw, 10px); background: linear-gradient(145deg, #e5e9ff, #646fa2 65%, #bac6fa); box-shadow: 0 25px 55px rgb(0 0 20 / .35); }
-  .glass { container-type: inline-size; border-radius: 14px; overflow: hidden; background: #151a2c; color: #f1f3ff; }
+  .glass { position: relative; container-type: inline-size; border-radius: 14px; overflow: hidden; background: #151a2c; color: #f1f3ff; }
   .pf { padding: clamp(12px, 4.5cqw, 26px); }
   .pf-head { display: flex; align-items: center; gap: 12px; }
   .pf-av { width: clamp(34px, 12cqw, 60px); height: auto; aspect-ratio: 1; border-radius: 50%; background: #222a44; object-fit: cover; }
@@ -91,4 +91,32 @@ const unavailable = pickO.assets.length - knownItems(pickO).filter((item) => ite
     .copy { max-width: 550px; }
     .mirror { max-width: 550px; }
   }
+
+  .t-out { border-bottom: 2px solid transparent; }
+  .tile { transition: opacity .35s, transform .45s var(--ease), background .35s, border-color .35s; }
+  .tour-replay { grid-column: 2; justify-self: center; color: #dce3ff; padding: 8px 12px; border: 1px solid #526191; border-radius: 8px; }
+  .tour-replay:hover { background: #253461; }
+  @media (max-width: 760px) { .tour-replay { grid-column: 1; } }
+  .tour-pointer, .tour-ripple { position: absolute; pointer-events: none; opacity: 0; }
+  .tour-pointer { z-index: 2; top: 0; left: 0; transform: translate(var(--tx, 60cqw), var(--ty, 26cqw)); transition: transform .52s var(--ease), opacity .25s; }
+  .tour-ripple { width: 34px; height: 34px; border: 2px solid #a5b4ff; border-radius: 50%; left: var(--rx); top: var(--ry); }
+  :global(html.js[data-motion="full"]) .stall:not(.s5) .tile { opacity: .2; transform: translateY(5px); }
+  :global(html.js[data-motion="full"]) .stall:not(.s6) .pick { background: #202840; border-color: transparent; }
+  :global(html.js[data-motion="full"]) .stall:not(.s6) .pf-tag { opacity: .48; }
+  .stall.s5 .t-out { border-color: #a5b4ff; }
+  .stall.s4:not(.s7) .tour-pointer { opacity: 1; }
+  .stall.s5 .tour-ripple { animation: tour-tap .6s ease-out both; }
+  @keyframes tour-tap {
+    from { opacity: 1; transform: translate(-50%, -50%) scale(.4); }
+    to { opacity: 0; transform: translate(-50%, -50%) scale(1.45); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .tile, .tour-pointer { transition: none; }
+    .tour-ripple { animation: none !important; }
+  }
 </style>
+
+<script>
+  import { runHero } from '../scripts/hero';
+  runHero();
+</script>

@@ -90,7 +90,9 @@ const row = (cls, name, sub, right = '') => `<div class="faux-row ${cls}"><i></i
 export function features() {
   return `<div class="wrap">
 <header class="page-head narrow-left"><span class="eyebrow">Features</span><h1>What RoFit does</h1>
-<p class="lede">One extension, four views of the outfits people save: browse them, take one apart, compare two, keep the best. Every feature below is in RoFit today.</p></header>
+<p class="lede">Browse saved outfits, find the pieces you like, and keep your favorite looks.</p></header>
+
+<nav class="feature-nav" aria-label="Explore features"><a href="/#demo">Try the demo</a><a href="#profiles">Profiles</a><a href="#explorer">Search</a><a href="#inspector">Inspect</a><a href="#compare">Compare</a><a href="#library">Library</a><a href="#share">Share</a><a href="/docs/">Read the docs</a></nav>
 
 ${feat('profiles', 'On every profile', 'Right where you already look', 'RoFit fits into roblox.com instead of sending you somewhere else.', [
   'An <b>Outfits</b> tab next to About and Creations, styled like Roblox’s own.',
@@ -226,7 +228,7 @@ const h2 = (id, text) => `<h2 id="${id}">${text}<a class="anchor" href="#${id}" 
 
 export function docs() {
   return `<div class="wrap">
-<header class="page-head"><span class="eyebrow">Docs</span><h1>Using RoFit</h1><p class="lede">Everything RoFit does, where to find it, and what to do when something doesn’t work.</p></header>
+<header class="page-head"><span class="eyebrow">Docs</span><h1>Using RoFit</h1><p class="lede">Get started, find the controls, or <a href="/guides/">browse the illustrated guides</a>.</p></header>
 <div class="docs">
 <nav class="toc" aria-label="On this page"><h4>On this page</h4><ol>${TOC.map(([id, t]) => `<li><a href="#${id}">${t}</a></li>`).join('')}</ol></nav>
 <article class="prose">

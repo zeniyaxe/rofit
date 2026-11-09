@@ -10,3 +10,8 @@
 .rf-demo .rf-pal-in input { min-height: 42px; }
 .rf-demo .rf-pal-in:focus-within { box-shadow: inset 0 -2px var(--rf-accent); }
 .rf-demo .rf-pal-in input:focus-visible { outline: none; }
+
+/* The public snapshot already explains its date above the demo. */
+.rf-demo .rf-upd,
+.rf-demo .rf-note:has(> button[aria-label="Dismiss"]),
+.rf-demo .rf-dock-hint > span { display: none; }

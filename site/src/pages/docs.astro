@@ -1,13 +1,26 @@
 ---
 import '../styles/ported.css';
-import Doc from '../layouts/Doc.astro';
+import Base from '../layouts/Base.astro';
 import { docs } from '../pages.mjs';
-
 ---
-<Doc title="Docs" lead="Learn how to use RoFit." toc={false}>
-  <div class="ported">
-  <Fragment set:html={docs()} />
+<Base title="RoFit Docs" description="Install RoFit and learn how to browse, compare, and save outfits.">
+  <div class="ported reference docs-page">
+    <Fragment set:html={docs()} />
   </div>
-<p><a href="/guides/">Browse the illustrated guides</a></p>
-</Doc>
+</Base>
+<style>
+  .reference { padding-block: calc(var(--nav-h) + clamp(28px, 6vw, 80px)) 70px; }
+  .reference :global(.page-head) { margin-bottom: clamp(28px, 5vw, 58px); }
+  .reference :global(.page-head h1) { font-size: clamp(2.5rem, 6vw, 5rem); }
+  .reference :global(.page-head .lede) { color: var(--ink-2); max-width: 64ch; margin-top: 14px; }
+  .docs-page :global(.docs) { display:grid; grid-template-columns: 200px minmax(0,72ch); align-items:start; gap:clamp(24px,5vw,72px); }
+  .docs-page :global(.toc) { display:block; border-top:1px solid var(--line); padding-top:14px; max-height:calc(100svh - var(--nav-h) - 40px); overflow:auto; }
+  .docs-page :global(.prose h2:first-child) { margin-top:0; }
+  .docs-page :global(.anchor) { margin-inline-start:.45em; font:600 .55em var(--f-body); opacity:.65; text-decoration:none; }
+  @media(max-width:800px) {
+    .docs-page :global(.docs) { grid-template-columns:minmax(0,1fr); }
+    .docs-page :global(.toc) { position:static; max-height:none; }
+    .docs-page :global(.toc ol) { grid-template-columns:repeat(auto-fit,minmax(min(100%,145px),1fr)); }
+  }
+</style>
 <script>import '../app.ts';</script>

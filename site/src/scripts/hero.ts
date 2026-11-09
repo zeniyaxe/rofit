@@ -1,8 +1,5 @@
-/**
- * The opener: the curtain gathers, a profile appears in the mirror, the Outfits tab slides in, a cursor clicks it,
- * outfits fill the grid and one is picked. Time-based (never scroll-jacked); with reduced motion it just shows the end state.
- */
-const STAGES = [250, 1500, 2350, 3300, 4300, 5700];
+/** Animate the profile preview from opening Outfits to highlighting a saved look. */
+const STEPS = [[4, 450], [5, 1200], [6, 2250], [7, 3550]] as const;
 
 export function runHero() {
   const root = document.getElementById('top');
@@ -12,6 +9,7 @@ export function runHero() {
   const ripple = document.getElementById('ripple')!;
   const tab = document.getElementById('t-out')!;
   const pick = root.querySelector<HTMLElement>('.tile.pick')!;
+  const replay = document.querySelector<HTMLButtonElement>('#hero-replay');
   const timers: number[] = [];
   const reduced = () => document.documentElement.dataset.motion !== 'full';
 
@@ -35,10 +33,17 @@ export function runHero() {
 
   const play = () => {
     clear();
-    if (reduced()) { stage(6); cursor.style.opacity = '0'; return; }
-    STAGES.forEach((t, i) => timers.push(window.setTimeout(() => stage(i + 1), t)));
+    if (reduced()) { stage(7); return; }
+    root.classList.remove('s4', 's5', 's6', 's7');
+    cursor.style.removeProperty('--tx');
+    cursor.style.removeProperty('--ty');
+    STEPS.forEach(([step, delay]) => timers.push(window.setTimeout(() => stage(step), delay)));
   };
+  if (replay) {
+    replay.hidden = reduced();
+    replay.addEventListener('click', play);
+  }
   play();
   // If the user flips Motion to Calm/Off mid-way, jump to the finished scene.
-  document.addEventListener('rofit:display', () => { if (reduced()) { clear(); stage(6); cursor.style.opacity = '0'; } });
+  document.addEventListener('rofit:display', () => { if (replay) replay.hidden = reduced(); if (reduced()) { clear(); stage(7); } });
 }

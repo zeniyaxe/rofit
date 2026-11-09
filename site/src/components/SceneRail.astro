@@ -137,7 +137,7 @@ const flag = (i: (typeof items)[number]) => (!i.it.forSale ? ' · off sale' : i.
   .mover .body { opacity: calc(1 - var(--p3) * .25); }
   .fly { opacity: var(--p3); transform: translate(calc(var(--p3) * var(--dx) * 1px), calc(var(--p3) * var(--dy) * 1px)) scale(calc(.55 + .45 * var(--p3))); transform-box: fill-box; transform-origin: center; filter: drop-shadow(0 4px 8px rgb(15 17 30 / .22)); }
 
-  .call .ln { fill: none; stroke: var(--ink); stroke-width: 1.6; stroke-dasharray: 1; stroke-dashoffset: calc(1 - var(--p3)); opacity: .55; }
+  .call .ln { fill: none; stroke: var(--ink); stroke-width: 1.6; stroke-dasharray: 1; stroke-dashoffset: calc(1 - var(--p3)); opacity: calc(.55 * var(--p3)); }
   .call .dot { fill: var(--ink); opacity: var(--p3); }
   .call foreignObject { opacity: var(--p3); transform: translateY(calc((1 - var(--p3)) * 14px)); }
   .total foreignObject { opacity: var(--p4); transform: translateY(calc((1 - var(--p4)) * 16px)) scale(calc(.94 + .06 * var(--p4))); transform-origin: center; }
