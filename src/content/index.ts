@@ -286,12 +286,13 @@ onSettings((s) => { settings = s; ensure(); });
 // SPA navigation: the Navigation API where it exists, history events and a slow poll as backstops.
 // The Navigation API (Chrome 102+) reports every same-document navigation. The slow poll only exists for browsers without it.
 const nav = (window as any).navigation;
-if (nav?.addEventListener) nav.addEventListener('navigatesuccess', schedule);
+const onNavigate = () => { schedule(); startAccountIntegration(); };
+if (nav?.addEventListener) nav.addEventListener('navigatesuccess', onNavigate);
 else {
   let href = location.href;
-  setInterval(() => { if (location.href !== href) { href = location.href; schedule(); } }, 1000);
+  setInterval(() => { if (location.href !== href) { href = location.href; onNavigate(); } }, 1000);
 }
-window.addEventListener('popstate', schedule);
+window.addEventListener('popstate', onNavigate);
 
 chrome.runtime.onMessage.addListener((msg, sender) => {
   if (sender.id !== chrome.runtime.id || msg?.__rofit !== 'open') return;

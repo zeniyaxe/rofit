@@ -114,12 +114,28 @@ async function activate(nav: Nav) {
   host.id = 'rofit-account-host';
   host.style.cssText = 'display:block;width:100%';
   content.appendChild(host);
-  hideSiblings();
+  const mountHost = host;
   // Roblox may render new children into the column while we are open; keep them out of sight.
-  obs2 = new MutationObserver(() => hideSiblings());
+  obs2 = new MutationObserver(() => {
+    if (!content?.isConnected || host !== mountHost || !unmount) return;
+    if (mountHost.parentElement !== content) content.appendChild(mountHost);
+    hideSiblings();
+  });
   obs2.observe(content, { childList: true });
-  const { mountPanel } = await panel();
-  unmount = mountPanel(host);
+  try {
+    const { mountPanel } = await panel();
+    if (host !== mountHost) return;
+    if (!content?.isConnected) { deactivate(); fallback(); return; }
+    if (mountHost.parentElement !== content) content.appendChild(mountHost);
+    unmount = mountPanel(mountHost);
+    hideSiblings();
+  } catch (error) {
+    if (host !== mountHost) return;
+    console.warn("RoFit could not mount account settings", error);
+    deactivate();
+    fallback();
+    return;
+  }
   if (!location.hash.startsWith(SETTINGS_HASH)) history.replaceState(history.state, '', location.pathname + location.search + SETTINGS_HASH);
 }
 
@@ -151,7 +167,8 @@ function pageStyle() {
 }
 
 function inject(nav: Nav) {
-  if (nav.list.querySelector(`[${MARK}]`)) return;
+  const existing = nav.list.querySelector<HTMLElement>(`[${MARK}]`);
+  if (existing) { ours = existing; return; }
   pageStyle();
   const model = nav.items.find((i) => !i.querySelector('[aria-current], [aria-selected=true], .active') && !i.matches('.active')) ?? nav.items[nav.items.length - 1];
   if (!model) return;
@@ -183,11 +200,13 @@ function wire(nav: Nav) {
 
 function ensure() {
   if (!isAccountPage()) { teardown(); return; }
+  if (active && !content?.isConnected) deactivate();
   const nav = findNav();
   if (!nav) return;
   inject(nav);
   wire(nav);
   if (location.hash.startsWith(SETTINGS_HASH) && !active) activate(nav);
+  else if (active && !location.hash.startsWith(SETTINGS_HASH) && unmount) deactivate();
 }
 
 function teardown() {

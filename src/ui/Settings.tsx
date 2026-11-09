@@ -95,8 +95,8 @@ export function SettingsPage({ settings }: { settings: S }) {
     els.forEach((e) => io.observe(e));
     return () => io.disconnect();
   }, [n]);
-  useEffect(() => { const id = location.hash.split('/')[1]; if (id) document.getElementById('set-' + id)?.scrollIntoView(); }, []);
-  const go = (id: string) => { document.getElementById('set-' + id)?.scrollIntoView({ behavior: motionLevel(settings.motion, os) === 'calm' ? 'auto' : 'smooth', block: 'start' }); setCurrent(id); };
+  useEffect(() => { const id = location.hash.split('/')[1]; if (id) body.current?.querySelector('[data-sec=' + CSS.escape(id) + ']')?.scrollIntoView(); }, []);
+  const go = (id: string) => { body.current?.querySelector('[data-sec=' + CSS.escape(id) + ']')?.scrollIntoView({ behavior: motionLevel(settings.motion, os) === 'calm' ? 'auto' : 'smooth', block: 'start' }); setCurrent(id); };
 
   return (
     <div class="rf-settings">
