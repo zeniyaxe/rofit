@@ -60,7 +60,7 @@ function Preview({ s, size = '420x420' }: { s?: Loaded; size?: string }) {
  * subjects swap sides (or the mirror changes mode) the same subject's preview flies from where it was to where it is.
  * Interruptible: an in-flight morph is measured where it visually is, cancelled, and retargeted from there.
  */
-function useMorph(root: RefObject<HTMLElement>, sig: string) {
+function useMorph(root: RefObject<HTMLElement | null>, sig: string) {
   const last = useRef(new Map<string, { x: number; y: number; w: number; h: number }>());
   useLayoutEffect(() => {
     const el = root.current;
