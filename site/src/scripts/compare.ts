@@ -19,27 +19,20 @@ export function initCompare() {
     range.value = String(v);
   };
   range.addEventListener('input', () => set(Number(range.value)));
-  glass.addEventListener('pointerdown', (e) => { glass.setPointerCapture(e.pointerId); move(e); });
-  glass.addEventListener('pointermove', (e) => { if (glass.hasPointerCapture(e.pointerId)) move(e); });
-  function move(e: PointerEvent) { const r = glass!.getBoundingClientRect(); set(((e.clientX - r.left) / r.width) * 100); stopDemo(); }
-
-  // An unprompted wipe once the toy scrolls into view, so it explains itself. Any input cancels it.
-  let demo = 0, demoOn = false;
-  function stopDemo() { demoOn = false; cancelAnimationFrame(demo); }
-  function runDemo() {
-    if (!full()) return;
-    demoOn = true;
-    const t0 = performance.now();
-    const tick = (t: number) => {
-      if (!demoOn) return;
-      const k = (t - t0) / 3200;
-      if (k >= 1) { set(50); demoOn = false; return; }
-      set(50 + Math.sin(k * Math.PI * 2) * 30 * (1 - k * 0.4));
-      demo = requestAnimationFrame(tick);
-    };
-    demo = requestAnimationFrame(tick);
+  glass.addEventListener('pointerdown', (event) => {
+    if (range.disabled || event.button !== 0) return;
+    event.preventDefault();
+    range.focus({ preventScroll: true });
+    glass.setPointerCapture(event.pointerId);
+    move(event);
+  });
+  glass.addEventListener('pointermove', (event) => {
+    if (glass.hasPointerCapture(event.pointerId)) move(event);
+  });
+  function move(event: PointerEvent) {
+    const rect = glass!.getBoundingClientRect();
+    set((event.clientX - rect.left) / rect.width * 100);
   }
-  new IntersectionObserver((es, io) => { if (es[0].isIntersecting) { setTimeout(runDemo, 500); io.disconnect(); } }, { threshold: 0.6 }).observe(glass);
 
   // ---- mode toggle with FLIP on the rows ----
   const items = [...rows.querySelectorAll<HTMLElement>('.row')];
@@ -47,7 +40,8 @@ export function initCompare() {
   const setMode = (mode: string) => {
     const diff = mode === 'diff';
     if (root.classList.contains('diff') === diff) return;
-    stopDemo();
+    range.disabled = diff;
+    if (!diff) set(50);
     const before = new Map(items.map((r) => [r, r.getBoundingClientRect().top]));
     root.classList.toggle('diff', diff);
     buttons.forEach((b) => { const on = b.dataset.mode === mode; b.classList.toggle('on', on); b.setAttribute('aria-checked', String(on)); });

@@ -2,3 +2,11 @@
 .rf-demo { position: relative; height: 100%; display: flex; flex-direction: column; background: var(--rf-bg); font-family: inherit; }
 .rf-demo .rf-shell { flex: 1; min-height: 0; }
 .rf-demo-note { position: absolute; left: 50%; bottom: 18px; transform: translateX(-50%); z-index: 50; padding: 10px 16px; border-radius: 10px; background: var(--rf-fg); color: var(--rf-bg); font-weight: 600; font-size: 13px; box-shadow: 0 8px 24px rgb(0 0 0 / .25); animation: rf-toast .4s var(--rf-spring) backwards; max-width: calc(100% - 32px); text-align: center; }
+
+/* Bound overlays to the embedded viewport, even on a short phone. */
+.rf-demo .rf-scrim.top { align-items: center; padding: 12px; }
+.rf-demo .rf-palette { width: min(620px, 100%); max-height: min(560px, 100%); }
+.rf-demo .rf-pal-in { min-height: 50px; height: auto; }
+.rf-demo .rf-pal-in input { min-height: 42px; }
+.rf-demo .rf-pal-in:focus-within { box-shadow: inset 0 -2px var(--rf-accent); }
+.rf-demo .rf-pal-in input:focus-visible { outline: none; }

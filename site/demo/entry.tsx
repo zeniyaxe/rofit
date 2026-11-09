@@ -1,3 +1,4 @@
+import { examplePrice } from '../src/lib/example-price';
 /**
  * The website demo: RoFit's real Shell (src/ui) mounted in a shadow root, fed by demo/shim-rpc.ts.
  * Loaded lazily when the demo section nears the viewport.
@@ -20,9 +21,9 @@ export interface DemoOptions { userId: number; theme: 'light' | 'dark'; reduced:
 
 function Frame({ o }: { o: DemoOptions }) {
   const user = o.userId === PRIVATE_ID ? { id: PRIVATE_ID, name: 'quiet' } : (realUser(o.userId) ?? { id: o.userId, name: 'unavailable' });
-  const vars = themeVars(resolveTheme({ ...DEFAULTS, appearance: o.theme, motion: o.reduced ? 'reduced' : 'full' }, false));
+  const vars = themeVars(resolveTheme({ ...DEFAULTS, appearance: o.theme, motion: o.reduced ? 'calm' : 'full' }, false));
   const [note, setNote] = useState('');
-  useEffect(() => { setDemoSettings({ motion: o.reduced ? 'reduced' : 'full' }); }, [o.reduced]);
+  useEffect(() => { setDemoSettings({ motion: o.reduced ? 'calm' : 'full' }); }, [o.reduced]);
   useEffect(() => {
     let t = 0;
     const f = (e: Event) => { setNote((e as CustomEvent<string>).detail); clearTimeout(t); t = window.setTimeout(() => setNote(''), 3200); };
@@ -64,8 +65,14 @@ export async function makeCard(outfitId: number, root: Element): Promise<Blob> {
   const money = (n: number) => 'R$ ' + n.toLocaleString('en-US');
   return renderCard(root, {
     title: r.o.name, owner: r.u.displayName, meta: d.avatarType + ' · ' + d.assets.length + ' items', avatarUrl: r.o.thumb,
-    items: d.assets.map((a) => { const rec = realAssetRec(a.id); return { name: rec?.name ?? a.name, sub: a.assetTypeName.replace(/Accessory$/, ''), price: !rec ? undefined : rec.isOffSale ? undefined : rec.isFree ? 'Free' : rec.price != null ? money(rec.price) : undefined, flag: rec && rec.isOffSale ? 'off sale' : undefined, thumb: rec?.thumb }; }),
-    total: sum.buyCount > 0 ? money(sum.buyNow) : 'Free', totalNote: 'to buy new today',
+    items: d.assets.map((asset) => {
+      const record = realAssetRec(asset.id);
+      const price = record && !record.isOffSale
+        ? record.isFree ? 'Free' : record.price != null ? money(record.price) : examplePrice(asset.id)
+        : examplePrice(asset.id);
+      return { name: record?.name ?? asset.name, sub: asset.assetTypeName.replace(/Accessory$/, ''), price, thumb: record?.thumb };
+    }),
+    total: money(sum.buyNow), totalNote: 'For-sale total',
   });
 }
 export { renderCard };

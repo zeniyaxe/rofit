@@ -99,7 +99,7 @@ function downloadPage() {
     if (VERSION.test(latest) && newer(latest, v)) show('warn', h('b', null, `RoFit ${v} is installed in this browser.`), ` Version ${latest} is out; see `, h('a', { href: '#update' }, 'Updating'), ' to keep your library.');
     else show('ok', h('b', null, `RoFit ${v} is installed in this browser.`), ' You’re up to date.');
   });
-  setTimeout(() => { if (!installed) show('', 'RoFit isn’t detected in this browser. (RoFit 2.0 and later let this site know they’re installed; older versions don’t.)'); }, 1500);
+  setTimeout(() => { if (!installed) show('', 'RoFit isn’t detected in this browser.'); }, 1500);
 }
 
 // ---- share viewer -------------------------------------------------------------------------------

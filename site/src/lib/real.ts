@@ -5,6 +5,7 @@
  */
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { isDisplayAsset } from './display-assets';
 
 export interface Item { id: number; name: string; typeId: number; typeName: string; creator: { name: string; verified: boolean } | null; price: number | null; forSale: boolean; limited: boolean; resolved: boolean; thumb: string | null }
 export interface Outfit { id: number; name: string; thumb: string; assets: { id: number; name: string; typeName: string }[] }
@@ -17,7 +18,10 @@ if (!snap.users.length) throw new Error('The real-profile snapshot has no users.
 
 export const capturedAt = snap.capturedAt;
 export const capturedLabel = new Date(snap.capturedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
-export const people = snap.users;
+export const people = snap.users.map((person) => ({
+  ...person,
+  outfits: person.outfits.map((outfit) => ({ ...outfit, assets: outfit.assets.filter(isDisplayAsset) })),
+}));
 export const item = (id: number): Item | undefined => snap.assets[String(id)];
 export const money = (n: number) => 'R$ ' + n.toLocaleString('en-US');
 
@@ -31,10 +35,11 @@ const person = people.reduce((a, b) => (b.outfits.length > a.outfits.length ? b 
 export const star = person;
 
 const richness = (o: Outfit) => Math.min(knownItems(o).length, 5) * 3 + knownItems(o).filter((i) => i.forSale && i.price).length * 6 - (o.assets.length > 8 ? 5 : 0);
-const compact = person.outfits.filter((o) => o.assets.length <= 7);
-const ranked = [...(compact.length ? compact : person.outfits)].sort((a, b) => richness(b) - richness(a));
+const originalOutfits = snap.users.find((user) => user.id === person.id)!.outfits;
+const compact = originalOutfits.filter((o) => o.assets.length <= 7);
+const ranked = [...(compact.length ? compact : originalOutfits)].sort((a, b) => richness(b) - richness(a));
 /** The outfit the story follows: lots of resolvable, picture-having items. */
-export const hero = ranked[0];
+export const hero = person.outfits.find((outfit) => outfit.id === ranked[0].id)!;
 
 /** The pair with the most items in common, for the Compare scene. */
 export const pair: [Outfit, Outfit] = (() => {

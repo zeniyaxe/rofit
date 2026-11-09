@@ -1,3 +1,4 @@
+import { isDisplayAsset } from '../src/lib/display-assets';
 /**
  * Real public profiles for the demo, read from the dated snapshot that scripts/capture-real.mjs wrote to /real/snapshot.json.
  * The site never calls Roblox from the visitor's browser: this is a static copy of what a signed-out visitor could see.
@@ -34,7 +35,7 @@ export function realDetails(o: SnapOutfit): OutfitDetails {
   return {
     id: o.id, name: o.name, avatarType: o.avatarType ?? 'R15', outfitType: 'Avatar', fetchedAt: when(), bodyColors,
     scale: { ...DEFAULT_SCALE, ...(o.scale ?? {}) },
-    assets: o.assets.map((a) => ({ id: a.id, name: a.name, assetTypeId: a.typeId, assetTypeName: a.typeName })),
+    assets: o.assets.filter(isDisplayAsset).map((a) => ({ id: a.id, name: a.name, assetTypeId: a.typeId, assetTypeName: a.typeName })),
   };
 }
 /** An AssetRec the way the extension would hold it, or undefined when Roblox didn't resolve the asset (shown as unknown, never as "deleted"). */
