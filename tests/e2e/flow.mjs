@@ -14,7 +14,7 @@ if (dark) await page.evaluate(() => { document.body.classList.remove('light-them
 await page.waitForTimeout(400);
 await shot('0-profile');
 await openRoFit(page);
-await page.waitForSelector('.rf-card', { timeout: 20000 });
+await page.waitForSelector('.rf-card:not(.sk)', { timeout: 30000 });
 await page.waitForTimeout(1200);
 await shot('1-explorer');
 // index everything, then Items view
@@ -60,14 +60,15 @@ await ws.waitForSelector('.rf-settings');
 await ws.waitForTimeout(800);
 await ws.screenshot({ path: `shots/${tag}-8-settings.png`, fullPage: true });
 await ws.goto(`chrome-extension://${id}/workspace.html#welcome`);
-await ws.waitForSelector('.rf-welcome');
+await ws.waitForSelector('.wl-story .ws-stage', { state: 'attached' });
+await ws.waitForTimeout(1200);
 await ws.screenshot({ path: `shots/${tag}-9-welcome.png` });
 await ws.goto(`chrome-extension://${id}/workspace.html#library`);
 await ws.waitForSelector('.rf-card');
 await ws.waitForTimeout(500);
 await ws.screenshot({ path: `shots/${tag}-10-library-page.png` });
 const pp = await ctx.newPage();
-await pp.setViewportSize({ width: 320, height: 330 });
+await pp.setViewportSize({ width: 340, height: 480 });
 await pp.goto(`chrome-extension://${id}/popup.html`);
 await pp.waitForTimeout(600);
 await pp.screenshot({ path: `shots/${tag}-11-popup.png` });

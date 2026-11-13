@@ -8,7 +8,7 @@ import type { LibraryEntry, RpcError, UserRec } from '../shared/types.ts';
 import { Ico, type IconName } from '../ui/icons.tsx';
 import { Spinner } from '../ui/primitives.tsx';
 import { useAsync, useMotion, useSettings, useThumb } from '../ui/data.ts';
-import { resolveTheme, themeVars } from '../ui/theme.ts';
+import { brandVars, resolveTheme, themeVars } from '../ui/theme.ts';
 import { motionClass } from '../shared/motion.ts';
 import { useFlip, useIndicator } from '../ui/motion.tsx';
 import { copy, errorText, outfitUrl, plural, profileOutfits, timeAgo } from '../ui/format.ts';
@@ -136,7 +136,8 @@ function Popup() {
     return () => removeEventListener('keydown', on);
   }, []);
 
-  const vars = themeVars(resolveTheme(s, false));
+  const theme = resolveTheme(s, false);
+  const vars = { ...themeVars(theme), ...brandVars(theme) };
   const openHere = async (outfit?: number) => {
     if (!here) return;
     try {
@@ -218,13 +219,13 @@ function Popup() {
   })();
 
   return (
-    <div class={'rf rf-popup rf-pop2' + motionClass(motion)} style={vars as any}>
+    <div class={'rf rf-popup rf-pop2 rf-own' + motionClass(motion)} style={vars as any}>
       <header class="rf-pop-h">
         <span class="rf-pop-logo"><Ico n="outfit" size={16} /></span>
         <b>RoFit</b>
-        <span class={'rf-pop-status ' + status.cls} role="status" title={workerDown ? 'RoFit’s background worker didn’t answer. Reload the extension from chrome://extensions if this keeps happening.' : status.label}><i />{status.label}</span>
+        {/* Only worth a word when something is wrong; "Ready" would be noise. */}
+        <span role="status" class="rf-pop-statuswrap">{status.cls !== 'ok' && <span class={'rf-pop-status ' + status.cls} title={workerDown ? 'RoFit’s background worker didn’t answer. Reload the extension from chrome://extensions if this keeps happening.' : status.label}><i />{status.label}</span>}</span>
         <span class="rf-grow" />
-        <button class="rf-ib" aria-label="Open library" title="Library" onClick={() => page('library')}><Ico n="library" size={18} /></button>
         <button class="rf-ib" aria-label="Open settings" title="Settings" onClick={() => page('settings')}><Ico n="settings" size={18} /></button>
         <a class="rf-ib" href={ACCOUNT_URL} target="_blank" rel="noopener noreferrer" title="RoFit settings on Roblox" aria-label="RoFit settings on Roblox"><Ico n="user" size={18} /></a>
       </header>
@@ -274,7 +275,7 @@ function Popup() {
               </div>
             </div>
           ) : (
-            <div class="rf-pop-now idle"><Ico n="outfit" size={20} /><span>Open any Roblox profile and look for <b>Outfits</b> (or <b>Saved Outfits</b>), or search for someone above.</span></div>
+            <div class="rf-pop-now idle"><Ico n="outfit" size={20} /><span>Open any Roblox profile and look for <b>Saved Outfits</b> (an <b>Outfits</b> tab on older layouts), or search for someone above.</span></div>
           )}
 
           {workerDown && <p class="rf-pop-msg" role="alert"><Ico n="warn" size={14} />RoFit’s background worker didn’t answer. Reload the extension from chrome://extensions if this keeps happening.</p>}

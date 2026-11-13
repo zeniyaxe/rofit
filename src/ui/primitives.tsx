@@ -1,7 +1,7 @@
 import { createContext, type ComponentChildren, type JSX } from 'preact';
 import { useContext, useEffect, useLayoutEffect, useRef, useState, useCallback } from 'preact/hooks';
 import { Ico, type IconName } from './icons.tsx';
-import { useThumb } from './data.ts';
+import { thumbStore, useThumb } from './data.ts';
 import { useIndicator, usePresence } from './motion.tsx';
 
 /**
@@ -87,6 +87,21 @@ export function anchorPos(btn: HTMLElement, align: 'left' | 'right', want = 220)
   };
 }
 
+/**
+ * Opening a menu can move its button: clicking it blurs the search field, which then eases back to its resting width
+ * and slides the toolbar. Re-anchor while the button settles (about one transition), then stop.
+ */
+function followAnchor(btn: HTMLElement, place: () => void, ms = 480): () => void {
+  let last = btn.getBoundingClientRect();
+  const t0 = Date.now();
+  const id = window.setInterval(() => {
+    const r = btn.getBoundingClientRect();
+    if (Math.abs(r.left - last.left) > 0.5 || Math.abs(r.top - last.top) > 0.5) { last = r; place(); }
+    if (Date.now() - t0 > ms) clearInterval(id);
+  }, 16);
+  return () => clearInterval(id);
+}
+
 export function Menu({ items, label, icon = 'more', children, align = 'right', class: cls }: {
   items: MenuItem[]; label: string; icon?: IconName; children?: ComponentChildren; align?: 'left' | 'right'; class?: string;
 }) {
@@ -99,6 +114,7 @@ export function Menu({ items, label, icon = 'more', children, align = 'right', c
   useLayoutEffect(() => {
     if (!open || !btn.current) return;
     setPos(anchorPos(btn.current, align));
+    return followAnchor(btn.current, () => setPos(anchorPos(btn.current!, align)));
   }, [open, align]);
 
   useEffect(() => {
@@ -154,7 +170,11 @@ export function Popover({ label, children, content, align = 'right', class: cls,
   const [pos, setPos] = useState<{ top: number; left?: number; right?: number; maxH: number } | null>(null);
   const btn = useRef<HTMLButtonElement>(null);
   const pop = useRef<HTMLDivElement>(null);
-  useLayoutEffect(() => { if (open && btn.current) setPos(anchorPos(btn.current, align, width)); }, [open, align, width]);
+  useLayoutEffect(() => {
+    if (!open || !btn.current) return;
+    setPos(anchorPos(btn.current, align, width));
+    return followAnchor(btn.current, () => setPos(anchorPos(btn.current!, align, width)));
+  }, [open, align, width]);
   useEffect(() => {
     if (!open) return;
     const close = (e: Event) => { const path = e.composedPath(); if (!path.includes(pop.current as EventTarget) && !path.includes(btn.current as EventTarget)) setOpen(false); };
@@ -301,8 +321,21 @@ export function Spinner({ size = 16 }: { size?: number }) {
   return <span class="rf-spin" style={{ width: size + 'px', height: size + 'px' }} role="progressbar" aria-label="Loading" />;
 }
 
-export function Chip({ children, tone, icon, title }: { children: ComponentChildren; tone?: 'warn' | 'ok' | 'muted' | 'accent'; icon?: IconName; title?: string }) {
+export function Chip({ children, tone, icon, title }: { children: ComponentChildren; tone?: 'warn' | 'ok' | 'muted' | 'accent' | 'unknown'; icon?: IconName; title?: string }) {
   return <span class={'rf-chip ' + (tone ?? '')} title={title}>{icon && <Ico n={icon} size={12} />}{children}</span>;
+}
+
+/**
+ * A cost as format.ts#costFigure states it. Exact totals print solid; a lower bound gets a dashed underline, and the
+ * full sentence ("At least R$ 854. Not counted: …") is both the tooltip and what a screen reader hears.
+ */
+export function Figure({ f, class: cls }: { f: { text: string | null; exact: boolean; says: string }; class?: string }) {
+  if (!f.text) return null;
+  return (
+    <span class={'rf-fig-n' + (f.exact ? '' : ' approx') + (cls ? ' ' + cls : '')} title={f.says}>
+      <span aria-hidden="true">{f.text}</span><span class="rf-sr">{f.says}</span>
+    </span>
+  );
 }
 
 export function Empty({ icon, title, body, children }: { icon: IconName; title: string; body?: string; children?: ComponentChildren }) {
@@ -320,25 +353,33 @@ export function Empty({ icon, title, body, children }: { icon: IconName; title: 
 export function Thumb({ id, size = '150x150', src, enabled = true, alt = '', class: cls }: {
   id: number; size?: '150x150' | '420x420'; src?: string | null; enabled?: boolean; alt?: string; class?: string;
 }) {
-  const t = useThumb(id, size, enabled && !src);
   const [failed, setFailed] = useState(false);
+  // A stored URL (library, share link) that no longer loads falls back to asking Roblox for a current render.
+  const t = useThumb(id, size, enabled && id > 0 && (!src || failed));
+  // A big render Roblox hasn't finished yet can borrow the small one the grid already loaded (no extra request).
+  const small = size === '420x420' && !t?.url ? thumbStore.get(id, '150x150') : undefined;
   const [loadedUrl, setLoadedUrl] = useState<string | null>(null);
-  const url = src && !failed ? src : t?.url;
+  const url = src && !failed ? src : t?.url ?? small?.url;
   // Compare against the URL rather than resetting in an effect: a cached image can fire onLoad before any effect runs.
-  const loaded = !!url && loadedUrl === url;
+  // Swapping the small stand-in for the full render keeps the image visible instead of fading out and back in.
+  const lowSeen = useRef<string | null>(null);
+  if (small?.url && url === small.url) lowSeen.current = small.url;
+  const loaded = !!url && (loadedUrl === url || (!!loadedUrl && loadedUrl === lowSeen.current));
   const state = t?.state;
+  const gone = !!src && failed && !t && !(enabled && id > 0);
   return (
-    <div class={'rf-thumb ' + (cls ?? '') + (loaded ? ' loaded' : '')}>
+    <div class={'rf-thumb ' + (cls ?? '') + (loaded ? ' loaded' : '') + (url && url === small?.url ? ' lowres' : '')} aria-busy={state === 'Pending' && !url ? true : undefined}>
       {url && !(failed && !t?.url) && (
         <img src={url} alt={alt} decoding="async" draggable={false} onLoad={() => setLoadedUrl(url!)} onError={() => setFailed(true)} />
       )}
-      {!url && !t && <div class="rf-skel" />}
-      {!url && t && (
-        <div class="rf-thumb-note">
+      {!url && !t && !gone && <div class="rf-skel" />}
+      {!url && (t || gone) && (
+        <div class={'rf-thumb-note ' + (state ?? '').toLowerCase()} title={state === 'Pending' ? 'Roblox is still rendering this outfit' : state === 'Stalled' ? 'Roblox hasn’t finished rendering this outfit yet. RoFit asks again next time you open it.' : undefined}>
           {state === 'Pending' ? <><Spinner size={14} /><span>Rendering…</span></> :
-            state === 'InReview' || state === 'Blocked' ? <><Ico n="lock" size={16} /><span>Preview unavailable</span></> :
-              state === 'RateLimited' ? <><Ico n="clock" size={16} /><span>Slow down</span></> :
-                <><Ico n="outfit" size={18} /><span>No preview</span></>}
+            state === 'Stalled' ? <><Ico n="outfit" size={18} /><span>Render not ready</span></> :
+              state === 'InReview' || state === 'Blocked' ? <><Ico n="lock" size={16} /><span>Preview unavailable</span></> :
+                state === 'RateLimited' ? <><Ico n="clock" size={16} /><span>Roblox is busy</span></> :
+                  <><Ico n="outfit" size={18} /><span>No preview</span></>}
         </div>
       )}
     </div>

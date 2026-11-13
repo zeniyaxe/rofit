@@ -5,7 +5,7 @@ mkdirSync('shots', { recursive: true });
 const { ctx } = await launch();
 const page = await openProfile(ctx, 156);
 await openRoFit(page);
-await page.waitForSelector('.rf-card:not(.sk)', { timeout: 25000 });
+await page.waitForSelector('.rf-card:not(.sk)', { state: 'attached', timeout: 45000 });
 await page.waitForTimeout(2500);
 const shot = (n) => page.screenshot({ path: `shots/motion-${n}.png`, clip: { x: 0, y: 40, width: 1385, height: 560 } });
 // open: sample the flight
@@ -18,7 +18,7 @@ await page.keyboard.press('Escape');
 for (const [i, t] of [[1, 70], [2, 90]]) { await page.waitForTimeout(t); await shot('close-' + i); }
 await page.waitForTimeout(600);
 // sort FLIP
-await page.locator('button[aria-label="Sort and filter"]').click();
+await page.locator('button[aria-label="Sort"]').click();
 await page.waitForTimeout(250);
 await page.locator('.rf-mi', { hasText: 'Name' }).click();
 for (const [i, t] of [[1, 60], [2, 100]]) { await page.waitForTimeout(t); await shot('sort-' + i); }

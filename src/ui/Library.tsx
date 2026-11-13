@@ -8,8 +8,8 @@ import type { ImportReport } from '../shared/backup.ts';
 import { costTotal, outfitCost, type OutfitCost } from '../shared/analysis.ts';
 import { isEmpty, matchFields, norm, parseQuery, type Field } from '../shared/search.ts';
 import { Ico } from './icons.tsx';
-import { Confirm, Dialog, Empty, Menu, Prompt, Seg, Spinner, Thumb, Toggle, useToast } from './primitives.tsx';
-import { costLabel, dateStr, download, plural, robux } from './format.ts';
+import { Confirm, Dialog, Empty, Figure, Menu, Prompt, Seg, Spinner, Thumb, Toggle, useToast } from './primitives.tsx';
+import { costFigure, dateStr, download, plural, robux } from './format.ts';
 import { useDebounced } from './data.ts';
 import { useFlip, useIntro } from './motion.tsx';
 
@@ -241,7 +241,7 @@ function LibGrid({ rows, p, costs, onFav }: { rows: { e: LibraryEntry; hit?: Fie
         const chips = Object.values(e.assets).filter((a) => a.thumb).slice(0, 4);
         const more = e.details.assets.length - chips.length;
         const cost = p.settings.showPrices ? costs.get(e.key) : undefined;
-        const costText = cost ? costLabel(cost) : null;
+        const fig = cost ? costFigure(cost) : null;
         const hitText = hit && hit.kind !== 'name' && hit.kind !== 'user' && hit.kind !== 'id' ? hit.label : null;
         return (
           <div role="listitem" data-k={e.key} data-oid={e.outfitId} style={{ '--i': Math.min(i, 24) } as any} class={'rf-cell' + (picked ? ' picked' : '') + (p.openKey === e.key ? ' active' : '')} key={e.key}>
@@ -255,7 +255,7 @@ function LibGrid({ rows, p, costs, onFav }: { rows: { e: LibraryEntry; hit?: Fie
                   {hitText ? <><Ico n="search" size={11} /><span class="rf-ell">{hitText}</span></> : <span class="rf-ell">{e.userName}</span>}
                   {e.source === 'share' && <em class="rf-tag" title="Opened from a share link: a snapshot someone sent, not checked against Roblox until you open it">Shared</em>}
                   {e.note && <Ico n="note" size={12} class="rf-card-ic" label="Has a note" />}
-                  {costText && p.settings.density !== 'compact' && <span class="rf-card-cost">{costText}</span>}
+                  {fig?.text && p.settings.density !== 'compact' && <Figure f={fig} class="rf-card-cost" />}
                 </span>
                 {p.settings.density !== 'compact' && <span class="rf-strip" aria-hidden="true">{chips.map((a) => <img key={a.id} src={a.thumb} alt="" loading="lazy" />)}{more > 0 && <em>+{more}</em>}</span>}
               </span>

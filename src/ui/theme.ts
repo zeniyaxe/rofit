@@ -56,6 +56,14 @@ export function resolveTheme(s: Settings, onRoblox: boolean): Theme {
   return { ...t, dark: rgb ? luminance(rgb) < 0.4 : false };
 }
 
+/**
+ * RoFit's own pages (popup, library/settings, welcome) may carry the brand: fluoro pink as a solid field or mark with
+ * black ink on it, and a deeper pink for text links (≥ 4.5:1 on either theme). Never used inside the roblox.com sheet.
+ */
+export function brandVars(t: Theme): Record<string, string> {
+  return { '--rf-brand': '#FF3D7F', '--rf-brand-on': '#111111', '--rf-brand-ink': t.dark ? '#FF6F9F' : '#C8104F' };
+}
+
 export function themeVars(t: Theme): Record<string, string> {
   // Dark needs a stronger tint than light to read as the same step on Roblox's ramp (measured: surface is ~11% / ~3.5%).
   const [s1, s2, s3, ln] = t.dark ? ['11%', '17%', '23%', '19%'] : ['3.5%', '7.5%', '12%', '13%'];

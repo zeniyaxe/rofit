@@ -16,47 +16,70 @@ export function useSettings(): Settings {
 
 // ---- outfit thumbnails: coalesced into batches, cached for the session ---------------------------
 type Listener = () => void;
+type ThumbSize = '150x150' | '420x420';
+/**
+ * Roblox renders outfit thumbnails on demand and answers `Pending` until the render exists. Pending ones are asked again
+ * with a growing gap (still batched with everything else due), a bounded number of times; after that the thumbnail is
+ * `Stalled` (a client-only state: "not ready yet", no spinner) until something asks for it again. The worker caches a
+ * Pending answer for only 2 s (service.ts#outfitThumbs), so every retry here really reaches Roblox.
+ */
+export const THUMB_RETRY_MS = [2500, 4000, 6000, 9000, 13000, 18000];
+const RATE_RETRY_MS = [8000, 20000];
 class ThumbStore {
   private map = new Map<string, ThumbInfo>();
-  private queue = new Map<string, { id: number; size: '150x150' | '420x420'; tries: number }>();
+  private queue = new Map<string, { id: number; size: ThumbSize; tries: number; due: number }>();
   private listeners = new Set<Listener>();
   private timer = 0;
-  get(id: number, size: '150x150' | '420x420' = '150x150') { return this.map.get(`${id}:${size}`); }
+  private timerAt = 0;
+  get(id: number, size: ThumbSize = '150x150') { return this.map.get(`${id}:${size}`); }
   subscribe(fn: Listener) { this.listeners.add(fn); return () => this.listeners.delete(fn); }
-  request(id: number, size: '150x150' | '420x420' = '150x150') {
+  request(id: number, size: ThumbSize = '150x150') {
     const k = `${id}:${size}`;
     const have = this.map.get(k);
     if (have?.url || this.queue.has(k)) return;
-    this.queue.set(k, { id, size, tries: 0 });
-    if (!this.timer) this.timer = window.setTimeout(() => this.flush(), 50);
+    this.queue.set(k, { id, size, tries: 0, due: 0 });
+    this.schedule(50);
+  }
+  private schedule(ms: number) {
+    const at = Date.now() + ms;
+    if (this.timer && this.timerAt <= at) return;
+    clearTimeout(this.timer);
+    this.timerAt = at;
+    this.timer = window.setTimeout(() => this.flush(), Math.max(0, ms));
+  }
+  private retry(id: number, size: ThumbSize, tries: number, plan: number[]): boolean {
+    if (tries >= plan.length) return false;
+    this.queue.set(`${id}:${size}`, { id, size, tries: tries + 1, due: Date.now() + plan[tries] });
+    return true;
   }
   private emit() { this.listeners.forEach((l) => l()); }
   private async flush() {
     this.timer = 0;
-    const items = [...this.queue.values()];
-    this.queue.clear();
+    const now = Date.now() + 25;
+    const items = [...this.queue.values()].filter((i) => i.due <= now);
+    for (const i of items) this.queue.delete(`${i.id}:${i.size}`);
     for (const size of ['150x150', '420x420'] as const) {
-      const ids = items.filter((i) => i.size === size).map((i) => i.id);
-      for (let i = 0; i < ids.length; i += 50) {
-        const chunk = ids.slice(i, i + 50);
+      const mine = items.filter((i) => i.size === size);
+      for (let i = 0; i < mine.length; i += 50) {
+        const chunk = mine.slice(i, i + 50);
         try {
-          const res = await rpc('outfits.thumbs', { ids: chunk, size });
-          for (const id of chunk) {
-            const t = res[id] ?? { state: 'Error', url: null };
-            this.map.set(`${id}:${size}`, t);
-            // Roblox renders on demand: Pending usually resolves within seconds.
-            const prev = items.find((x) => x.id === id && x.size === size)!;
-            if (t.state === 'Pending' && prev.tries < 6) {
-              this.queue.set(`${id}:${size}`, { id, size, tries: prev.tries + 1 });
-              if (!this.timer) this.timer = window.setTimeout(() => this.flush(), 2500);
-            }
+          const res = await rpc('outfits.thumbs', { ids: chunk.map((x) => x.id), size });
+          for (const it of chunk) {
+            const t = res[it.id] ?? { state: 'Error', url: null };
+            const again = t.state === 'Pending' && this.retry(it.id, size, it.tries, THUMB_RETRY_MS);
+            this.map.set(`${it.id}:${size}`, t.state === 'Pending' && !again ? { state: 'Stalled', url: null } : t);
           }
         } catch (e) {
-          for (const id of chunk) this.map.set(`${id}:${size}`, { state: (e as RpcError).kind === 'rate-limited' ? 'RateLimited' : 'Error', url: null });
+          const limited = (e as RpcError).kind === 'rate-limited';
+          for (const it of chunk) {
+            if (limited) this.retry(it.id, size, it.tries, RATE_RETRY_MS);
+            this.map.set(`${it.id}:${size}`, { state: limited ? 'RateLimited' : 'Error', url: null });
+          }
         }
         this.emit();
       }
     }
+    if (this.queue.size) this.schedule(Math.min(...[...this.queue.values()].map((q) => q.due)) - Date.now());
   }
 }
 export const thumbStore = new ThumbStore();

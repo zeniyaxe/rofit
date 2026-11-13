@@ -11,10 +11,10 @@ import { useMotion, useSettings } from './data.ts';
  * step 2 is the same element that becomes the inspector preview, the left half of the mirror, and the saved tile.
  */
 const SCENES: { id: string; icon: IconName; title: string; body: string; ms: number }[] = [
-  { id: 'discover', icon: 'search', title: 'Find their saved outfits', body: 'Every Roblox profile gets an Outfits tab with the looks that person actually saved.', ms: 2600 },
+  { id: 'discover', icon: 'search', title: 'Find their saved outfits', body: 'Every Roblox profile gets a Saved Outfits entry with the looks that person actually saved.', ms: 2600 },
   { id: 'open', icon: 'outfit', title: 'Open one', body: 'Pick any outfit. It lifts straight out of the grid.', ms: 2000 },
   { id: 'inspect', icon: 'eye', title: 'See the whole avatar', body: 'A big preview, the body setup, and what it costs today, with nothing guessed.', ms: 2800 },
-  { id: 'explore', icon: 'layers', title: 'Go item by item', body: 'Every accessory, clothing piece and body part, with what’s off sale or gone.', ms: 2800 },
+  { id: 'explore', icon: 'layers', title: 'Go item by item', body: 'Every accessory, clothing piece and body part, with what’s off sale or unavailable.', ms: 2800 },
   { id: 'compare', icon: 'compare', title: 'Hold two looks up to the mirror', body: 'Side by side or wiped across one another, with shared and unique items.', ms: 3200 },
   { id: 'save', icon: 'saved', title: 'Keep it', body: 'Save to your library. It stays in this browser even if the owner deletes it.', ms: 2600 },
 ];
@@ -95,14 +95,13 @@ export function Welcome({ mode, onDone }: { mode: 'welcome' | 'whatsnew'; onDone
 
   return (
     <div class="wl wl2">
-      <div class="wl-glow" aria-hidden="true" />
       <section class="wl-left">
         <div class="wl-logo" aria-hidden="true"><Ico n="outfit" size={34} class="pp-swing" /></div>
         <p class="wl-eyebrow">{mode === 'welcome' ? `Installed · v${ver}` : `Updated to v${ver}`}</p>
         <h1 class="wl-title">{words.map((w, i) => <span key={i} style={{ '--i': String(i) } as any}>{w}</span>)}</h1>
         <p class="wl-lead">
           {mode === 'welcome'
-            ? <>RoFit adds an <b>Outfits</b> tab to every Roblox profile, with the outfits that person actually saved. Read-only, and everything stays in this browser.</>
+            ? <>RoFit adds <b>Saved Outfits</b> to every Roblox profile: the outfits that person actually saved, each piece called out with what Roblox knows about it. Read-only, and everything stays in this browser.</>
             : <>Here’s what’s new. Everything still runs locally in your browser.</>}
         </p>
 

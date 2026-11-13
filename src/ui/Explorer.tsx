@@ -8,8 +8,8 @@ import type { Settings } from '../shared/settings.ts';
 import { saveSettings } from '../shared/settings.ts';
 import type { MotionLevel } from '../shared/motion.ts';
 import { Ico } from './icons.tsx';
-import { Chip, Empty, Menu, Popover, Prompt, Seg, Spinner, Thumb, Toggle } from './primitives.tsx';
-import { costLabel, errorText, plural, robux, timeAgo } from './format.ts';
+import { Chip, Empty, Figure, Menu, Popover, Prompt, Seg, Spinner, Thumb, Toggle } from './primitives.tsx';
+import { costFigure, errorText, plural, robux, timeAgo } from './format.ts';
 import { useAsync, useDebounced, type IndexProgress, type OutfitList } from './data.ts';
 import { useFlip, useIntro } from './motion.tsx';
 import { NoOutfits } from './NoOutfits.tsx';
@@ -160,6 +160,16 @@ export function Explorer(p: Props) {
     if (st.layout === 'grid') { const top = cards[0].offsetTop; cols = Math.max(1, cards.filter((c) => c.offsetTop === top).length); }
     const nxt = e.key === 'ArrowLeft' ? i - 1 : e.key === 'ArrowRight' ? i + 1 : e.key === 'ArrowUp' ? i - cols : e.key === 'ArrowDown' ? i + cols : e.key === 'Home' ? 0 : cards.length - 1;
     cards[Math.max(0, Math.min(cards.length - 1, nxt))]?.focus();
+  };
+
+  // One tab stop for the whole grid (the open outfit, else the first): arrows move inside it, Tab moves on to the
+  // inspector instead of walking through every card. The stop follows focus without re-rendering the grid.
+  const tabStopId = rows.some((r) => r.o.id === p.openId) ? p.openId : rows[0]?.o.id;
+  const onGridFocus = (e: FocusEvent) => {
+    const card = (e.target as HTMLElement).closest?.('.rf-card');
+    if (!card || !gridRef.current) return;
+    for (const c of gridRef.current.querySelectorAll<HTMLElement>('.rf-card[tabindex="0"]')) if (c !== card) c.tabIndex = -1;
+    (card as HTMLElement).tabIndex = 0;
   };
 
   const activeFilters = (f.type !== 'all' ? 1 : 0) + (f.saved !== 'all' ? 1 : 0) + (f.price !== 'any' ? 1 : 0) + (f.limited ? 1 : 0) + (f.buyable ? 1 : 0) + f.groups.length;
@@ -315,9 +325,9 @@ export function Explorer(p: Props) {
             </Empty>
           )
         ) : (
-          <div ref={gridRef} class={`rf-grid ${st.layout} ${st.density}${rows.length > 150 ? ' big' : ''}${intro ? ' intro' : ''}`} role="list" onKeyDown={onGridKey}>
+          <div ref={gridRef} class={`rf-grid ${st.layout} ${st.density}${rows.length > 150 ? ' big' : ''}${intro ? ' intro' : ''}`} role="list" onKeyDown={onGridKey} onFocusIn={onGridFocus}>
             {rows.map((r, i) => (
-              <OutfitCard key={r.o.id} o={r.o} i={i} d={p.details.get(r.o.id)} cost={st.showPrices ? r.cost : undefined} active={p.openId === r.o.id} picked={p.multi.has(r.o.id)}
+              <OutfitCard key={r.o.id} o={r.o} i={i} tabStop={r.o.id === tabStopId} d={p.details.get(r.o.id)} cost={st.showPrices ? r.cost : undefined} active={p.openId === r.o.id} picked={p.multi.has(r.o.id)}
                 isSaved={p.saved.has(`${p.userId}:${r.o.id}`)} list={st.layout === 'list'} hit={r.hit && r.hit.kind !== 'name' && r.hit.kind !== 'id' ? r.hit.label ?? null : null}
                 multiMode={p.multi.size > 0} onOpen={p.onOpen} onToggle={p.onToggle} showTech={st.technical} compact={st.density === 'compact'} />
             ))}
@@ -349,8 +359,8 @@ function FChip({ label, onClear }: { label: string; onClear: () => void }) {
   return <button class="rf-chip accent btn" onClick={onClear} aria-label={`Remove filter: ${label}`}>{label}<Ico n="close" size={12} /></button>;
 }
 
-function OutfitCard({ o, i, d, cost, active, picked, isSaved, list, hit, multiMode, onOpen, onToggle, showTech, compact }: {
-  o: OutfitRec; i: number; d?: OutfitDetails; cost?: OutfitCost; active: boolean; picked: boolean; isSaved: boolean; list: boolean; hit: string | null; multiMode: boolean;
+function OutfitCard({ o, i, tabStop, d, cost, active, picked, isSaved, list, hit, multiMode, onOpen, onToggle, showTech, compact }: {
+  o: OutfitRec; i: number; tabStop: boolean; d?: OutfitDetails; cost?: OutfitCost; active: boolean; picked: boolean; isSaved: boolean; list: boolean; hit: string | null; multiMode: boolean;
   onOpen: Props['onOpen']; onToggle: (id: number) => void; showTech: boolean; compact: boolean;
 }) {
   const ref = useRef<HTMLButtonElement>(null);
@@ -369,11 +379,11 @@ function OutfitCard({ o, i, d, cost, active, picked, isSaved, list, hit, multiMo
     onOpen(o, th?.getBoundingClientRect(), th?.querySelector('img')?.currentSrc);
   };
   const sub = d ? `${d.avatarType} · ${plural(d.assets.length, 'item')}` : null;
-  const costText = cost ? costLabel(cost) : null;
-  const costTip = cost ? [`${robux(cost.buyNow)} new`, cost.resale ? `${robux(cost.resale)} from resellers` : '', cost.offsale ? `${cost.offsale} off sale` : '', cost.unknown ? `${cost.unknown} unknown` : ''].filter(Boolean).join(' · ') : '';
+  const fig = cost ? costFigure(cost) : null;
+  const costSpoken = !fig?.text ? '' : fig.exact || fig.amount === 0 ? fig.text : `at least ${robux(fig.amount)}`;
   return (
     <div ref={host} role="listitem" data-k={o.id} data-oid={o.id} style={{ '--i': Math.min(i, 24) } as any} class={'rf-cell' + (picked ? ' picked' : '') + (active ? ' active' : '')}>
-      <button ref={ref} class="rf-card" title={o.name} onClick={click} aria-label={`${o.name}${isSaved ? ', saved' : ''}${costText ? `, ${costText}` : ''}`} aria-pressed={picked ? true : undefined} aria-current={active ? 'true' : undefined}
+      <button ref={ref} class="rf-card" title={o.name} tabIndex={tabStop ? 0 : -1} onClick={click} aria-label={`${o.name}${isSaved ? ', saved' : ''}${costSpoken ? `, ${costSpoken}` : ''}`} aria-pressed={picked ? true : undefined} aria-current={active ? 'true' : undefined}
         onKeyDown={(e) => { if (e.key === ' ') { e.preventDefault(); onToggle(o.id); } }}>
         <Thumb id={o.id} enabled={near} />
         <span class="rf-card-t">
@@ -381,7 +391,7 @@ function OutfitCard({ o, i, d, cost, active, picked, isSaved, list, hit, multiMo
           <span class="rf-card-sub">
             {hit ? <><Ico n="search" size={11} /><span class="rf-ell">{hit}</span></> : <span class="rf-ell">{sub ?? (showTech ? `#${o.id}` : ' ')}</span>}
             {!o.isEditable && <em class="rf-tag">Preset</em>}
-            {costText && !compact && <span class="rf-card-cost" title={costTip}>{costText}</span>}
+            {fig?.text && !compact && <Figure f={fig} class="rf-card-cost" />}
           </span>
         </span>
         {isSaved && <span class="rf-badge" title="In your library"><Ico n="saved" size={14} /></span>}

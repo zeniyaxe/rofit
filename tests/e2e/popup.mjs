@@ -16,7 +16,7 @@ for (const uid of [156, 1]) {
 }
 const popup = async (hash = '') => {
   const pp = await ctx.newPage();
-  await pp.setViewportSize({ width: 320, height: 460 });
+  await pp.setViewportSize({ width: 340, height: 480 }); // the popup is 340px wide (styles.css .rf-pop2)
   await pp.goto(`chrome-extension://${id}/popup.html${hash}`);
   await pp.waitForTimeout(900);
   return pp;
@@ -25,7 +25,7 @@ const popup = async (hash = '') => {
 {
   const pp = await popup();
   await pp.screenshot({ path: 'shots/popup-idle.png' });
-  const recent = await pp.locator('.rf-pop-sec[aria-label="Recently viewed"] .rf-pop-name').allInnerTexts();
+  const recent = await pp.locator('#rf-pop-panel[aria-labelledby="rf-pt-recent"] .rf-pop-name').allInnerTexts();
   ok('idle: recently viewed lists the profiles just visited', recent.some((t) => t.startsWith('builderman')) && recent.some((t) => t.startsWith('Roblox')), recent.map((t) => t.split('\n')[0]).join(', '));
   ok('idle: explains where RoFit lives on a profile', /Saved Outfits/.test(await pp.locator('.rf-pop-now.idle').innerText()));
   ok('search box has focus on open', await pp.evaluate(() => document.activeElement?.getAttribute('aria-label') === 'Search Roblox users and your library'));
