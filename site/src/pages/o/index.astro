@@ -1,13 +1,14 @@
 ---
 import '../../styles/ported.css';
-import Doc from '../../layouts/Doc.astro';
+import Base from '../../layouts/Base.astro';
 import { viewer } from '../../pages.mjs';
-
 ---
-<Doc title="Shared outfit" lead="Open a snapshot shared from RoFit." toc={false}>
-  <div class="ported">
-  <Fragment set:html={viewer()} />
+<Base title="Shared outfit" description="Open an outfit someone shared from RoFit. The outfit travels inside the link; rofit.site never receives it." noindex>
+  <div class="ported viewer-page">
+    <Fragment set:html={viewer()} />
   </div>
-
-</Doc>
+</Base>
+<style is:global>
+  .viewer-page { padding-top: calc(var(--nav-h) + clamp(16px, 4vw, 48px)); min-height: 70svh; }
+</style>
 <script>import '../../app.ts';</script>

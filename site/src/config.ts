@@ -5,7 +5,7 @@
 export const SITE = {
   name: 'RoFit',
   url: 'https://rofit.site',
-  tagline: 'See the fit. Know every piece.',
+  tagline: 'Saved Roblox outfits, piece by piece.',
   description: 'RoFit adds an Outfits tab to Roblox profiles: browse the outfits a player saved, inspect every item, compare looks and keep the ones you like. Free, source on GitHub, nothing collected.',
 } as const;
 

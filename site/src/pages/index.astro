@@ -1,25 +1,21 @@
 ---
 import Base from '../layouts/Base.astro';
-import Hero from '../components/Hero.astro';
-import SceneRail from '../components/SceneRail.astro';
-import SceneCompare from '../components/SceneCompare.astro';
-import SceneShare from '../components/SceneShare.astro';
-import ScenePrivate from '../components/ScenePrivate.astro';
+import Cover from '../components/Cover.astro';
+import Rack from '../components/Rack.astro';
+import FaceToFace from '../components/FaceToFace.astro';
+import TakeIt from '../components/TakeIt.astro';
+import Private from '../components/Private.astro';
 import Demo from '../components/Demo.astro';
 import Proof from '../components/Proof.astro';
-import InstallCta from '../components/InstallCta.astro';
+import Close from '../components/Close.astro';
 ---
-<Base>
-  <Hero />
-  <SceneRail />
-  <SceneCompare />
-  <SceneShare />
-  <ScenePrivate />
+<Base onField hideMark>
+  <Cover />
+  <Rack />
+  <FaceToFace />
+  <TakeIt />
+  <Private />
   <Demo />
   <Proof />
-  <InstallCta />
-  <script>
-    import { initScenes } from '../scripts/scenes';
-    initScenes();
-  </script>
+  <Close />
 </Base>

@@ -4,11 +4,11 @@ import Base from './Base.astro';
 interface Props { title: string; lead: string; description?: string; meta?: string; toc?: boolean; type?: 'website' | 'article' }
 const { title, lead, description, meta, toc = true, type = 'website' } = Astro.props;
 ---
-<Base title={title} description={description ?? lead} type={type} curtain valance>
-  <header class="valance">
+<Base title={title} description={description ?? lead} type={type}>
+  <header class="masthead">
     <div class="wrap">
       <h1>{title}</h1>
-      <p>{lead}</p>
+      <p class="lead">{lead}</p>
       {meta && <p class="meta">{meta}</p>}
     </div>
   </header>
@@ -19,7 +19,7 @@ const { title, lead, description, meta, toc = true, type = 'website' } = Astro.p
     </div>
   </div>
   <script>
-    // Table of contents from the page's own h2s, with the current section highlighted.
+    // Table of contents from the page's own h2s, with the section being read marked.
     const list = document.getElementById('toc');
     const hs = [...document.querySelectorAll<HTMLElement>('#prose h2')];
     if (list && hs.length > 2) {
@@ -30,13 +30,9 @@ const { title, lead, description, meta, toc = true, type = 'website' } = Astro.p
       });
       const links = [...list.querySelectorAll('a')];
       const io = new IntersectionObserver((es) => es.forEach((e) => {
-        if (e.isIntersecting) links.forEach((a) => a.classList.toggle('on', a.getAttribute('href') === '#' + (e.target as HTMLElement).id));
+        if (e.isIntersecting) links.forEach((a) => { const on = a.getAttribute('href') === '#' + (e.target as HTMLElement).id; a.classList.toggle('on', on); on ? a.setAttribute('aria-current', 'location') : a.removeAttribute('aria-current'); });
       }), { rootMargin: '-20% 0px -70% 0px' });
       hs.forEach((h) => io.observe(h));
     } else document.querySelector('.toc')?.remove();
   </script>
 </Base>
-
-<style>
-  .meta { font-size: 14px !important; margin-top: 12px !important; opacity: .9; }
-</style>

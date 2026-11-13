@@ -1,0 +1,58 @@
+---
+import { ACCESS } from '../../../src/shared/access.ts';
+const order = ['public', 'viewer', 'restricted', 'cached', 'unknown', 'unavailable'] as const;
+---
+<section class="priv ink-page" id="private" aria-labelledby="priv-h">
+  <div class="wrap grid">
+    <div class="copy">
+      <h2 id="priv-h" class="rv">Some wardrobes stay shut.</h2>
+      <p class="rv" style="--i:1">Roblox lets players keep their saved outfits to themselves. When Roblox says no, RoFit says so too, and hides any copy it cached on an earlier visit. It never tries another way in.</p>
+      <p class="rv" style="--i:2">What it can still show is what Roblox shows everyone: the outfit they are <em>wearing right now</em>, clearly marked as not a saved outfit.</p>
+      <div class="slot rv" style="--i:3" aria-hidden="true">
+        <div class="art"><span class="no">——————</span><span class="stamp">Private</span></div>
+        <div class="body"><i></i><i class="short"></i><span>Roblox won’t show these outfits to you</span></div>
+      </div>
+    </div>
+    <div class="key">
+      <h3>Every list says where it stands</h3>
+      <p class="from">These labels are read from the extension’s own source each time this site is built.</p>
+      <dl>
+        {order.map((k, n) => (
+          <div class={'row rv tone-' + ACCESS[k].tone} style={`--i:${n}`}>
+            <dt><span class="chip">{ACCESS[k].label}</span></dt>
+            <dd>{ACCESS[k].body}</dd>
+          </div>
+        ))}
+      </dl>
+      <a class="link" href="/guides/no-outfits">Why a profile shows no outfits</a>
+    </div>
+  </div>
+</section>
+
+<style>
+  .priv { margin-top: var(--section); padding-block: clamp(80px, 10vw, 150px); }
+  .grid { display: grid; grid-template-columns: minmax(0, .95fr) minmax(0, 1.05fr); gap: var(--s8); align-items: start; }
+  h2 { font-size: var(--t-h2); font-stretch: var(--narrow); font-weight: 900; text-transform: uppercase; line-height: .88; max-width: 9ch; }
+  .copy > p { margin-top: var(--s5); max-width: 44ch; color: var(--ink-2); }
+  .copy em { color: var(--ink); font-style: normal; font-weight: 700; }
+  /* an empty sleeve: the collector number and stats print as blanks, because Roblox didn't give them */
+  .slot { margin-top: var(--s7); width: min(250px, 72%); padding: 6px; border-radius: 3px; outline: 1px dashed var(--rule-2); outline-offset: -1px; transform: rotate(-1.5deg); }
+  .slot .art { position: relative; aspect-ratio: 1; display: grid; place-items: center; border-radius: 1px; outline: 1px dashed var(--rule-2); outline-offset: -1px; }
+  .slot .no { position: absolute; left: 10px; top: 9px; color: var(--ink-3); }
+  .slot .stamp { padding: 6px 12px; border: 2px solid var(--spot); color: var(--spot); font-family: var(--f-display); font-stretch: var(--wide); font-weight: 820; font-size: .9rem; letter-spacing: .08em; text-transform: uppercase; transform: rotate(-8deg); }
+  .slot .body { display: grid; gap: 7px; padding: 12px 6px 6px; font-size: var(--t-tiny); color: var(--ink-3); }
+  .slot i { display: block; height: 10px; border-bottom: 1px dashed var(--rule-2); }
+  .slot i.short { width: 60%; }
+  .key h3 { font-size: 1.6rem; }
+  .from { margin-top: var(--s2); font-size: var(--t-small); color: var(--ink-3); }
+  dl { margin: var(--s5) 0; }
+  .row { display: grid; grid-template-columns: 170px minmax(0, 1fr); gap: 6px var(--s5); padding: var(--s4) 0; border-top: 1px solid var(--rule); }
+  dd { margin: 0; color: var(--ink-2); font-size: .95rem; }
+  .chip { display: inline-block; padding: 2px 8px; border-radius: var(--r-sm); font-weight: 700; font-size: .84rem; box-shadow: inset 0 0 0 1px currentColor; }
+  /* the site prints in ink and one spot: known states solid, refusals in the spot, unknowns dashed */
+  .tone-ok .chip { color: var(--ink); }
+  .tone-accent .chip { color: var(--spot); }
+  .tone-warn .chip { background: var(--spot); color: #0c0c0d; box-shadow: none; }
+  .tone-muted .chip { color: var(--ink-3); box-shadow: none; outline: 1px dashed currentColor; outline-offset: -1px; }
+  @media (max-width: 900px) { .grid { grid-template-columns: minmax(0, 1fr); } .row { grid-template-columns: minmax(0, 1fr); } }
+</style>

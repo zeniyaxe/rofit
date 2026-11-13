@@ -1,21 +1,172 @@
 ---
-import '../styles/ported.css';
 import Base from '../layouts/Base.astro';
-import { features } from '../pages.mjs';
+import { star, hero, pair, knownItems, priceOf, kindOf, visible, cardStats, money } from '../lib/real';
+import { ACCESS } from '../../../src/shared/access.ts';
+
+const rack = star.outfits.slice(0, 4);
+const pieces = knownItems(hero).filter(visible).slice(0, 4);
+const shared = pair[0].assets.filter((a) => pair[1].assets.some((b) => b.id === a.id)).length;
+
+const sections = [
+  { id: 'profiles', title: 'On every profile', lede: 'RoFit fits into roblox.com instead of sending you somewhere else.', points: [
+    'On Roblox’s current profile layout, a <b>Saved Outfits</b> row under Currently Wearing. On the older layout, an <b>Outfits</b> tab next to About and Creations.',
+    'A <b>hanger button</b> by the profile’s ⋯ menu, and a toolbar popup that finds anyone by username, user ID or profile link.',
+    'Nothing is fetched until you click. It keeps working as Roblox re-renders the page or you move between profiles.',
+  ] },
+  { id: 'explorer', title: 'Explorer', lede: 'A whole wardrobe at once: grid or list, three sizes, arrow keys to move around. Roblox’s own preset outfits stay hidden unless you ask for them.', points: [
+    '<b>Read every outfit</b> with one click (one request per outfit, paced for Roblox’s limits) to search by item or creator, filter by price and sort by cost.',
+    'Search that forgives typos and understands <code>"exact phrases"</code>, <code>-exclusions</code> and <code>#IDs</code>.',
+    'Filters for avatar type, kinds of item, price range, limiteds, and whether a look is already in your library.',
+    'The <b>Items</b> view lists every item across the outfits, how often each is reused, and near-duplicate looks.',
+  ], art: 'rack' },
+  { id: 'inspector', title: 'Inspector', lede: 'Open an outfit to see exactly what it’s made of, with each fact labelled by where it came from.', points: [
+    'The full render, then every item grouped by kind, with thumbnails and links to the Marketplace.',
+    '<b>Cost to recreate</b>: buy-new and resale totals kept apart; off-sale items and unknown prices are counted, never guessed.',
+    '<b>What do I own?</b> marks the items you already have, when you’re signed in to Roblox.',
+    'Body colours and scale, similar outfits, and <b>history</b>: what changed since RoFit last saw it on this computer.',
+    'Copy or download the item list as JSON, or as a Roblox Studio script.',
+  ], art: 'pieces' },
+  { id: 'compare', title: 'Compare', lede: 'Pick two outfits, or one outfit and what you’re wearing, and see them together.', points: [
+    'Side by side, or a <b>wipe</b> from one render to the other.',
+    'What’s in both, what’s only in each, and the share of pieces they have in common.',
+    'Compare with <b>what you’re wearing</b> right now (needs you signed in to Roblox).',
+    'Copy the differences as text to paste anywhere.',
+  ], art: 'compare' },
+  { id: 'library', title: 'Library', lede: 'Your library lives in your browser, on your computer. Nothing is uploaded anywhere.', points: [
+    'Collections you can rename, delete or move outfits between; favourites, tags and notes.',
+    'Select several to favourite, move, tag, export or remove in one go.',
+    'Each saved outfit keeps its own copy of its item data, so clearing RoFit’s cache never breaks your library.',
+    '<b>Back up</b> everything to one file. Importing shows what will be added before anything changes.',
+  ] },
+  { id: 'share', title: 'Share links and cards', lede: 'Send an outfit, not an account.', points: [
+    'The outfit sits after the <code>#</code> in the link, a part browsers never send to a server. rofit.site can show it but never receives it.',
+    'Anyone can open the link on rofit.site; with RoFit installed, <b>Save to RoFit</b> imports it after you confirm in RoFit.',
+    'For outfits RoFit can’t confirm are public, it asks you first, and it won’t make links for private lists.',
+    'Or save the outfit as a PNG card, drawn on your device.',
+  ], art: 'link' },
+  { id: 'visibility', title: 'Visibility', lede: 'Since late 2025 Roblox lets people limit who sees their outfits. RoFit labels every list with what it observed.', points: [], art: 'access' },
+  { id: 'keyboard', title: 'Keyboard and comfort', lede: 'Built to be driven quickly and to stay comfortable to look at.', points: [
+    '<kbd>Ctrl</kbd> <kbd>K</kbd> command palette, <kbd>/</kbd> search, <kbd>J</kbd> and <kbd>K</kbd> for next and previous, <kbd>S</kbd> save, <kbd>C</kbd> compare, <kbd>?</kbd> for the full list.',
+    'Motion you choose: System, Full, Balanced or Calm, with a live preview. Calm keeps gentle fades and drops movement.',
+    'Light, dark and OLED themes; Auto follows Roblox’s own theme.',
+  ] },
+];
 ---
-<Base title="RoFit Features" description="Browse, inspect, compare, and save Roblox outfits.">
-  <div class="ported reference features-page">
-    <Fragment set:html={features()} />
+<Base title="Features" description="Everything RoFit does with saved Roblox outfits: explore, inspect, compare, keep and share, with honest labels for what Roblox does and doesn’t show.">
+  <header class="masthead">
+    <div class="wrap">
+      <h1>What RoFit does</h1>
+      <p class="lead">Browse the outfits a player saved, take any one apart, compare two, and keep the looks you like. Every example on this page is a real public outfit.</p>
+    </div>
+  </header>
+
+  <div class="wrap layout">
+    <nav class="index" aria-label="Features on this page">
+      <ol>{sections.map((s) => <li><a href={'#' + s.id}>{s.title}</a></li>)}</ol>
+      <a class="btn sm" href="/#try">Try it live</a>
+    </nav>
+
+    <div class="list">
+      {sections.map((s) => (
+        <section class="feat" id={s.id} aria-labelledby={s.id + '-h'}>
+          <div class="text">
+            <h2 id={s.id + '-h'}>{s.title}</h2>
+            <p class="lede">{s.lede}</p>
+            {s.points.length > 0 && <ul>{s.points.map((p) => <li set:html={p} />)}</ul>}
+          </div>
+
+          {s.art === 'rack' && (
+            <ul class="art rack" aria-label={`Saved outfits by ${star.displayName}`}>
+              {rack.map((o) => { const st = cardStats(o); return (
+                <li class="card"><div class="art-img"><img src={o.thumb} alt="" width="420" height="420" loading="lazy" /><span class="no">{o.id}</span></div>
+                  <div class="body"><b class="t">{o.name}</b><span class="stats">{st.pieces} pieces · {st.forSale ? <span class="price known">{money(st.total)}</span> : <span class="price off">Off sale</span>}</span></div></li>
+              ); })}
+            </ul>
+          )}
+          {s.art === 'pieces' && (
+            <figure class="art pieces">
+              <img src={hero.thumb} alt={hero.name} width="420" height="420" loading="lazy" />
+              <figcaption>
+                <b>{hero.name}</b>
+                <ul>{pieces.map((i) => { const p = priceOf(i); return <li><span><b>{i.name}</b><small>{kindOf(i.typeName)}</small></span>{i.limited && <span class="ltd">Ltd</span>}<span class={'price ' + p.tone}>{p.text}</span></li>; })}</ul>
+              </figcaption>
+            </figure>
+          )}
+          {s.art === 'compare' && (
+            <figure class="art cmp">
+              <img src={pair[0].thumb} alt={pair[0].name} width="420" height="420" loading="lazy" />
+              <figcaption><strong class="num">{shared}</strong><span>pieces in both</span></figcaption>
+              <img src={pair[1].thumb} alt={pair[1].name} width="420" height="420" loading="lazy" />
+            </figure>
+          )}
+          {s.art === 'link' && <p class="art url"><span>rofit.site/o/</span><b>#1.eJyNk…</b></p>}
+          {s.art === 'access' && (
+            <dl class="art access">
+              {(['public', 'viewer', 'restricted', 'unknown'] as const).map((k) => <div class={'tone-' + ACCESS[k].tone}><dt><span class="chip">{ACCESS[k].label}</span></dt><dd>{ACCESS[k].body}</dd></div>)}
+            </dl>
+          )}
+        </section>
+      ))}
+
+      <div class="end">
+        <h2>Try it on a profile you know.</h2>
+        <div class="acts"><a class="btn" href="/download">Install RoFit</a><a class="btn line" href="/docs">Read the docs</a></div>
+      </div>
+    </div>
   </div>
 </Base>
+
 <style>
-  .reference { padding-block: calc(var(--nav-h) + clamp(28px, 6vw, 80px)) 70px; }
-  .reference :global(.page-head) { margin-bottom: clamp(28px, 5vw, 58px); }
-  .reference :global(.page-head h1) { font-size: clamp(2.5rem, 6vw, 5rem); }
-  .reference :global(.page-head .lede) { color: var(--ink-2); max-width: 64ch; margin-top: 14px; }
-  .features-page :global(.feature-nav) { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:26px; }
-  .features-page :global(.feature-nav a) { display:inline-flex; align-items:center; min-height:42px; padding:6px 12px; border:1px solid var(--line); border-radius:9px; font-size:.9rem; font-weight:650; }
-  .features-page :global(.feat-art) { border:1px solid var(--line); }
-  .features-page :global(.feat h2) { margin-block:8px 12px; }
-  @media(max-width:700px) { .features-page :global(.feat:nth-of-type(even) .feat-art) { order:0; } }
+  .layout { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: var(--s8); padding-top: var(--s8); align-items: start; }
+  .index { position: sticky; top: calc(var(--nav-h) + 28px); display: grid; gap: var(--s5); }
+  .index ol { list-style: none; border-left: 1px solid var(--rule); }
+  .index a:not(.btn) { display: block; padding: 6px 0 6px 14px; margin-left: -1px; border-left: 1px solid transparent; text-decoration: none; color: var(--ink-2); font-size: var(--t-small); font-weight: 600; transition: color var(--d-fast), border-color var(--d-fast); }
+  .index a:not(.btn):hover, .index a.on { color: var(--ink); border-left-color: var(--ink); }
+  .index .btn { justify-self: start; }
+  .feat { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--s6) var(--s7); padding: var(--s8) 0; border-top: 1px solid var(--ink); scroll-margin-top: calc(var(--nav-h) + 16px); }
+  .feat:first-child { padding-top: 0; border-top: 0; }
+  .feat:not(:has(.art)) .text { grid-column: 1 / -1; max-width: 72ch; }
+  h2 { font-size: clamp(2rem, 4vw, 3.4rem); }
+  .lede { margin-top: var(--s4); color: var(--ink-2); font-size: 1.05em; }
+  .text ul { margin-top: var(--s5); padding-left: 1.1em; display: grid; gap: var(--s3); }
+  .text li::marker { color: var(--spot); }
+  .text code { background: var(--paper-2); padding: .05em .35em; border-radius: var(--r-sm); font-size: .86em; }
+  .art { align-self: start; margin: 0; }
+  .rack { list-style: none; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s3); }
+  .rack .art-img { position: relative; aspect-ratio: 1; background: color-mix(in srgb, var(--paper-2) 70%, var(--stock)); }
+  .rack .art-img img { width: 100%; height: 100%; object-fit: contain; }
+  .rack .art-img .no { position: absolute; left: 8px; top: 7px; color: var(--ink-2); }
+  .pieces { display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); align-items: center; gap: var(--s4); background: var(--spot); color: var(--spot-ink); border-radius: var(--r); padding: var(--s4); }
+  .pieces > b, .pieces figcaption > b { font-family: var(--f-display); font-stretch: var(--cond); font-size: 1.4rem; font-weight: 820; }
+  .pieces ul { list-style: none; margin-top: var(--s3); }
+  .pieces li { display: flex; align-items: center; gap: 8px; padding: 8px 0; border-top: 1px solid var(--spot-rule); font-size: .88rem; }
+  .pieces li > span:first-child { display: grid; flex: 1; min-width: 0; line-height: 1.2; }
+  .pieces li b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pieces small { color: rgb(12 12 13 / .72); }
+  .pieces .ltd { background: var(--spot-ink); color: var(--spot); }
+  .cmp { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: var(--s3); background: var(--stock); border-radius: var(--r); box-shadow: 0 0 0 1px var(--rule); padding: var(--s4); }
+  .cmp figcaption { display: grid; justify-items: center; text-align: center; font-size: var(--t-small); font-weight: 650; }
+  .cmp strong { font-family: var(--f-display); font-stretch: var(--wide); font-weight: 820; font-size: 3rem; line-height: 1; }
+  .url { display: inline-flex; padding: 12px 16px; background: var(--ink); color: var(--paper); border-radius: var(--r-sm); font-family: var(--f-code); font-size: .9rem; justify-self: start; }
+  .url b { color: var(--spot); font-weight: 600; }
+  .access div { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 4px var(--s4); padding: var(--s3) 0; border-top: 1px solid var(--rule); }
+  .access dd { margin: 0; color: var(--ink-2); font-size: .92rem; }
+  .chip { display: inline-block; padding: 2px 8px; border-radius: var(--r-sm); font-weight: 700; font-size: .82rem; box-shadow: inset 0 0 0 1px currentColor; }
+  .tone-ok .chip { color: var(--ink); }
+  .tone-accent .chip { color: var(--link); }
+  .tone-warn .chip { background: var(--spot); color: #0c0c0d; box-shadow: none; }
+  .tone-muted .chip { color: var(--ink-3); box-shadow: none; outline: 1px dashed currentColor; outline-offset: -1px; }
+  .end { padding: var(--s8) 0 0; border-top: 1px solid var(--ink); }
+  .end h2 { font-stretch: var(--narrow); text-transform: uppercase; font-weight: 900; font-size: clamp(2.4rem, 6vw, 5rem); }
+  .acts { display: flex; flex-wrap: wrap; gap: var(--s3); margin-top: var(--s6); }
+  @media (max-width: 1000px) { .layout { grid-template-columns: minmax(0, 1fr); } .index { position: static; } .index ol { display: flex; flex-wrap: wrap; border: 0; gap: 4px 14px; } .index a:not(.btn) { padding: 4px 0; border: 0; } }
+  @media (max-width: 760px) { .feat { grid-template-columns: minmax(0, 1fr); } .access div { grid-template-columns: minmax(0, 1fr); } }
 </style>
+
+<script>
+  const links = [...document.querySelectorAll<HTMLAnchorElement>('.index ol a')];
+  const io = new IntersectionObserver((es) => es.forEach((e) => {
+    if (e.isIntersecting) links.forEach((a) => a.classList.toggle('on', a.hash === '#' + e.target.id));
+  }), { rootMargin: '-30% 0px -60% 0px' });
+  document.querySelectorAll('.feat').forEach((s) => io.observe(s));
+</script>

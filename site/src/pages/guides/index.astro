@@ -4,14 +4,16 @@ import { GUIDES } from '../../lib/guides';
 ---
 <Doc title="Guides" lead="Short, specific answers for using RoFit." toc={false}>
   <ul class="gl">
-    {GUIDES.map((g) => <li><a href={`/guides/${g.slug}`}><b>{g.title}</b><span>{g.blurb}</span></a></li>)}
+    {GUIDES.map((g) => <li><a href={`/guides/${g.slug}`}><b>{g.title}</b><span>{g.blurb}</span><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg></a></li>)}
   </ul>
 </Doc>
 <style is:global>
-  .gl { list-style: none; padding: 0 !important; display: grid; gap: 0 !important; }
-  .gl a { display: grid; gap: 4px; padding: 20px 0; border-top: 1px solid var(--line); text-decoration: none; color: var(--ink) !important; font-weight: 400 !important; transition: transform .25s var(--ease); }
-  .gl li:last-child a { border-bottom: 1px solid var(--line); }
-  .gl a:hover { transform: translateX(10px); }
-  .gl b { font-family: var(--f-display); font-size: 1.3rem; letter-spacing: -.02em; }
-  .gl span { color: var(--ink-2); }
+  .prose .gl { list-style: none; padding: 0; display: grid; gap: 0; }
+  .prose .gl a { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px var(--s4); align-items: center; padding: var(--s5) 0; border-top: 1px solid var(--rule); text-decoration: none; color: var(--ink); font-weight: 400; }
+  .prose .gl li:last-child a { border-bottom: 1px solid var(--rule); }
+  .prose .gl b { font-family: var(--f-display); font-stretch: var(--cond); font-weight: 800; font-size: 1.6rem; letter-spacing: -.01em; line-height: 1.05; }
+  .prose .gl span { grid-column: 1; color: var(--ink-2); }
+  .prose .gl svg { grid-column: 2; grid-row: 1 / span 2; transition: transform var(--d) var(--land); }
+  .prose .gl a:hover svg { transform: translateX(6px); }
+  .prose .gl a:hover b { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: .15em; }
 </style>

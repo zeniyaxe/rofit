@@ -1,0 +1,78 @@
+---
+import { hero as o, knownItems, buyNow, money, priceOf, kindOf, visible, ownerOfOutfit } from '../lib/real';
+const items = knownItems(o).filter(visible).slice(0, 5);
+const owner = ownerOfOutfit(o.id);
+---
+<section class="take section" id="share" aria-labelledby="take-h">
+  <div class="wrap grid">
+    <div class="copy">
+      <h2 id="take-h" class="rv">Take it with you.</h2>
+      <p class="rv" style="--i:1">Save any outfit as an image card with its render, every piece and the price of what’s on sale. It’s drawn on your device; nothing is uploaded.</p>
+      <p class="rv" style="--i:2">Or send a link. The outfit travels in the part after the <code>#</code>, which browsers never send to a server, so rofit.site can open it without ever seeing it.</p>
+      <div class="acts rv" style="--i:3">
+        <button class="btn" id="share-save" type="button">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M5 21h14" /></svg>
+          Save this card as a PNG
+        </button>
+        <a class="link" href="/guides/share-card">How cards and links work</a>
+      </div>
+      <p class="hint" id="share-hint" role="status"></p>
+    </div>
+
+    <div class="sheet rv" style="--i:1">
+      <article class="pcard" id="share-card" data-outfit={o.id}>
+        <div class="l">
+          <img src={o.thumb} alt={`${o.name}, saved by ${owner?.displayName ?? 'a player'}`} width="420" height="420" loading="lazy" />
+          <span class="no">{o.id}</span>
+        </div>
+        <div class="r">
+          <h3>{o.name}</h3>
+          <p class="by">{owner?.displayName} · {o.assets.length} pieces</p>
+          <ul>
+            {items.map((i) => { const p = priceOf(i); return (
+              <li><img src={i.thumb!} alt="" width="36" height="36" loading="lazy" /><span><b>{i.name}</b><small>{kindOf(i.typeName)}</small></span><span class={'price ' + p.tone}>{p.text}</span></li>
+            ); })}
+          </ul>
+          <p class="tot"><span>On sale new</span><strong class="num">{money(buyNow(o))}</strong></p>
+        </div>
+      </article>
+      <p class="url" aria-label="What a share link looks like"><span>rofit.site/o/</span><b>#1.eJyNk…</b></p>
+    </div>
+  </div>
+</section>
+
+<style>
+  .grid { display: grid; grid-template-columns: minmax(0, .85fr) minmax(0, 1.15fr); gap: var(--s8); align-items: center; }
+  h2 { font-size: var(--t-h2); }
+  .copy > p { margin-top: var(--s5); max-width: 44ch; color: var(--ink-2); }
+  .copy code { background: var(--paper-2); padding: .05em .35em; border-radius: var(--r-sm); }
+  .acts { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s4) var(--s5); margin-top: var(--s6); }
+  .hint { min-height: 1.6em; margin-top: var(--s3); font-size: var(--t-small); color: var(--ink-2); }
+  .sheet { position: relative; }
+  .pcard { display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); background: #fff; color: #0c0c0d; border-radius: var(--r); box-shadow: 0 0 0 1px var(--rule), var(--lift-2); overflow: hidden; transform: rotate(-1.2deg); transition: transform var(--d-slow) var(--land); }
+  .pcard:hover { transform: rotate(0deg) translateY(-4px); }
+  .pcard .l { position: relative; background: #f1f1ed; display: grid; place-items: center; }
+  .pcard .l img { width: 100%; height: auto; }
+  .pcard .l .no { position: absolute; left: 12px; top: 10px; color: #45454b; }
+  .pcard .r { padding: var(--s5); display: grid; align-content: start; gap: 4px; }
+  .pcard h3 { font-size: 1.8rem; font-stretch: var(--cond); }
+  .by { font-size: var(--t-small); color: #45454b; margin-bottom: var(--s3); }
+  .pcard ul { list-style: none; }
+  .pcard li { display: grid; grid-template-columns: 36px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 7px 0; border-top: 1px solid rgb(12 12 13 / .1); font-size: .86rem; }
+  .pcard li img { width: 36px; height: 36px; object-fit: cover; border-radius: var(--r-sm); background: #f1f1ed; }
+  .pcard li span:nth-child(2) { display: grid; min-width: 0; line-height: 1.2; }
+  .pcard li b { font-weight: 700; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  .pcard li small { color: #66666e; font-size: .74rem; }
+  .pcard .price.unknown { color: #66666e; }
+  .tot { display: flex; justify-content: space-between; align-items: baseline; margin-top: var(--s3); padding-top: var(--s3); border-top: 1.5px solid #0c0c0d; font-size: var(--t-small); font-weight: 650; }
+  .tot strong { font-family: var(--f-display); font-stretch: var(--wide); font-weight: 800; font-size: 1.4rem; }
+  .url { position: absolute; right: -8px; bottom: -22px; display: inline-flex; padding: 10px 14px; background: var(--ink); color: var(--paper); border-radius: var(--r-sm); font-family: var(--f-code); font-size: .82rem; transform: rotate(1.5deg); box-shadow: var(--lift); max-width: 92%; overflow: hidden; white-space: nowrap; }
+  .url b { color: var(--spot); font-weight: 600; }
+  @media (max-width: 960px) { .grid { grid-template-columns: minmax(0, 1fr); } .sheet { margin-bottom: var(--s5); } }
+  @media (max-width: 560px) { .pcard { grid-template-columns: minmax(0, 1fr); transform: none; } .pcard .l img { max-width: 260px; } .url { right: 8px; } }
+</style>
+
+<script>
+  import { initShare } from '../scripts/share';
+  initShare();
+</script>

@@ -1,38 +1,78 @@
 ---
 import { LINKS } from '../config';
-import Hanger from './Hanger.astro';
-const { curtain = false, valance = false } = Astro.props;
-const path = Astro.url.pathname.replace(/\/$/, '') || '/';
-const cur = (p: string) => (path === p || (p !== '/' && path.startsWith(p)) ? 'page' : undefined);
+interface Props { onField?: boolean; hideMark?: boolean }
+const { onField = false, hideMark = false } = Astro.props;
+const path = Astro.url.pathname.replace(/\.html$/, '').replace(/\/$/, '') || '/';
+const cur = (p: string) => (path === p || (p !== '/' && path.startsWith(p + '/')) ? 'page' : undefined);
+const links = [
+  ['/features', 'Features'],
+  ['/docs', 'Docs'],
+  ['/guides', 'Guides'],
+  ['/privacy', 'Privacy'],
+  ['/changelog', 'Changelog'],
+] as const;
 ---
-<header class={'nav' + (curtain ? ' over-curtain' : '') + (valance ? ' over-valance' : '')} id="nav">
+<header class:list={['nav', { 'on-field': onField, 'hide-mark': hideMark, solid: !onField }]} id="nav">
   <div class="wrap">
-    <a class="brand" href="/" aria-label="RoFit home"><span class="mark"><Hanger size={20} /></span>RoFit</a>
-    <button class="menu-btn" id="menu-btn" aria-label="Menu" aria-expanded="false" aria-controls="nav-links">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 8h16M4 16h16" /></svg>
-    </button>
+    <a class="wordmark" href="/" aria-label="RoFit home">RoFit<span class="dot" aria-hidden="true"></span></a>
+    <button class="menu-btn" id="menu-btn" type="button" aria-label="Menu" aria-expanded="false" aria-controls="nav-links"><span></span><span></span></button>
     <nav class="nav-links" id="nav-links" aria-label="Main">
-      <a href="/#demo">Try it</a>
-      <a href="/features" aria-current={cur('/features')}>Features</a>
-      <a href="/docs" aria-current={cur('/docs')}>Docs</a>
-      <a href="/privacy" aria-current={cur('/privacy')}>Privacy</a>
-      <a href="/roadmap" aria-current={cur('/roadmap')}>Roadmap</a>
-      {LINKS.donate && <a href={LINKS.donate} rel="noopener" class="don-link">Donate</a>}
-      <a class="btn btn-curtain" href="/download">Install</a>
+      {links.map(([href, label]) => <a href={href} aria-current={cur(href)}>{label}</a>)}
+      {LINKS.donate && <a href={LINKS.donate} rel="noopener">Donate</a>}
+      <a class="btn" href="/download" aria-current={cur('/download')}>Install RoFit</a>
+      <span class="thumb" aria-hidden="true"></span>
     </nav>
   </div>
 </header>
 
 <script>
   const nav = document.getElementById('nav')!;
-  const on = () => nav.classList.toggle('scrolled', scrollY > 8);
-  on(); addEventListener('scroll', on, { passive: true });
-  const btn = document.getElementById('menu-btn')!;
+  const btn = document.getElementById('menu-btn') as HTMLButtonElement;
   const links = document.getElementById('nav-links')!;
-  btn.addEventListener('click', () => {
-    const open = links.classList.toggle('open');
+  const thumb = links.querySelector<HTMLElement>('.thumb')!;
+  const root = document.documentElement;
+
+  // Bar turns solid once the page moves.
+  const onScroll = () => nav.classList.toggle('scrolled', scrollY > 12);
+  onScroll(); addEventListener('scroll', onScroll, { passive: true });
+
+  // Underline thumb: rests on the current page, follows the pointer, returns when it leaves. Transitions retarget, so
+  // sweeping across links never snaps.
+  const plain = [...links.querySelectorAll<HTMLAnchorElement>('a:not(.btn)')];
+  const current = plain.find((a) => a.getAttribute('aria-current') === 'page');
+  const moveTo = (a?: HTMLElement) => {
+    if (!a || innerWidth <= 900) { thumb.style.opacity = '0'; return; }
+    const r = a.getBoundingClientRect(), p = links.getBoundingClientRect();
+    thumb.style.opacity = '1';
+    // A fixed 100px bar scaled to the link: transform only, so the sweep never triggers layout.
+    thumb.style.transform = `translateX(${r.left - p.left + 12}px) scaleX(${(r.width - 24) / 100})`;
+  };
+  if (current) { thumb.style.transition = 'none'; moveTo(current); thumb.getBoundingClientRect(); thumb.style.transition = ''; }
+  plain.forEach((a) => { a.addEventListener('pointerenter', () => moveTo(a)); a.addEventListener('focus', () => moveTo(a)); });
+  links.addEventListener('pointerleave', () => moveTo(current));
+  addEventListener('resize', () => moveTo(current));
+  document.fonts?.ready.then(() => moveTo(current));
+
+  // Mobile sheet: a real dialog-like layer. Focus moves in, Tab stays inside, Esc and links close it, focus returns.
+  const focusables = () => [btn, ...links.querySelectorAll<HTMLElement>('a')];
+  const setOpen = (open: boolean) => {
+    links.classList.toggle('open', open);
+    nav.classList.toggle('menu-open', open);
+    root.classList.toggle('menu-locked', open);
     btn.setAttribute('aria-expanded', String(open));
+    btn.setAttribute('aria-label', open ? 'Close menu' : 'Menu');
+    if (open) links.querySelector<HTMLElement>('a')?.focus();
+  };
+  btn.addEventListener('click', () => setOpen(!links.classList.contains('open')));
+  links.addEventListener('click', (e) => { if ((e.target as HTMLElement).closest('a')) setOpen(false); });
+  addEventListener('keydown', (e) => {
+    if (!links.classList.contains('open')) return;
+    if (e.key === 'Escape') { setOpen(false); btn.focus(); }
+    if (e.key === 'Tab') {
+      const f = focusables(), i = f.indexOf(document.activeElement as HTMLElement);
+      if (e.shiftKey && i <= 0) { e.preventDefault(); f[f.length - 1].focus(); }
+      else if (!e.shiftKey && i === f.length - 1) { e.preventDefault(); f[0].focus(); }
+    }
   });
-  links.addEventListener('click', (e) => { if ((e.target as HTMLElement).closest('a')) { links.classList.remove('open'); btn.setAttribute('aria-expanded', 'false'); } });
-  addEventListener('keydown', (e) => { if (e.key === 'Escape' && links.classList.contains('open')) { links.classList.remove('open'); btn.setAttribute('aria-expanded', 'false'); btn.focus(); } });
+  matchMedia('(min-width: 901px)').addEventListener('change', (m) => { if (m.matches) setOpen(false); });
 </script>
