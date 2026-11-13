@@ -7,10 +7,11 @@ MV3 extension. On a roblox.com profile it adds one entry point (a **Saved Outfit
 ```
 npm run build        # dist/ (production, closed shadow root, minified)
 node scripts/build.mjs --test   # dist-test/ (open shadow root, for Playwright)
-npm run typecheck && npm test   # tsc + node --test (50 unit tests, node strips TS: no enums / parameter properties)
+npm run typecheck && npm test   # tsc + node --test (55 unit tests, node strips TS: no enums / parameter properties)
 npm run test:e2e     # tests/e2e/run.mjs — real Chromium, live roblox.com, needs the --test build
 node tests/e2e/popup.mjs    # toolbar popup: search, recent, open-on-tab
-node site/build.mjs [--serve]   # rofit.site → site/dist (serve on :8787)
+npm --prefix site run build   # rofit.site (Astro) → site/dist; npm --prefix site run dev serves :4321
+npm --prefix site run test:ui   # site interactions + overflow at 320–1920px (needs dev/preview server)
 node tests/e2e/site.mjs [shots=1]   # site pages, CSP, viewer hostile input, extension bridge
 node tests/e2e/stress.mjs   # 240 mocked outfits, 150% zoom, reduced motion, failing details
 node tests/e2e/motion.mjs   # mid-flight frames of open/close/sort into shots/
@@ -22,11 +23,11 @@ CI (`.github/workflows/ci.yml`) runs typecheck, unit tests, the production build
 
 ## Architecture
 - `src/background/` service worker. **Only** place that talks to Roblox (`roblox.ts`) and the only owner of IndexedDB (`db.ts`). `service.ts` = handlers (sync + access, thumbs, details+history, asset resolution+provenance, library incl. bulk/collections, backups, user lookup). `index.ts` = message router (`trusted(sender)`: our own pages and roblox.com tabs only), the separate `site-import` listener for the rofit.site bridge, capability tracking in `storage.session`, daily prune alarm.
-- `src/shared/` types, `rpc.ts` (typed request map used by both sides), `analysis.ts` (pure: hash, diff, price summary, cost buckets, clustering, Lua export), `access.ts` (visibility states, badge copy, share policy), `share.ts` (share-link codec; also used by the website), `backup.ts` (export/import validation + dry-run report), `search.ts` (query parsing and ranking), `deeplink.ts` (`#rofit/<id>` parsing), `motion.ts`, `settings.ts` (schema v2 + migration), `assetTypes.ts`. All pure and unit tested.
+- `src/shared/` types, `rpc.ts` (typed request map used by both sides), `analysis.ts` (pure: hash, diff, price summary, cost buckets, clustering, Lua export), `overview.ts` (wardrobe summary for the empty inspector pane, no requests), `access.ts` (visibility states, badge copy, share policy), `share.ts` (share-link codec; also used by the website), `backup.ts` (export/import validation + dry-run report), `search.ts` (query parsing and ranking), `deeplink.ts` (`#rofit/<id>` parsing), `motion.ts`, `settings.ts` (schema v2 + migration), `assetTypes.ts`. All pure and unit tested.
 - `src/content/index.ts` — the only code that knows Roblox's profile DOM. Tiny; lazy-imports `sheet.js` (declared in `web_accessible_resources`, `use_dynamic_url`). `sheet.tsx` mounts Preact in a closed shadow root outside React's tree. `site.ts` — the rofit.site bridge (see Trust boundaries).
-- `src/ui/` Preact UI shared by the sheet, the library/settings page (`pages/workspace.tsx`) and the popup. `Shell.tsx` owns navigation state, keyboard and the command list; `Explorer`, `Inspector`, `Compare`, `Library`, `Settings`, `Welcome`, `NoOutfits`, `Access` (badge), `Share` (dialog), `Palette` (Ctrl K + shortcuts). One stylesheet (`styles.css`) driven by three variables (`--rf-bg/--rf-fg/--rf-accent`) sampled from the live page in `theme.ts`; every other color is `color-mix` of those.
+- `src/ui/` Preact UI shared by the sheet, the library/settings page (`pages/workspace.tsx`) and the popup. `Shell.tsx` owns navigation state, keyboard and the command list; `Explorer`, `Inspector`, `Compare`, `Library`, `Settings`, `Welcome`, `NoOutfits`, `Access` (badge), `Overview` (wardrobe panel), `Share` (dialog), `Palette` (Ctrl K + shortcuts). One stylesheet (`styles.css`) driven by three variables (`--rf-bg/--rf-fg/--rf-accent`) sampled from the live page in `theme.ts`; every other color is `color-mix` of those.
 - `pages/workspace.tsx` routes on `location.hash`: `library`, `library/import`, `library/import/<share payload>`, `settings[/<section>]`, `welcome`.
-- `site/` static website (see `site/README.md`): `build.mjs` renders pages from `src/pages.mjs`, bundles `src/app.ts` (the only script), writes `_headers` (CSP). Claims on the site must match the code.
+- `site/` static Astro website (see `site/README.md`, design system in `site/DESIGN.md`). Pages in `src/pages`, homepage sections in `src/components`, every token in `src/styles/global.css`. Docs body and the share viewer still render markup from `src/pages.mjs` / `src/app.ts` (styled by `src/styles/ported.css`). CSP lives in `public/_headers`. All outfit imagery and prices come from the dated snapshot in `public/real/` via `src/lib/real.ts`; never add illustrative or example prices. Claims on the site must match the code.
 
 ## Roblox assumptions (verified Nov 2026; re-verify before relying)
 - v2 outfit list is token-paginated, no total. v1's `total` is bogus (500). Owners can restrict outfit visibility (Nov 2025): 403 = refused, an empty 200 can also mean hidden. Details in `docs/research/outfit-access.md`.
