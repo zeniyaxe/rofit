@@ -52,8 +52,8 @@
 .v-status.ok { color: var(--ok); }
 .v-status.warn { color: var(--warn); }
 .v-sec { margin-top: var(--s7); }
-.v-sec h2 { display: flex; align-items: baseline; gap: 10px; padding-bottom: var(--s3); border-bottom: 1.5px solid var(--ink); font-size: 1.6rem; }
-.v-sec h2 small { font-family: var(--f-display); font-stretch: var(--wide); font-size: .9rem; color: var(--ink-3); font-weight: 600; }
+.v-sec h2 { display: flex; align-items: baseline; gap: 10px; padding-bottom: var(--s3); border-bottom: 1.5px solid var(--ink); font-size: var(--t-h4); }
+.v-sec h2 small { font-family: var(--f-display); font-stretch: var(--wide); font-size: var(--t-small); color: var(--ink-3); font-weight: 600; }
 .v-group { margin: var(--s5) 0 var(--s1); font-family: var(--f-body); font-stretch: normal; font-size: var(--t-tiny); font-weight: 750; text-transform: uppercase; letter-spacing: .08em; color: var(--ink-3); }
 .v-items { list-style: none; }
 .v-item { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; gap: var(--s3); align-items: center; padding: 8px 0; border-bottom: 1px solid var(--rule); }
@@ -62,15 +62,15 @@
 .v-item .ith svg { width: 18px; height: 18px; }
 .v-item b { display: block; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .v-item small { color: var(--ink-2); font-size: .8rem; }
-.v-item a { font-size: .84rem; font-weight: 650; color: var(--link); white-space: nowrap; }
+.v-item a { font-size: var(--t-small); font-weight: 650; color: var(--link); white-space: nowrap; }
 .v-body { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 0 var(--s4); margin-top: var(--s3); }
-.v-sw { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--rule); font-size: .9rem; }
-.v-sw i { width: 26px; height: 26px; border-radius: var(--r-sm); flex: none; box-shadow: inset 0 0 0 1px rgb(0 0 0 / .14); }
+.v-sw { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--rule); font-size: var(--t-small); }
+.v-sw i { width: 26px; height: 26px; border-radius: var(--r-sm); flex: none; box-shadow: inset 0 0 0 1px var(--rule-2); }
 .v-sw span { display: flex; flex-direction: column; line-height: 1.25; }
 .v-sw code { color: var(--ink-3); font-size: .76rem; }
 .v-scale { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 0 var(--s4); margin-top: var(--s4); }
-.v-scale div { padding: 10px 0; border-bottom: 1px solid var(--rule); font-size: .84rem; color: var(--ink-2); }
-.v-scale b { display: block; color: var(--ink); font-family: var(--f-display); font-stretch: var(--wide); font-weight: 700; font-size: 1.1rem; }
+.v-scale div { padding: 10px 0; border-bottom: 1px solid var(--rule); font-size: var(--t-small); color: var(--ink-2); }
+.v-scale b { display: block; color: var(--ink); font-family: var(--f-display); font-stretch: var(--wide); font-weight: 700; font-size: var(--t-h5); }
 .v-empty { padding: var(--s7) 0 var(--s5); max-width: 640px; }
 .v-empty .ic { width: 56px; height: 56px; border-radius: var(--r); background: var(--spot); color: var(--spot-ink); display: grid; place-items: center; margin-bottom: var(--s5); }
 .v-empty .ic svg { width: 26px; height: 26px; }

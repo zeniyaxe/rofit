@@ -89,7 +89,7 @@ const BACK = 6; // pieces printed on a card's back
 
   /* a printed card with a back: the front is the outfit, the back its pieces. Turns in Full motion, crossfades otherwise. */
   .card.flip { overflow: visible; padding: 0; box-shadow: none; background: none; display: grid; transform-style: preserve-3d; transition: transform var(--d-slow) var(--land), translate var(--d) var(--land); }
-  .cards > li:hover .card.flip { translate: 0 -4px; }
+  .cards > li:hover .card.flip { translate: 0 calc(var(--nudge) * -1); }
   .card.flip.turned { transform: rotateY(180deg); }
   .face { grid-area: 1 / 1; display: grid; grid-template-rows: auto 1fr; min-width: 0; background: var(--stock); border-radius: 3px; padding: 5px;
     box-shadow: 0 0 0 1px var(--rule), inset 0 0 0 4px var(--stock), inset 0 0 0 5px var(--rule); backface-visibility: hidden; -webkit-backface-visibility: hidden; transition: box-shadow var(--d) var(--ease); }
@@ -98,20 +98,20 @@ const BACK = 6; // pieces printed on a card's back
   .card .art { display: block; overflow: hidden; }
   .card .art img { transition: transform var(--d-slow) var(--ease); }
   .cards > li:hover .art img { transform: scale(1.04); }
-  .card .t { font-family: var(--f-body); font-stretch: normal; font-size: 1.05rem; font-weight: 760; letter-spacing: -.01em; }
+  .card .t { font-family: var(--f-body); font-stretch: normal; font-size: var(--t-lead); font-weight: 760; letter-spacing: -.01em; }
   .cost, .unk { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 8px; font-size: var(--t-small); }
   .cost { margin-top: 4px; padding-top: 8px; border-top: 1px dashed var(--rule); }
-  .cost .price.known { font-family: var(--f-display); font-stretch: var(--wide); font-size: 1rem; }
+  .cost .price.known { font-family: var(--f-display); font-stretch: var(--wide); font-size: var(--t-ui-l); }
   .for { color: var(--ink-3); font-size: var(--t-tiny); }
-  .stats .ltd { font-size: .64rem; }
+  .stats .ltd { font-size: var(--t-micro); }
   .back .no { color: var(--ink-3); }
   .back h4 { font-family: var(--f-body); font-stretch: normal; font-size: .98rem; font-weight: 760; letter-spacing: -.01em; line-height: 1.2; }
   .back ul { list-style: none; margin-top: 6px; }
   .back li { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-top: 1px dashed var(--rule); font-size: .8rem; line-height: 1.2; }
   .back li > span:first-child { display: grid; flex: 1; min-width: 0; }
   .back li b { font-weight: 650; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .back li small { color: var(--ink-3); font-size: .7rem; }
-  .back .price.off, .back .price.unknown { font-size: .72rem; }
+  .back li small { color: var(--ink-3); font-size: var(--t-micro); }
+  .back .price.off, .back .price.unknown { font-size: var(--t-micro); }
   .more { font-size: var(--t-tiny); color: var(--ink-3); }
   .turn { justify-self: start; display: inline-flex; align-items: center; gap: 6px; min-height: 36px; margin-top: 6px; padding: 0 10px; border-radius: var(--r-sm); font-size: .8rem; font-weight: 700; box-shadow: inset 0 0 0 1px var(--rule-2); transition: background var(--d-fast); }
   .turn:hover { background: var(--paper-2); }

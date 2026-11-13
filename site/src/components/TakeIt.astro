@@ -50,23 +50,23 @@ const owner = ownerOfOutfit(o.id);
   .hint { min-height: 1.6em; margin-top: var(--s3); font-size: var(--t-small); color: var(--ink-2); }
   .sheet { position: relative; }
   .pcard { display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); background: #fff; color: #0c0c0d; border-radius: var(--r); box-shadow: 0 0 0 1px var(--rule), var(--lift-2); overflow: hidden; transform: rotate(-1.2deg); transition: transform var(--d-slow) var(--land); }
-  .pcard:hover { transform: rotate(0deg) translateY(-4px); }
+  :root[data-motion='full'] .pcard:hover { transform: rotate(0deg) translateY(calc(var(--nudge) * -1)); }
   .pcard .l { position: relative; background: #f1f1ed; display: grid; place-items: center; }
   .pcard .l img { width: 100%; height: auto; }
   .pcard .l .no { position: absolute; left: 12px; top: 10px; color: #45454b; }
   .pcard .r { padding: var(--s5); display: grid; align-content: start; gap: 4px; }
-  .pcard h3 { font-size: 1.8rem; font-stretch: var(--cond); }
+  .pcard h3 { font-size: var(--t-h4); font-stretch: var(--cond); }
   .by { font-size: var(--t-small); color: #45454b; margin-bottom: var(--s3); }
   .pcard ul { list-style: none; }
-  .pcard li { display: grid; grid-template-columns: 36px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 7px 0; border-top: 1px solid rgb(12 12 13 / .1); font-size: .86rem; }
+  .pcard li { display: grid; grid-template-columns: 36px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 7px 0; border-top: 1px solid rgb(12 12 13 / .1); font-size: var(--t-small); }
   .pcard li img { width: 36px; height: 36px; object-fit: cover; border-radius: var(--r-sm); background: #f1f1ed; }
   .pcard li span:nth-child(2) { display: grid; min-width: 0; line-height: 1.2; }
   .pcard li b { font-weight: 700; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-  .pcard li small { color: #66666e; font-size: .74rem; }
+  .pcard li small { color: #66666e; font-size: var(--t-micro); }
   .pcard .price.unknown { color: #66666e; }
   .tot { display: flex; justify-content: space-between; align-items: baseline; margin-top: var(--s3); padding-top: var(--s3); border-top: 1.5px solid #0c0c0d; font-size: var(--t-small); font-weight: 650; }
-  .tot strong { font-family: var(--f-display); font-stretch: var(--wide); font-weight: 800; font-size: 1.4rem; }
-  .url { position: absolute; right: -8px; bottom: -22px; display: inline-flex; padding: 10px 14px; background: var(--ink); color: var(--paper); border-radius: var(--r-sm); font-family: var(--f-code); font-size: .82rem; transform: rotate(1.5deg); box-shadow: var(--lift); max-width: 92%; overflow: hidden; white-space: nowrap; }
+  .tot strong { font-family: var(--f-display); font-stretch: var(--wide); font-weight: 800; font-size: var(--t-h4); }
+  .url { position: absolute; right: -8px; bottom: -22px; display: inline-flex; padding: 10px 14px; background: var(--ink); color: var(--paper); border-radius: var(--r-sm); font-family: var(--f-code); font-size: var(--t-small); transform: rotate(1.5deg); box-shadow: var(--lift); max-width: 92%; overflow: hidden; white-space: nowrap; }
   .url b { color: var(--spot); font-weight: 600; }
   @media (max-width: 960px) { .grid { grid-template-columns: minmax(0, 1fr); } .sheet { margin-bottom: var(--s5); } }
   @media (max-width: 560px) { .pcard { grid-template-columns: minmax(0, 1fr); transform: none; } .pcard .l img { max-width: 260px; } .url { right: 8px; } }

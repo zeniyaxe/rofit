@@ -21,8 +21,8 @@ import { LINKS } from '../config';
   h2 { font-size: clamp(3.6rem, 12vw, 11rem); font-stretch: var(--narrow); font-weight: 900; text-transform: uppercase; line-height: .84; letter-spacing: -.03em; }
   .steps { list-style: none; counter-reset: s; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s6); margin-top: var(--s8); }
   .steps li { counter-increment: s; display: grid; gap: 6px; align-content: start; padding-top: var(--s4); border-top: 1.5px solid var(--spot-ink); }
-  .steps li::before { content: counter(s); font-family: var(--f-display); font-stretch: var(--wide); font-weight: 800; font-size: 1.1rem; }
-  .steps b { font-size: 1.2rem; font-weight: 760; }
+  .steps li::before { content: counter(s); font-family: var(--f-display); font-stretch: var(--wide); font-weight: 800; font-size: var(--t-h5); }
+  .steps b { font-size: var(--t-h5); font-weight: 760; }
   .steps em { font-style: normal; font-weight: 700; }
   .acts { display: flex; flex-wrap: wrap; gap: var(--s3); margin-top: var(--s8); }
   @media (max-width: 860px) { .steps { grid-template-columns: minmax(0, 1fr); } }

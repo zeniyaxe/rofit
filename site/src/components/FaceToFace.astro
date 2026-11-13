@@ -95,12 +95,12 @@ const cards = [{ o: a, side: 'a', mine: onlyA.length }, { o: b, side: 'b', mine:
   .cc.a { grid-column: 1; grid-row: 1; transform: rotate(-2deg) translateY(6px); }
   .meet { grid-column: 2; grid-row: 1; }
   .cc.b { grid-column: 3; grid-row: 1; transform: rotate(2deg) translateY(6px); }
-  .cc:hover { transform: rotate(0) translateY(-4px); }
+  :root[data-motion='full'] .cc:hover { transform: rotate(0) translateY(calc(var(--nudge) * -1)); }
   .cc .art { position: relative; aspect-ratio: 1; background: #efefeb; border-radius: 1px; }
   .cc .art img { width: 100%; height: 100%; object-fit: contain; }
   .cc .no { position: absolute; left: 8px; top: 8px; color: #45454b; }
   .cc .body { padding: 12px 8px 8px; display: grid; gap: 6px; }
-  .cc h3 { font-size: 1.7rem; font-stretch: var(--cond); }
+  .cc h3 { font-size: var(--t-h4); font-stretch: var(--cond); }
   .cc .stats { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; font-family: var(--f-display); font-stretch: 112%; font-weight: 560; font-size: .76rem; color: #45454b; }
   .cc .stats .price { font-family: var(--f-display); color: #0c0c0d; }
   .meet { display: grid; justify-items: center; text-align: center; gap: 4px; font-weight: 700; font-size: var(--t-small); line-height: 1.2; }
@@ -110,7 +110,7 @@ const cards = [{ o: a, side: 'a', mine: onlyA.length }, { o: b, side: 'b', mine:
   .pane { position: absolute; inset: 0; display: grid; place-items: center; background: #fff; }
   .pane img { width: 86%; height: 86%; object-fit: contain; }
   .pane.a { clip-path: inset(0 calc(100% - var(--at)) 0 0); }
-  .lab { position: absolute; top: 14px; display: grid; gap: 2px; max-width: 44%; font-size: .9rem; line-height: 1.2; z-index: 2; pointer-events: none; }
+  .lab { position: absolute; top: 14px; display: grid; gap: 2px; max-width: 44%; font-size: var(--t-small); line-height: 1.2; z-index: 2; pointer-events: none; }
   .lab b { font-weight: 760; }
   .la { left: 16px; }
   .lb { right: 16px; text-align: right; justify-items: end; }
@@ -125,15 +125,15 @@ const cards = [{ o: a, side: 'a', mine: onlyA.length }, { o: b, side: 'b', mine:
   .who { margin-top: var(--s6); font-size: var(--t-small); text-align: center; }
 
   .ledger { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s6); margin-top: clamp(48px, 7vw, 96px); }
-  .col h3 { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; padding-bottom: 10px; border-bottom: 1.5px solid var(--spot-ink); font-size: 1.15rem; }
+  .col h3 { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; padding-bottom: 10px; border-bottom: 1.5px solid var(--spot-ink); font-size: var(--t-h5); }
   .col h3 span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .col h3 .num { font-stretch: var(--wide); font-weight: 650; font-size: .9rem; }
+  .col h3 .num { font-stretch: var(--wide); font-weight: 650; font-size: var(--t-small); }
   .col ul { list-style: none; }
   .col li { display: grid; grid-template-columns: 40px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--rule); }
   .col li img, .col .ph { width: 40px; height: 40px; border-radius: var(--r-sm); background: rgb(255 255 255 / .55); object-fit: cover; }
   .col .ph { outline: 1px dashed var(--spot-rule); outline-offset: -1px; background: none; }
   .t { display: grid; min-width: 0; line-height: 1.25; }
-  .t b { font-weight: 700; font-size: .94rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .t b { font-weight: 700; font-size: var(--t-ui); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .t small { font-size: .78rem; color: var(--ink-2); }
   .tags { display: inline-flex; gap: 6px; align-items: center; }
   .sum { margin-top: var(--s3); font-size: var(--t-small); }
@@ -145,7 +145,7 @@ const cards = [{ o: a, side: 'a', mine: onlyA.length }, { o: b, side: 'b', mine:
     .meet { grid-column: 1 / -1; grid-row: 2; grid-auto-flow: column; justify-content: center; align-items: baseline; gap: 10px; margin-top: var(--s2); }
     .meet br { display: none; }
     .cc.a { transform: rotate(-1.5deg); } .cc.b { transform: rotate(1.5deg); }
-    .cc h3 { font-size: 1.2rem; }
+    .cc h3 { font-size: var(--t-h5); }
     .cc .stats span:nth-child(2) { display: none; }
     .wipe { aspect-ratio: .95; }
   }

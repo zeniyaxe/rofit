@@ -84,7 +84,7 @@ const COL = 147;                                    // where the cover lines sta
   .stage { grid-area: stage; position: relative; width: min(100%, calc(min(80svh, 780px) * 2.1)); aspect-ratio: 2.1; justify-self: center; margin-top: calc(var(--mast) * -.4); }
   .copy { grid-area: stage; align-self: end; justify-self: start; z-index: 3; width: min(31%, 430px); }
   h1 { font-size: clamp(2.8rem, 4.8vw, 5rem); font-stretch: var(--narrow); font-weight: 900; line-height: .88; letter-spacing: -.02em; text-transform: uppercase; }
-  .deck { margin-top: var(--s4); font-size: 1.04rem; line-height: 1.5; max-width: 36ch; }
+  .deck { margin-top: var(--s4); font-size: var(--t-lead); line-height: 1.5; max-width: 36ch; }
   .acts { display: flex; flex-wrap: wrap; gap: var(--s3); margin-top: var(--s5); }
   .meta { margin-top: var(--s4); font-size: var(--t-small); font-weight: 600; }
 
@@ -106,11 +106,11 @@ const COL = 147;                                    // where the cover lines sta
   .look[data-on] .pin { opacity: 1; transform: none; transition-delay: calc(200ms + var(--k) * 70ms); }
 
   .calls { list-style: none; position: absolute; left: 70%; right: 0; top: 0; bottom: 0; }
-  .call { position: absolute; left: 0; right: 0; top: var(--ly); transform: translateY(-1.15em); display: grid; gap: 1px; font-size: .9rem; line-height: 1.3;
+  .call { position: absolute; left: 0; right: 0; top: var(--ly); transform: translateY(-1.15em); display: grid; gap: 1px; font-size: var(--t-small); line-height: 1.3;
     opacity: 0; translate: calc(var(--rise) * .6) 0; transition: opacity var(--d-fast) var(--ease), translate var(--d) var(--ease); }
   .look[data-on] .call { opacity: 1; translate: none; transition: opacity var(--d) var(--ease) calc(320ms + var(--k) * 70ms), translate var(--d-slow) var(--ease) calc(320ms + var(--k) * 70ms); }
-  .call b { font-weight: 760; font-size: 1.02rem; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
-  .call .sub { color: var(--ink-2); font-size: .82rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .call b { font-weight: 760; font-size: var(--t-ui-l); display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
+  .call .sub { color: var(--ink-2); font-size: var(--t-small); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .call .tags { display: inline-flex; align-items: center; gap: 6px; margin-top: 4px; }
   .call .n { display: none; }
   .look:has(.call:hover) .leaders path, .look:has(.call:hover) .pin { opacity: .2; }
@@ -118,10 +118,10 @@ const COL = 147;                                    // where the cover lines sta
   .look:has(.call[data-k='3']:hover) [data-k='3'], .look:has(.call[data-k='4']:hover) [data-k='4'] { opacity: 1; }
 
   /* issue line: the collector number and whose wardrobe this is, under the masthead */
-  .stamp { position: absolute; left: 0; top: calc(var(--mast) * .5); width: min(30%, 400px); display: grid; gap: 2px; font-size: .86rem; line-height: 1.35;
-    opacity: 0; translate: 0 6px; transition: opacity var(--d-fast), translate var(--d) var(--ease); }
+  .stamp { position: absolute; left: 0; top: calc(var(--mast) * .5); width: min(30%, 400px); display: grid; gap: 2px; font-size: var(--t-small); line-height: 1.35;
+    opacity: 0; translate: 0 calc(var(--nudge) * 1.5); transition: opacity var(--d-fast), translate var(--d) var(--ease); }
   .look[data-on] .stamp { opacity: 1; translate: none; transition: opacity var(--d-slow) var(--ease) 160ms, translate var(--d-slow) var(--ease) 160ms; }
-  .stamp b { font-family: var(--f-display); font-stretch: var(--cond); font-weight: 840; font-size: 1.7rem; line-height: 1; letter-spacing: -.01em; margin: 4px 0 2px; }
+  .stamp b { font-family: var(--f-display); font-stretch: var(--cond); font-weight: 840; font-size: var(--t-h4); line-height: 1; letter-spacing: -.01em; margin: 4px 0 2px; }
   .stamp .total { margin-top: 2px; }
   .stamp .total strong { font-family: var(--f-display); font-stretch: var(--wide); font-weight: 760; }
 
@@ -129,8 +129,8 @@ const COL = 147;                                    // where the cover lines sta
   .switch button { width: 48px; height: 48px; display: grid; place-items: center; border-radius: var(--r-sm); box-shadow: inset 0 0 0 1.5px var(--spot-ink); transition: background var(--d-fast), color var(--d-fast), transform var(--d) var(--land); }
   .switch button:hover { background: var(--spot-ink); color: var(--spot); }
   .switch button:active { transform: scale(.93); transition-duration: 70ms; }
-  .count { min-width: 66px; text-align: center; font-family: var(--f-display); font-stretch: var(--wide); font-weight: 620; font-size: .92rem; }
-  .source { grid-column: 1 / -1; margin-top: var(--s4); font-size: .74rem; color: var(--ink-2); max-width: 70ch; }
+  .count { min-width: 66px; text-align: center; font-family: var(--f-display); font-stretch: var(--wide); font-weight: 620; font-size: var(--t-small); }
+  .source { grid-column: 1 / -1; margin-top: var(--s4); font-size: var(--t-micro); color: var(--ink-2); max-width: 70ch; }
 
   /* ---- narrower than a spread: stack it, number the pins, list the pieces ----------------------------------- */
   @media (max-width: 1100px) {
@@ -147,12 +147,12 @@ const COL = 147;                                    // where the cover lines sta
     .fig { position: relative; left: auto; transform: scale(1.12); width: min(100%, 400px); height: auto; justify-self: center; margin-block: 2%; }
     .leaders { display: none; }
     .pin { width: 22px; height: 22px; margin: -11px 0 0 -11px; display: grid; place-items: center; box-shadow: 0 0 0 2px var(--spot); }
-    .pin i { display: block; font-style: normal; font-size: 11px; font-weight: 800; color: var(--spot); }
+    .pin i { display: block; font-style: normal; font-size: var(--t-micro); font-weight: 800; color: var(--spot); }
     .calls { position: static; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 250px), 1fr)); gap: var(--s4) var(--s5); margin-top: var(--s5); }
     .call { position: relative; top: auto; transform: none; grid-template-columns: 26px minmax(0, 1fr); column-gap: 10px; padding-top: 10px; border-top: 1px solid var(--rule); }
     .call > :not(.n) { grid-column: 2; }
     .call b { -webkit-line-clamp: 2; }
-    .call .n { display: grid; grid-row: 1 / span 3; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: var(--spot-ink); color: var(--spot); font-size: 11px; font-weight: 800; margin-top: 1px; }
+    .call .n { display: grid; grid-row: 1 / span 3; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: var(--spot-ink); color: var(--spot); font-size: var(--t-micro); font-weight: 800; margin-top: 1px; }
     .switch { position: relative; left: auto; bottom: auto; justify-self: start; margin-top: var(--s5); grid-area: 2 / 1; }
   }
 </style>

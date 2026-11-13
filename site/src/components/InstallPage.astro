@@ -110,14 +110,14 @@ const host = (h: string) => h.replace('https://', '').replace('/*', '');
   .steps { list-style: none; counter-reset: s; margin: var(--s7) 0 var(--s6); display: grid; gap: 0; max-width: 72ch; }
   .steps li { counter-increment: s; display: grid; grid-template-columns: 56px minmax(0, 1fr); column-gap: var(--s4); padding: var(--s5) 0; border-top: 1px solid var(--rule); }
   .steps li::before { content: counter(s); grid-row: 1 / span 4; font-family: var(--f-display); font-stretch: var(--wide); font-weight: 820; font-size: 2.2rem; line-height: 1; }
-  .steps h2 { font-size: 1.5rem; }
+  .steps h2 { font-size: var(--t-h4); }
   .steps p, .steps .copyline { grid-column: 2; margin-top: var(--s2); color: var(--ink-2); }
   .steps code, .perm code, .faq code, .note code { background: var(--paper-2); padding: .05em .35em; border-radius: var(--r-sm); font-size: .86em; }
   .steps b { color: var(--ink); }
   .note.warn { max-width: 72ch; }
   .perm, .faq { margin-top: var(--s8); max-width: 72ch; }
   .perm h2, .faq h2 { font-size: clamp(1.8rem, 3vw, 2.4rem); margin-bottom: var(--s3); }
-  table { width: 100%; border-collapse: collapse; margin-top: var(--s4); font-size: .94rem; }
+  table { width: 100%; border-collapse: collapse; margin-top: var(--s4); font-size: var(--t-ui); }
   th, td { text-align: left; vertical-align: top; padding: 10px 12px 10px 0; border-bottom: 1px solid var(--rule); }
   th { font-size: var(--t-tiny); text-transform: uppercase; letter-spacing: .07em; color: var(--ink-3); border-bottom-color: var(--ink); }
   td:first-child { white-space: nowrap; }
@@ -130,7 +130,7 @@ const host = (h: string) => h.replace('https://', '').replace('/*', '');
   details[open] summary::after { transform: rotate(45deg); }
   details p { padding-bottom: var(--s4); color: var(--ink-2); }
   .side { position: sticky; top: calc(var(--nav-h) + 28px); display: grid; gap: var(--s4); padding: var(--s5); background: var(--stock); border-radius: var(--r); box-shadow: 0 0 0 1px var(--rule); }
-  .side h2 { font-size: 1.4rem; }
+  .side h2 { font-size: var(--t-h4); }
   .side ul { list-style: none; display: grid; }
   .side li { display: grid; gap: 2px; padding: var(--s3) 0; border-top: 1px solid var(--rule); font-size: var(--t-small); }
   .side li span { color: var(--ink-3); }

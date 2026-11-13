@@ -52,19 +52,19 @@ const hostName = (h: string) => h.replace('https://', '').replace('/*', '');
   .notes { grid-area: notes; }
   .sheet { padding: clamp(20px, 3vw, 36px); background: var(--stock); border-radius: var(--r); box-shadow: 0 0 0 1px var(--rule); }
   .cap { display: flex; justify-content: space-between; gap: var(--s4); padding-bottom: var(--s3); border-bottom: 1.5px solid var(--ink); font-family: var(--f-display); font-stretch: var(--wide); font-weight: 650; font-size: var(--t-tiny); }
-  h3 { font-family: var(--f-body); font-stretch: normal; font-size: 1rem; font-weight: 750; letter-spacing: 0; margin: var(--s5) 0 var(--s2); }
+  h3 { font-family: var(--f-body); font-stretch: normal; font-size: var(--t-ui-l); font-weight: 750; letter-spacing: 0; margin: var(--s5) 0 var(--s2); }
   .perm { list-style: none; }
-  .perm li { display: grid; grid-template-columns: minmax(130px, 210px) minmax(0, 1fr); gap: 4px var(--s5); padding: 11px 0; border-top: 1px dashed var(--rule); font-size: .94rem; color: var(--ink-2); }
+  .perm li { display: grid; grid-template-columns: minmax(130px, 210px) minmax(0, 1fr); gap: 4px var(--s5); padding: 11px 0; border-top: 1px dashed var(--rule); font-size: var(--t-ui); color: var(--ink-2); }
   .perm li:first-child { border-top: 0; }
   .perm b { color: var(--ink); }
   .perm code { font-weight: 600; color: var(--ink); overflow-wrap: anywhere; }
   .none code { color: var(--ink); text-decoration: underline 2px var(--spot); text-underline-offset: .25em; }
-  .notes h3 { margin-top: 0; font-family: var(--f-display); font-stretch: var(--cond); font-size: 1.6rem; font-weight: 820; }
+  .notes h3 { margin-top: 0; font-family: var(--f-display); font-stretch: var(--cond); font-size: var(--t-h4); font-weight: 820; }
   .no-list { list-style: none; display: grid; gap: var(--s4); margin-top: var(--s4); }
   .no-list li { padding-left: 22px; position: relative; color: var(--ink-2); }
   .no-list li::before { content: ''; position: absolute; left: 0; top: .55em; width: 9px; height: 9px; background: var(--spot); border-radius: 50%; }
   .no-list b { color: var(--ink); }
-  .how { margin: var(--s5) 0; font-size: .94rem; color: var(--ink-2); }
+  .how { margin: var(--s5) 0; font-size: var(--t-ui); color: var(--ink-2); }
   code { font-size: .86em; }
   @media (max-width: 900px) { .ledger { grid-template-columns: minmax(0, 1fr); grid-template-areas: 'head' 'sheet' 'notes'; } .head { position: static; } .perm li { grid-template-columns: minmax(0, 1fr); } }
 </style>
