@@ -1,4 +1,4 @@
-# RoFit Inspector — notes for future Claude sessions
+# RoFit — notes for future Claude sessions
 
 ## What it is
 MV3 extension. On a roblox.com profile it adds one entry point (a **Saved Outfits** row after *Currently Wearing* on Roblox's current tab-less profile, or an **Outfits** tab on the older layout) plus a hanger button by ⋯; they open a workspace for that user's **real saved avatar outfits** (`outfitType=Avatar`, `isEditable:true`). Roblox presets (`isEditable:false`) are hidden by default and always labelled. Never present bundles, inventory, currently-wearing or favorites as saved outfits. The companion website lives in `site/` (rofit.site: docs, download, privacy, share-link viewer).

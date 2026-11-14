@@ -1,10 +1,10 @@
 @echo off
 setlocal
 cd /d "%~dp0"
-title RoFit Inspector setup
+title RoFit setup
 
 echo.
-echo  RoFit Inspector - setup
+echo  RoFit - setup
 echo  -----------------------
 
 where node >nul 2>nul

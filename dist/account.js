@@ -1215,7 +1215,9 @@ label.rf-frow { cursor: pointer; }
 .ws-stage { position: relative; }
 .ws-win { border-radius: 16px; background: var(--rf-bg); box-shadow: 0 30px 80px rgb(0 0 0 / .28), 0 0 0 1px var(--rf-line); overflow: hidden; }
 .ws-bar { display: flex; align-items: center; gap: 6px; padding: 9px 12px; background: var(--rf-surface); font-size: 11px; color: var(--rf-muted); }
-.ws-bar i { width: 9px; height: 9px; border-radius: 50%; background: var(--rf-surface-3); }
+.ws-bar i { width: 10px; height: 10px; border-radius: 50%; background: #ff5f57; box-shadow: inset 0 0 0 .5px rgb(0 0 0 / .18); }
+.ws-bar i:nth-child(2) { background: #febc2e; }
+.ws-bar i:nth-child(3) { background: #28c840; }
 .ws-bar span { margin-left: 10px; padding: 2px 10px; border-radius: 99px; background: var(--rf-bg); }
 .ws-head { display: flex; align-items: center; gap: 10px; padding: 12px 16px 0; font-size: 13px; }
 .ws-head small { display: block; color: var(--rf-muted); font-size: 11px; }

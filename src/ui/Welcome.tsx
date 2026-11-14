@@ -26,11 +26,13 @@ function Story({ still }: { still: boolean }) {
   const [step, setStep] = useState(still ? 2 : 0);
   const [playing, setPlaying] = useState(!still);
   const hover = useRef(false);
+  const [tick, setTick] = useState(0);
   useEffect(() => {
     if (!playing || still) return;
-    const t = window.setTimeout(() => { if (!hover.current) setStep((s) => (s + 1) % SCENES.length); else setStep((s) => s); }, SCENES[step].ms);
+    // While the pointer rests on the tour it holds the scene; the timer re-arms (via tick) instead of stopping for good.
+    const t = window.setTimeout(() => { if (hover.current) setTick((n) => n + 1); else setStep((s) => (s + 1) % SCENES.length); }, SCENES[step].ms);
     return () => clearTimeout(t);
-  }, [step, playing, still]);
+  }, [step, playing, still, tick]);
   const go = (i: number) => { setStep((i + SCENES.length) % SCENES.length); };
   const sc = SCENES[step];
   return (
@@ -122,7 +124,7 @@ export function Welcome({ mode, onDone }: { mode: 'welcome' | 'whatsnew'; onDone
           <button class="rf-linkbtn" onClick={() => done()}>{mode === 'welcome' ? 'Skip' : 'Close'}</button>
         </div>
         <div class="wl-links">
-          <a href={SITE_URL} target="_blank" rel="noopener noreferrer"><Ico n="globe" size={15} />rofit.site</a>
+          <a href={SITE_URL} target="_blank" rel="noopener noreferrer"><Ico n="outfit" size={15} />rofit.site</a>
           <a href={REPO_URL} target="_blank" rel="noopener noreferrer"><GithubMark size={15} />GitHub</a>
           <span class="wl-keys"><kbd class="rf-kbd">←</kbd><kbd class="rf-kbd">→</kbd> step through the tour</span>
         </div>
