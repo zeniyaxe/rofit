@@ -1,57 +1,140 @@
 ---
-import Doc from '../layouts/Doc.astro';
+import GithubMark from './GithubMark.astro';
+import '../styles/ported.css';
+import Base from '../layouts/Base.astro';
 import { LINKS } from '../config';
+import { facts, PERMISSION_WORDS, HOST_WORDS } from '../lib/privacy';
 import pkg from '../../../package.json';
-const browsers = [
-  { name: 'Chrome', icon: '/chrome.png', store: 'Chrome Web Store', url: LINKS.chromeStore },
-  { name: 'Firefox', icon: '/firefox.png', store: 'Firefox Add-ons', url: LINKS.firefoxAddons },
+const zip = `${LINKS.github}/archive/refs/heads/main.zip`;
+const stores = [
+  { name: 'Chrome Web Store', url: LINKS.chromeStore, note: 'Not listed yet' },
+  { name: 'Firefox Add-ons', url: LINKS.firefoxAddons, note: 'No Firefox build yet' },
+  { name: 'Edge Add-ons', url: LINKS.edgeAddons, note: 'Not listed; the Chrome build works in Edge' },
 ];
+const host = (h: string) => h.replace('https://', '').replace('/*', '');
 ---
-<Doc title="Install RoFit" lead="RoFit is coming to the Chrome Web Store and Firefox Add-ons. You can try it now in the site demo or build it from GitHub." toc={false}>
-  <div class="stores" aria-label="Browser stores">
-    {browsers.map((browser) => (
-      <article class="store">
-        <img src={browser.icon} alt="" width="56" height="56" />
-        <div><strong>{browser.name}</strong><span>{browser.store}</span></div>
-        {browser.url
-          ? <a class="btn btn-curtain" href={browser.url}>Add to {browser.name}</a>
-          : <button type="button" class="btn" disabled aria-label={browser.name + ' coming soon'}>Coming soon</button>}
-      </article>
-    ))}
+<Base title="Install" description="Install RoFit in Chrome, Edge or Brave in about a minute: download, load it in developer mode, open a Roblox profile.">
+  <header class="masthead">
+    <div class="wrap">
+      <h1>Install RoFit</h1>
+      <p class="lead">RoFit isn’t in a browser store yet, so you load it yourself. It takes about a minute in Chrome, Edge, Brave or another Chromium browser (version {facts.minChrome} or newer), and needs no account.</p>
+    </div>
+  </header>
+
+  <div class="wrap page" data-release-version={pkg.version}>
+    <div class="main">
+      <div class="get">
+        <a class="btn" href={zip}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M5 21h14" /></svg>
+          Download RoFit {pkg.version} source (.zip)
+        </a>
+        <a class="btn line" href={LINKS.github} rel="noopener"><GithubMark size={18} />View on GitHub</a>
+      </div>
+      <p class="note detect" id="detect" role="status" hidden></p>
+
+      <ol class="steps">
+        <li>
+          <h2>Get the code and build it</h2>
+          <p>Unzip the download (or <code>git clone</code> the repository). In that folder run <code>npm ci</code>, then <code>npm run build</code>. On Windows you can double-click <code>setup.bat</code>, which does both and walks you through the rest. You need Node.js installed.</p>
+        </li>
+        <li>
+          <h2>Turn on developer mode</h2>
+          <p>Open the extensions page and switch on <b>Developer mode</b> (top right).</p>
+          <div class="copyline"><code>chrome://extensions</code><button class="btn sm line" type="button" data-copy="chrome://extensions">Copy</button></div>
+          <p class="small muted">Edge: <code>edge://extensions</code> · Brave: <code>brave://extensions</code></p>
+        </li>
+        <li>
+          <h2>Load the extension</h2>
+          <p>Choose <b>Load unpacked</b> and pick the <code>dist</code> folder the build created. RoFit appears in your extensions; pin it to the toolbar if you like.</p>
+        </li>
+        <li>
+          <h2>Open a Roblox profile</h2>
+          <p>A <b>Saved Outfits</b> row appears under Currently Wearing (or an <b>Outfits</b> tab on the older layout), plus a hanger button by the ⋯ menu. Nothing is fetched until you click.</p>
+        </li>
+      </ol>
+
+      <p class="note warn"><b>Keep the same folder.</b> For extensions loaded this way, the browser ties RoFit’s storage, including your library, to the folder it was loaded from. Loading a copy from another folder starts with an empty library, and removing RoFit deletes its data. Before updating, export a backup: <b>Settings → Library &amp; data → Export backup</b>.</p>
+
+      <section class="perm" id="permissions" aria-labelledby="perm-h">
+        <h2 id="perm-h">What it will ask for</h2>
+        <p class="muted">Read from the extension’s manifest when this page was built. Compare it with RoFit’s <i>Details</i> on <code>chrome://extensions</code>.</p>
+        <div class="tablewrap"><table>
+          <thead><tr><th>Permission</th><th>Why</th></tr></thead>
+          <tbody>
+            {facts.permissions.map((p) => <tr><td><code>{p}</code></td><td><b>{PERMISSION_WORDS[p].name}.</b> {PERMISSION_WORDS[p].why}</td></tr>)}
+            {facts.hostPermissions.map((h) => <tr><td><code>{host(h)}</code></td><td>{HOST_WORDS[h]}</td></tr>)}
+          </tbody>
+        </table></div>
+      </section>
+
+      <section class="faq" id="update" aria-labelledby="faq-h">
+        <h2 id="faq-h">Updating, removing and trouble</h2>
+        <details open>
+          <summary>How do I update?</summary>
+          <p>Export a backup first. Then download the new code into the <em>same folder</em> (or <code>git pull</code>), run <code>npm run build</code> again, and press the reload icon on RoFit’s card in <code>chrome://extensions</code>. Your library stays.</p>
+        </details>
+        <details>
+          <summary>How do I remove it?</summary>
+          <p>Press <b>Remove</b> on RoFit’s card. That also deletes everything RoFit stored in this browser, so export a backup first if you want to keep your library.</p>
+        </details>
+        <details>
+          <summary>Chrome warns about developer-mode extensions</summary>
+          <p>That reminder appears for anything not installed from a store. It’s expected; you can dismiss it.</p>
+        </details>
+        <details>
+          <summary>I don’t see Saved Outfits on a profile</summary>
+          <p>Reload the profile once after installing. If the row still doesn’t show, the toolbar button opens the same workspace for the profile you’re on. If the list is empty, the <a class="link" href="/guides/no-outfits">no-outfits guide</a> explains why.</p>
+        </details>
+        <details>
+          <summary>Does it work in Firefox or Safari?</summary>
+          <p>Not yet. There is no Firefox or Safari build, and this site won’t claim one until it exists.</p>
+        </details>
+      </section>
+    </div>
+
+    <aside class="side" aria-label="Store listings">
+      <h2>Stores</h2>
+      <ul>
+        {stores.map((s) => <li>{s.url ? <a class="btn sm" href={s.url} rel="noopener">{s.name}</a> : <><b>{s.name}</b><span>{s.note}</span></>}</li>)}
+      </ul>
+      <p class="small muted">When a listing goes live, its button appears here. Until then there’s nothing to click, rather than a link to nowhere.</p>
+      <a class="link" href="/support">Get help</a>
+    </aside>
   </div>
-  <div class="install-meta" data-release-version={pkg.version}><a href="/#demo">Try the demo</a><a href={LINKS.github}>View on GitHub</a><p id="detect" role="status" hidden></p></div>
-  <h2>Load it from source</h2>
-  <p>You need Node.js and Git. RoFit has no accounts and needs no keys.</p>
-  <ol>
-    <li>Get the code from <a href={LINKS.github} rel="noopener">the GitHub repository</a> (download it as a ZIP, or <code>git clone</code>).</li>
-    <li>In that folder, run <code>npm ci</code>, then <code>npm run build</code>. On Windows you can double-click <code>setup.bat</code> instead; it does both and walks you through the next step.</li>
-    <li>Open <code>chrome://extensions</code> and switch on <strong>Developer mode</strong> (top right).</li>
-    <li>Choose <strong>Load unpacked</strong> and pick the <code>dist</code> folder that the build created.</li>
-    <li>Open any profile on roblox.com. Use the <strong>Saved Outfits</strong> row or <strong>Outfits</strong> tab.</li>
-  </ol>
-  <p>Chrome may remind you at startup about developer-mode extensions. That is normal for anything not installed from the store.</p>
-
-  <h2>Check what you installed</h2>
-  <p>On <code>chrome://extensions</code>, open RoFit’s <em>Details</em> and look at <em>Permissions</em> and <em>Site access</em>. They should match the <a href="/privacy">privacy page</a> exactly: Roblox’s six read-only API hosts, plus storage, a daily cleanup alarm and the active tab.</p>
-
-  <h2 id="update">Updating and removing</h2>
-  <p>Updates from source are manual: pull the new code, rebuild in the same folder to preserve your library, then press the reload icon on RoFit’s card. To remove it, use <em>Remove</em> on the same card; that also deletes everything RoFit stored.</p>
-
-  <h2>Trouble?</h2>
-  <p>See the <a href="/guides/no-outfits">guide on profiles with no outfits</a> or the <a href="/support">support page</a>.</p>
-</Doc>
-
+</Base>
 <script>import '../app.ts';</script>
+
 <style>
-  .stores { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin-bottom: 22px; }
-  .store { min-width: 0; display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 14px; padding: clamp(16px, 3vw, 24px); border: 1px solid var(--line); border-radius: 20px; background: linear-gradient(150deg, var(--paper), var(--wall-2)); }
-  .store img { display: block; object-fit: contain; width: 56px; height: 56px; }
-  .store strong, .store span { display: block; }
-  .store strong { font-size: 1.15rem; }
-  .store span { color: var(--ink-2); font-size: .86rem; }
-  .store .btn { grid-column: 1 / -1; min-height: 44px; justify-content: center; }
-  .store button { background: var(--wall); color: var(--ink-2); cursor: default; }
-  .install-meta { display: flex; flex-wrap: wrap; gap: 8px 20px; align-items: center; }
-  .install-meta :global(.detect) { flex-basis: 100%; color: var(--ink-2); font-size: .9rem; }
-  @media (max-width: 540px) { .stores { grid-template-columns: 1fr; } }
+  .page { display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: var(--s8); padding-top: var(--s7); align-items: start; }
+  .get { display: flex; flex-wrap: wrap; gap: var(--s3); }
+  .detect { margin-top: var(--s4); }
+  .steps { list-style: none; counter-reset: s; margin: var(--s7) 0 var(--s6); display: grid; gap: 0; max-width: 72ch; }
+  .steps li { counter-increment: s; display: grid; grid-template-columns: 56px minmax(0, 1fr); column-gap: var(--s4); padding: var(--s5) 0; border-top: 1px solid var(--rule); }
+  .steps li::before { content: counter(s); grid-row: 1 / span 4; font-family: var(--f-display); font-stretch: var(--wide); font-weight: 820; font-size: 2.2rem; line-height: 1; }
+  .steps h2 { font-size: var(--t-h4); }
+  .steps p, .steps .copyline { grid-column: 2; margin-top: var(--s2); color: var(--ink-2); }
+  .steps code, .perm code, .faq code, .note code { background: var(--paper-2); padding: .05em .35em; border-radius: var(--r-sm); font-size: .86em; }
+  .steps b { color: var(--ink); }
+  .note.warn { max-width: 72ch; }
+  .perm, .faq { margin-top: var(--s8); max-width: 72ch; }
+  .perm h2, .faq h2 { font-size: clamp(1.8rem, 3vw, 2.4rem); margin-bottom: var(--s3); }
+  table { width: 100%; border-collapse: collapse; margin-top: var(--s4); font-size: var(--t-ui); }
+  th, td { text-align: left; vertical-align: top; padding: 10px 12px 10px 0; border-bottom: 1px solid var(--rule); }
+  th { font-size: var(--t-tiny); text-transform: uppercase; letter-spacing: .07em; color: var(--ink-3); border-bottom-color: var(--ink); }
+  td:first-child { white-space: nowrap; }
+  details { border-top: 1px solid var(--rule); }
+  details:last-child { border-bottom: 1px solid var(--rule); }
+  summary { list-style: none; display: flex; justify-content: space-between; gap: var(--s4); padding: var(--s4) 0; font-weight: 700; }
+  summary::-webkit-details-marker { display: none; }
+  summary::after { content: ''; flex: none; width: 18px; height: 18px; margin-top: 3px; background: currentColor; -webkit-mask: var(--plus) center / contain no-repeat; mask: var(--plus) center / contain no-repeat; transition: transform var(--d) var(--ease); }
+  details { --plus: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round'%3E%3Cpath d='M12 5v14M5 12h14'/%3E%3C/svg%3E"); }
+  details[open] summary::after { transform: rotate(45deg); }
+  details p { padding-bottom: var(--s4); color: var(--ink-2); }
+  .side { position: sticky; top: calc(var(--nav-h) + 28px); display: grid; gap: var(--s4); padding: var(--s5); background: var(--stock); border-radius: var(--r); box-shadow: 0 0 0 1px var(--rule); }
+  .side h2 { font-size: var(--t-h4); }
+  .side ul { list-style: none; display: grid; }
+  .side li { display: grid; gap: 2px; padding: var(--s3) 0; border-top: 1px solid var(--rule); font-size: var(--t-small); }
+  .side li span { color: var(--ink-3); }
+  @media (max-width: 960px) { .page { grid-template-columns: minmax(0, 1fr); } .side { position: static; } }
+  @media (max-width: 520px) { .get .btn { width: 100%; white-space: normal; text-align: center; } td:first-child { white-space: normal; } }
 </style>

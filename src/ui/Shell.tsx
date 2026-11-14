@@ -11,6 +11,7 @@ import { Explorer } from './Explorer.tsx';
 import { Inspector } from './Inspector.tsx';
 import { Compare, type Subject } from './Compare.tsx';
 import { LibraryView } from './Library.tsx';
+import { WardrobeOverview } from './Overview.tsx';
 import { Palette, ShortcutsDialog, MOD, type Command } from './Palette.tsx';
 import { useAsync, useIndexer, useMotion, useOutfits, useSettings } from './data.ts';
 import { useIndicator } from './motion.tsx';
@@ -317,7 +318,7 @@ function ShellInner({ userId, userName, initialOutfit, onExit, standalone, impor
 
       <div class="rf-main">
         {compare ? (
-          <Compare a={compare.a} b={compare.b} onClose={() => setCompare(null)} onSwap={() => setCompare({ a: compare.b, b: compare.a })} />
+          <Compare a={compare.a} b={compare.b} tech={settings.technical} onClose={() => setCompare(null)} onSwap={() => setCompare({ a: compare.b, b: compare.a })} />
         ) : (
           <>
             <div class="rf-pane" inert={narrow && !!open && !open.closing}>
@@ -335,8 +336,17 @@ function ShellInner({ userId, userName, initialOutfit, onExit, standalone, impor
               )}
             </div>
             {inspector ? <div class="rf-dock" data-anim={dockAnim}>{inspector}</div> : !narrow && hasContent && (
-              <div class="rf-dock empty"><div class="rf-dock-hint"><Ico n="outfit" size={28} /><p>Pick an outfit to see what it’s made of.</p>
-                <span class="rf-muted rf-small">Shift-click or Space selects several. <kbd class="rf-kbd">{MOD} K</kbd> jumps anywhere, <kbd class="rf-kbd">?</kbd> lists shortcuts.</span></div></div>
+              <div class={'rf-dock empty' + (tab === 'outfits' && userId ? ' ov' : '')}>
+                {tab === 'outfits' && userId ? (
+                  <WardrobeOverview userName={userName ?? ''} outfits={pool} presetsHidden={settings.showPresets ? 0 : list.outfits.length - pool.length}
+                    details={indexer.details} recs={indexer.recs} access={list.access?.state} showPrices={settings.showPrices}
+                    onOpen={(o) => openOutfit(o, cardRect(o.id), root.current?.querySelector<HTMLImageElement>(`[data-oid="${o.id}"] .rf-thumb img`)?.currentSrc)}
+                    onFilterItem={setItemFilter} />
+                ) : (
+                  <div class="rf-dock-hint"><Ico n="outfit" size={28} /><p>Pick an outfit to see what it’s made of.</p>
+                    <span class="rf-muted rf-small">Shift-click or Space selects several. <kbd class="rf-kbd">{MOD} K</kbd> jumps anywhere, <kbd class="rf-kbd">?</kbd> lists shortcuts.</span></div>
+                )}
+              </div>
             )}
           </>
         )}

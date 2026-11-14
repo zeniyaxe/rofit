@@ -9,11 +9,13 @@ npm run build    # demo bundle -> claim check -> astro build -> dist/
 npm test         # claim check + built-site checks
 node scripts/make-assets.mjs   # regenerates public/og.png and apple-touch-icon.png
 node tests/e2e/pages.mjs 1440 900 d   # screenshots of pages into shots/ (needs the dev/preview server)
+npm run test:ui  # cover switcher, tabs, menu focus, wipe, overflow at 320–1920px, Calm motion (needs the dev/preview server)
 ```
 
 ## How it works
 - **The demo is the real extension UI.** `scripts/build-demo.mjs` bundles `../src/ui` with two shims (`demo/shim-rpc.ts`, `demo/shim-settings.ts`) swapped for the extension's rpc/settings modules, into `public/demo/demo.js` (lazy-loaded, ~180 KB). Real public profiles come from a dated snapshot (`public/real/`, see below); the only invented profile is "quiet" (private, no avatar). There are no drawn avatars anywhere.
-- **Scroll scenes** (`src/scripts/scenes.ts`) publish `--p` / `--pN` CSS variables and `data-step`; components draw everything from those. With motion Reduced/Off or no JS, scenes fall back to static layouts (`.static`).
+- **Design system** (RoFit 3.0): see `DESIGN.md`. One stylesheet of tokens (`src/styles/global.css`); sections are plain Astro components with their own scoped styles. No sticky scroll scenes: motion is reveals, the cover's re-dealt looks and leader lines, card deals on the wardrobe shelf and the compare wipe. Calm zeroes travel tokens and keeps fades; Off removes durations. Content is visible without JS.
+- **Prices are never illustrative.** Everything priced on the site comes from the snapshot; off-sale items say Off sale and unresolved items say Unknown (dashed). `src/lib/real.ts#priceOf` is the only formatter.
 - **Privacy claims are generated, not typed.** `src/lib/privacy.ts` reads the extension's `public/manifest.json` and source; `scripts/check-claims.mjs` fails the build if permissions/hosts/network files change without the site's wording being updated.
 - **Changelog** is parsed from `../CHANGELOG.md` at build time.
 - **Display preferences** (theme, Full/Calm/Off motion) live in `localStorage` only.

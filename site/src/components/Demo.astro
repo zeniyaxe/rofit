@@ -1,53 +1,56 @@
 ---
-import { star } from '../lib/real';
+import { star, people, capturedLabel } from '../lib/real';
 ---
-<section class="demo" id="demo" data-start={star.id} aria-labelledby="demo-h">
-  <div class="head">
-    <h2 id="demo-h">Try RoFit.</h2>
-    <p>Browse {star.displayName}’s saved outfits, inspect the pieces, or compare two looks.</p>
-  </div>
-
-
-
-  <div class="browser">
-    <div class="bar"><i aria-hidden="true"></i><i aria-hidden="true"></i><i aria-hidden="true"></i><span class="url">roblox.com/users/<b id="demo-uid">{star.id}</b>/profile</span></div>
-    <div class="view">
-      <div id="demo-host" class="host" aria-label="RoFit demo"></div>
-      <div class="boot" id="demo-boot" role="status">Loading the demo…</div>
-      <noscript><p class="ns">The live demo needs JavaScript. Everything else on this site works without it.</p></noscript>
+<section class="demo section" id="try" data-start={star.id} aria-labelledby="demo-h">
+  <div class="wrap">
+    <div class="head-line">
+      <h2 id="demo-h" class="rv">Try it live.</h2>
+      <p class="rv" style="--i:1">This is the extension’s real interface, running on this page with a dated snapshot of public profiles. Open an outfit, search its pieces, select two and compare them, or press <kbd>Ctrl</kbd> <kbd>K</kbd>.</p>
+    </div>
+    <div class="who" role="group" aria-label="Choose a profile for the demo">
+      {people.map((p) => <button type="button" class="pick" data-demo-user={p.id} aria-pressed={p.id === star.id ? 'true' : 'false'}>{p.displayName}</button>)}
+    </div>
+    <div class="frame">
+      <div class="bar" aria-hidden="true"><span class="url">roblox.com/users/<b id="demo-uid">{star.id}</b>/profile</span><span class="snap">Snapshot {capturedLabel}</span></div>
+      <div class="view">
+        <div id="demo-host" class="host" aria-label="RoFit demo"></div>
+        <div class="boot" id="demo-boot" role="status">Loading the demo…</div>
+        <noscript><p class="ns">The live demo needs JavaScript. Everything else on this site works without it.</p></noscript>
+      </div>
     </div>
   </div>
 </section>
 
 <style>
-  .demo { width: min(100%, calc(var(--maxw) + var(--gutter) * 2)); margin: clamp(90px, 14vw, 180px) auto 0; padding: 0 var(--gutter); }
-  .head { max-width: 68ch; margin-inline: auto; text-align: center; }
-  h2 { font-size: clamp(2rem, 4.2vw, 4rem); letter-spacing: -.035em; }
-  .head p { margin-top: 16px; color: var(--ink-2); }
-
-  .browser { border-radius: 14px; background: var(--paper); box-shadow: 0 0 0 1px var(--line), 0 40px 80px rgb(15 20 60 / .18); overflow: hidden; }
-  .bar { display: flex; align-items: center; gap: 7px; padding: 11px 14px; background: var(--wall-2); }
-  .bar i { flex: 0 0 11px; height: 11px; border-radius: 50%; background: #ff5f57; }
-  .bar i:nth-child(2) { background: #febc2e; }
-  .bar i:nth-child(3) { background: #28c840; }
-  .url { margin-left: 10px; flex: 1; min-width: 0; padding: 5px 12px; border-radius: 8px; background: var(--paper); font-size: 13px; color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .head-line h2 { font-size: var(--t-h2); }
+  .who { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: var(--s4); }
+  .pick { min-height: 40px; padding: 0 14px; border-radius: var(--r-sm); font-weight: 650; font-size: var(--t-small); box-shadow: inset 0 0 0 1px var(--rule-2); transition: background var(--d-fast), color var(--d-fast), transform var(--d) var(--land); }
+  .pick:hover { background: var(--paper-2); }
+  .pick:active { transform: scale(.96); transition-duration: 70ms; }
+  .pick[aria-pressed='true'] { background: var(--ink); color: var(--paper); box-shadow: none; }
+  .frame { border-radius: var(--r); background: var(--stock); box-shadow: 0 0 0 1px var(--rule), var(--lift-2); overflow: hidden; }
+  .bar { display: flex; align-items: center; justify-content: space-between; gap: var(--s4); padding: 10px 14px; border-bottom: 1px solid var(--rule); font-size: .8rem; }
+  .url { min-width: 0; color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: var(--f-code); }
   .url b { color: var(--ink); font-weight: 600; }
-  .view { position: relative; height: clamp(520px, 78svh, 760px); }
-  .host { position: absolute; inset: 0; opacity: 0; transition: opacity .5s var(--ease); }
+  .snap { flex: none; color: var(--ink-3); }
+  .view { position: relative; height: clamp(540px, 80svh, 780px); }
+  .host { position: absolute; inset: 0; opacity: 0; transition: opacity var(--d-slow) var(--ease); }
   .view.ready .host { opacity: 1; }
-  .boot { position: absolute; inset: 0; display: grid; place-items: center; color: var(--ink-3); font-weight: 600; transition: opacity .3s; }
+  .boot { position: absolute; inset: 0; display: grid; place-items: center; color: var(--ink-3); font-weight: 600; transition: opacity var(--d); }
   .view.ready .boot { opacity: 0; pointer-events: none; }
   .ns { position: absolute; inset: 0; display: grid; place-items: center; padding: 24px; text-align: center; }
-  @media (max-width: 700px) { .view { height: clamp(440px, 78svh, 650px); } .url { font-size: 12px; } }
+  @media (max-width: 700px) { .view { height: clamp(480px, 82svh, 680px); } .snap { display: none; } }
 </style>
 
 <script>
   import { loadDemo } from '../scripts/demo-loader';
-  const sec = document.getElementById('demo')!;
+  const sec = document.getElementById('try')!;
   const host = document.getElementById('demo-host')!;
   const view = sec.querySelector('.view')!;
   const boot = document.getElementById('demo-boot')!;
-  const state = { userId: Number(sec.dataset.start), theme: 'dark' as const, reduced: document.documentElement.dataset.motion !== 'full' };
+  const uid = document.getElementById('demo-uid')!;
+  const theme = () => (document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light') as 'light' | 'dark';
+  const state = { userId: Number(sec.dataset.start), theme: theme(), reduced: document.documentElement.dataset.motion !== 'full' };
   let handle: { update: (o: typeof state) => void } | null = null;
   let loading: Promise<void> | null = null;
 
@@ -60,12 +63,22 @@ import { star } from '../lib/real';
       boot.textContent = 'The demo could not load here. The extension itself is unaffected.';
     }
   })();
-
-  // Start fetching the (lazy) bundle when the section is near, not at page load.
+  // Fetch the lazy bundle when the section is near, not at page load.
   new IntersectionObserver((e, o) => { if (e[0].isIntersecting) { load(); o.disconnect(); } }, { rootMargin: '600px 0px' }).observe(sec);
 
+  const pickUser = (id: number) => {
+    state.userId = id; uid.textContent = String(id);
+    sec.querySelectorAll<HTMLButtonElement>('[data-demo-user]').forEach((b) => b.setAttribute('aria-pressed', String(Number(b.dataset.demoUser) === id)));
+    load().then(() => handle?.update({ ...state }));
+  };
+  // Profile buttons here, and any "open in the demo" link elsewhere on the page.
+  document.addEventListener('click', (e) => {
+    const t = (e.target as HTMLElement).closest<HTMLElement>('[data-demo-user]');
+    if (t) pickUser(Number(t.dataset.demoUser));
+  });
   document.addEventListener('rofit:display', () => {
     state.reduced = document.documentElement.dataset.motion !== 'full';
+    state.theme = theme();
     handle?.update({ ...state });
   });
 </script>

@@ -1,6 +1,6 @@
 {
   "name": "rofit-inspector",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "private": true,
   "description": "Browse, inspect, compare and keep other people's saved Roblox avatar outfits.",
   "type": "module",

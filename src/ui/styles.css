@@ -10,7 +10,8 @@
   --rf-surface-2: color-mix(in srgb, var(--rf-tint) var(--rf-s2), var(--rf-bg));
   --rf-surface-3: color-mix(in srgb, var(--rf-tint) var(--rf-s3), var(--rf-bg));
   --rf-line: color-mix(in srgb, var(--rf-tint) var(--rf-line-pct), var(--rf-bg));
-  --rf-muted: color-mix(in srgb, var(--rf-fg) 62%, var(--rf-bg));
+  /* 66%: secondary text stays ≥ 4.5:1 on the tinted surfaces too (62% measured ~4.3:1 on --rf-surface in light). */
+  --rf-muted: color-mix(in srgb, var(--rf-fg) 66%, var(--rf-bg));
   --rf-accent-soft: color-mix(in srgb, var(--rf-accent) 14%, var(--rf-bg));
   --rf-warn: #d97706;
   --rf-ok: #1f9d55;
@@ -401,26 +402,7 @@
 .rf-details { margin: 8px 0; font-size: 13px; } .rf-details summary { cursor: pointer; color: var(--rf-muted); }
 
 /* ---- welcome ------------------------------------------------------------------------------------- */
-.rf-welcome { flex: 1; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); min-height: 100vh; }
-.rf-wl { padding: 8vh 6vw; display: flex; flex-direction: column; justify-content: center; max-width: 640px; margin-left: auto; }
 .rf-logo { width: 48px; height: 48px; border-radius: 12px; background: var(--rf-accent); color: var(--rf-accent-fg); display: flex; align-items: center; justify-content: center; margin-bottom: 20px; }
-.rf-wl h1 { font-size: 40px; line-height: 1.05; font-weight: 800; letter-spacing: -.02em; }
-.rf-lead { font-size: 17px; margin: 12px 0 28px; color: var(--rf-muted); max-width: 44ch; }
-.rf-lead b { color: var(--rf-fg); }
-.rf-steps { list-style: none; display: flex; flex-direction: column; gap: 18px; margin-bottom: 32px; }
-.rf-steps li { display: flex; gap: 14px; }
-.rf-steps li > span { width: 26px; height: 26px; border-radius: 50%; background: var(--rf-surface-2); font-weight: 700; font-size: 13px; display: flex; align-items: center; justify-content: center; flex: none; margin-top: 1px; }
-.rf-steps p { color: var(--rf-muted); margin-top: 2px; max-width: 46ch; }
-.rf-wa { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-.rf-wr { background: var(--rf-surface); display: flex; align-items: center; justify-content: center; padding: 40px; }
-.rf-faux { width: min(420px, 100%); background: var(--rf-bg); border-radius: 12px; box-shadow: 0 20px 50px rgb(0 0 0 / .14); overflow: hidden; transform: rotate(-1.2deg); }
-.rf-faux-tabs { display: flex; border-bottom: 1px solid var(--rf-line); }
-.rf-faux-tabs span { flex: 1; text-align: center; padding: 14px 0; font-weight: 600; color: var(--rf-muted); }
-.rf-faux-tabs .on { color: var(--rf-fg); box-shadow: inset 0 -2px var(--rf-fg); }
-.rf-faux-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; padding: 16px; }
-.rf-faux-grid i { display: block; aspect-ratio: 1; border-radius: 8px; background: var(--rf-surface-2); }
-.rf-faux-grid b { display: block; height: 8px; width: 70%; border-radius: 4px; background: var(--rf-surface-2); margin-top: 8px; }
-.rf-faux-grid div:nth-child(2) i { background: var(--rf-accent-soft); box-shadow: inset 0 0 0 2px var(--rf-accent); }
 
 /* ---- responsive & motion ------------------------------------------------------------------------------- */
 @media (max-width: 760px) {
@@ -433,7 +415,6 @@
   .rf-hide-s { display: none; }
   .rf-cols3 { grid-template-columns: 1fr; }
   .rf-cheads { grid-template-columns: 1fr 1fr; } .rf-sim { grid-column: 1 / -1; order: -1; }
-  .rf-welcome { grid-template-columns: 1fr; } .rf-wr { display: none; } .rf-wl { margin: 0 auto; }
   .rf-setrow { flex-direction: column; align-items: flex-start; gap: 10px; }
 }
 /* ---- motion v2 ------------------------------------------------------------------------------------
@@ -1108,7 +1089,7 @@ label.rf-frow { cursor: pointer; }
 .rf.rm .rf-search:focus-within > .rf-ico, .rf.rm .rf-ib:hover .rf-ico { transform: none; }
 
 /* ==== pass 2: popup (rebuilt component) ======================================================= */
-.rf-pop2 { width: 340px; }
+.rf-pop2 { width: 340px; max-width: 100%; } /* yields to a vertical scrollbar instead of forcing a horizontal one */
 .rf-pop2 .rf-pop-h { gap: 4px; padding: 10px 6px 8px 12px; }
 .rf-pop2 .rf-pop-h > b { margin-left: 5px; }
 .rf-pop-status { display: inline-flex; align-items: center; gap: 5px; margin-left: 8px; padding: 2px 8px 2px 6px; border-radius: 99px; font-size: 11px; font-weight: 700; color: var(--rf-muted); background: var(--rf-surface); }
@@ -1234,7 +1215,9 @@ label.rf-frow { cursor: pointer; }
 .ws-stage { position: relative; }
 .ws-win { border-radius: 16px; background: var(--rf-bg); box-shadow: 0 30px 80px rgb(0 0 0 / .28), 0 0 0 1px var(--rf-line); overflow: hidden; }
 .ws-bar { display: flex; align-items: center; gap: 6px; padding: 9px 12px; background: var(--rf-surface); font-size: 11px; color: var(--rf-muted); }
-.ws-bar i { width: 9px; height: 9px; border-radius: 50%; background: var(--rf-surface-3); }
+.ws-bar i { width: 10px; height: 10px; border-radius: 50%; background: #ff5f57; box-shadow: inset 0 0 0 .5px rgb(0 0 0 / .18); }
+.ws-bar i:nth-child(2) { background: #febc2e; }
+.ws-bar i:nth-child(3) { background: #28c840; }
 .ws-bar span { margin-left: 10px; padding: 2px 10px; border-radius: 99px; background: var(--rf-bg); }
 .ws-head { display: flex; align-items: center; gap: 10px; padding: 12px 16px 0; font-size: 13px; }
 .ws-head small { display: block; color: var(--rf-muted); font-size: 11px; }
@@ -1257,7 +1240,7 @@ label.rf-frow { cursor: pointer; }
 .ws-fig i:nth-child(3) { top: 64%; width: 62%; height: 34%; background: hsl(var(--h) 35% 30%); }
 .ws-fig.big { width: 30%; height: 64%; }
 .ws-hero, .ws-twin { position: absolute; border-radius: 12px; display: flex; align-items: center; justify-content: center; background: radial-gradient(120% 90% at 50% 10%, color-mix(in srgb, hsl(var(--h) 60% 55%) 24%, var(--rf-surface)), var(--rf-surface)); transition: left .7s var(--rf-spring), top .7s var(--rf-spring), width .7s var(--rf-spring), height .7s var(--rf-spring), opacity .35s var(--rf-ease), box-shadow .4s, border-radius .5s; }
-.ws-hero { left: 35.7%; top: 6%; width: 28.6%; height: 42.5%; opacity: 0; z-index: 2; }
+.ws-hero { left: 3.6%; top: 6%; width: 28.6%; height: 42.5%; opacity: 0; z-index: 2; }
 .ws-twin { left: 96%; top: 6%; width: 42%; height: 88%; opacity: 0; z-index: 1; }
 .ws-panel { position: absolute; left: 52%; top: 6%; width: 44%; height: 88%; padding: 4% 4.5%; border-radius: 12px; background: var(--rf-surface); display: flex; flex-direction: column; gap: 7px; opacity: 0; transform: translateX(16px); transition: opacity .4s var(--rf-ease), transform .6s var(--rf-spring), left .7s var(--rf-spring), width .7s var(--rf-spring); font-size: 12px; overflow: hidden; }
 .ws-title { font-size: 15px; letter-spacing: -.01em; }
@@ -1280,7 +1263,7 @@ label.rf-frow { cursor: pointer; }
 /* moments */
 .wl-story[data-step=discover] .ws-cursor { left: 82%; top: 17%; }
 .wl-story[data-step=open] .ws-hero { opacity: 1; box-shadow: 0 18px 40px rgb(0 0 0 / .28); }
-.wl-story[data-step=open] .ws-cursor { left: 50%; top: 40%; }
+.wl-story[data-step=open] .ws-cursor { left: 18%; top: 40%; }
 .wl-story[data-step=open] .ws-grid { filter: saturate(.6); }
 .wl-story:is([data-step=inspect], [data-step=explore], [data-step=compare], [data-step=save]) .ws-grid { opacity: 0; transform: scale(.92); pointer-events: none; }
 .wl-story:is([data-step=inspect], [data-step=explore]) .ws-hero { opacity: 1; left: 4%; top: 6%; width: 44%; height: 88%; }
@@ -1333,3 +1316,114 @@ label.rf-frow { cursor: pointer; }
 }
 .rm .wl-story *, .rm .wl-story { transition: none !important; animation: none !important; }
 @media (prefers-reduced-motion: reduce) { .wl-story *, .wl-story { transition-duration: .01ms !important; animation: none !important; } }
+
+/* ==== 3.0: collector numbering, honest unknowns, steady cards, wardrobe overview ===================
+   Inside roblox.com this still inherits Roblox's font and sampled colours; only details are borrowed from the
+   "get the look" editorial: a quiet catalogue number, figures that show when they are a lower bound. */
+.rf-sr { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; border: 0; }
+/* A known value prints solid. A lower bound (or an unknown) is visibly different: dashed underline + help cursor + tooltip. */
+.rf-fig-n { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.rf-fig-n.approx { text-decoration: underline dashed; text-decoration-color: color-mix(in srgb, currentColor 55%, transparent); text-decoration-thickness: 1px; text-underline-offset: .22em; cursor: help; }
+.rf-fig-n.unknown { color: var(--rf-muted); }
+.rf-chip.unknown { background: transparent; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--rf-fg) 26%, transparent); color: var(--rf-muted); }
+.rf-chip.unknown .rf-ico { opacity: .85; }
+
+/* cards: fixed thumbnail, names clamp to two lines, the line below never changes height */
+.rf-grid:not(.list) .rf-card-name { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; white-space: normal; overflow-wrap: anywhere; line-height: 1.25; min-height: 2.5em; }
+.rf-grid.compact:not(.list) .rf-card-name { -webkit-line-clamp: 1; line-clamp: 1; min-height: 1.25em; white-space: nowrap; display: block; text-overflow: ellipsis; }
+.rf-card-sub { height: 17px; }
+.rf-card-cost { margin-left: auto; padding-left: 6px; font-weight: 700; color: var(--rf-fg); font-size: 11.5px; flex: none; }
+.rf-grid.big .rf-cell { contain-intrinsic-size: auto 236px; }
+.rf-thumb-note { text-align: center; padding: 8px; line-height: 1.25; }
+.rf-thumb-note.stalled, .rf-thumb-note.ratelimited { color: color-mix(in srgb, var(--rf-fg) 55%, var(--rf-bg)); }
+.rf-stage .rf-thumb-note { font-size: 13px; gap: 8px; }
+
+/* inspector header: catalogue number, title, who/what, provenance */
+.rf-kicker { display: flex; align-items: center; gap: 8px; margin: 14px 0 0; min-height: 22px; }
+.rf-no { display: inline-flex; align-items: baseline; gap: 5px; padding: 2px 6px; margin-left: -6px; border-radius: 6px; color: var(--rf-muted); font-size: 12px; transition: background .14s, color .14s; }
+.rf-no:hover { background: var(--rf-surface); color: var(--rf-fg); }
+.rf-no-k { font-weight: 700; letter-spacing: .02em; }
+.rf-no-n { font-variant-numeric: tabular-nums; letter-spacing: .02em; font-weight: 600; }
+.rf-no .rf-ico { align-self: center; opacity: 0; transition: opacity .14s; }
+.rf-no:hover .rf-ico, .rf-no:focus-visible .rf-ico { opacity: .8; }
+.rf-kicker + .rf-iname-h { margin-top: 2px; }
+.rf-meta-who { color: var(--rf-fg); font-weight: 600; }
+
+/* cost summary: one headline figure, its make-up, then what isn't counted */
+.rf-cost-k { font-size: 11px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: var(--rf-muted); margin-bottom: 4px; }
+.rf-cost-n .rf-fig-n.approx { text-decoration-thickness: 2px; text-underline-offset: .16em; }
+.rf-cost-l { margin-top: 4px; }
+
+/* wardrobe overview (the inspector pane before an outfit is picked) */
+.rf-dock.empty.ov { align-items: stretch; justify-content: flex-start; overflow-y: auto; }
+.rf-ov { display: flex; flex-direction: column; gap: 6px; padding: 28px 28px 22px; width: 100%; min-height: 100%; animation: rf-rise .4s var(--rf-ease) backwards; }
+.rf-ov-k { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--rf-muted); }
+.rf-ov-h { font-size: 17px; font-weight: 600; display: flex; align-items: baseline; gap: 8px; margin-top: 2px; }
+.rf-ov-n { font-size: 40px; line-height: 1; font-weight: 800; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+.rf-ov-sub { color: var(--rf-fg); font-size: 13.5px; line-height: 1.5; }
+.rf-ov-part { color: var(--rf-muted); }
+.rf-ov-dl { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 8px 16px; margin: 14px 0 2px; padding-top: 14px; border-top: 1px solid var(--rf-line); font-size: 13px; align-items: baseline; }
+.rf-ov-dl dt { color: var(--rf-muted); }
+.rf-ov-dl dd { margin: 0; display: flex; align-items: baseline; gap: 8px; min-width: 0; }
+.rf-ov-dl dd .rf-fig-n { margin-left: auto; font-weight: 700; }
+.rf-ov-o { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--rf-fg); font-weight: 600; text-align: left; }
+.rf-ov-re { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--rf-line); }
+.rf-ov-re ul { list-style: none; margin: 6px -8px 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+.rf-ov-item { display: flex; align-items: center; gap: 10px; width: 100%; padding: 5px 8px; border-radius: 8px; text-align: left; transition: background .12s; }
+.rf-ov-item:hover { background: var(--rf-surface-2); }
+.rf-ov-item .rf-ithumb { width: 32px; height: 32px; background: var(--rf-bg); }
+.rf-ov-c { font-size: 12px; color: var(--rf-muted); flex: none; font-variant-numeric: tabular-nums; }
+.rf-ov-foot { margin-top: auto; padding-top: 22px; display: flex; flex-direction: column; gap: 6px; color: var(--rf-muted); font-size: 12.5px; }
+.rf-ov-foot p:first-child { display: flex; align-items: center; gap: 8px; color: var(--rf-fg); font-size: 13.5px; }
+.rf-ov-keys { line-height: 1.7; }
+.rf-dock-hint .rf-ov-keys { font-size: 12px; }
+
+/* compare: one colour per side everywhere (left = accent, right = amber, shared = neutral) */
+.rf-compare { --rf-side-a: var(--rf-accent); --rf-side-b: #c9861f; }
+.rf-ccol.a h3 { border-color: var(--rf-side-a); } .rf-ccol.b h3 { border-color: var(--rf-side-b); } .rf-ccol.both h3 { border-color: color-mix(in srgb, var(--rf-fg) 35%, var(--rf-bg)); }
+.rf-ccol h3::before { content: ''; width: 8px; height: 8px; border-radius: 50%; margin: auto 7px auto 0; flex: none; background: color-mix(in srgb, var(--rf-fg) 35%, var(--rf-bg)); }
+.rf-ccol.a h3::before { background: var(--rf-side-a); } .rf-ccol.b h3::before { background: var(--rf-side-b); }
+.rf-ccol h3 span { margin-left: auto; }
+.rf-mside.b .rf-mstage { box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--rf-side-b) 45%, transparent); }
+.rf-cbarrow.b i::after { background: var(--rf-side-b); }
+.rf-cbarrow.approx i::after { -webkit-mask: linear-gradient(90deg, #000 calc(100% - 14px), transparent); mask: linear-gradient(90deg, #000 calc(100% - 14px), transparent); }
+.rf-cbarrow > .rf-fig-n { font-weight: 700; }
+.rf-cdelta { margin: 8px 0 4px; }
+dl.rf-mid-n { display: flex; flex-direction: column; gap: 4px; margin: 0; width: 100%; max-width: 132px; }
+dl.rf-mid-n > div { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+dl.rf-mid-n dt { font-size: 10.5px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--rf-muted); display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
+dl.rf-mid-n dt::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: color-mix(in srgb, var(--rf-fg) 35%, var(--rf-bg)); }
+dl.rf-mid-n .a dt::before { background: var(--rf-side-a); } dl.rf-mid-n .b dt::before { background: var(--rf-side-b); }
+dl.rf-mid-n dd { margin: 0; font-size: 15px; font-weight: 800; font-variant-numeric: tabular-nums; }
+@media (max-width: 760px) { dl.rf-mid-n { flex-direction: row; max-width: none; width: auto; gap: 14px; } dl.rf-mid-n > div { flex-direction: column; align-items: center; gap: 0; } }
+.rf-cbar { flex-wrap: wrap; row-gap: 8px; }
+.rf-cbar h2 { white-space: nowrap; }
+@media (max-width: 760px) {
+  .rf-cbar { padding: 8px 12px; gap: 6px; }
+  .rf-cscroll { padding: 14px 12px; }
+  .rf-cbarrow { grid-template-columns: minmax(0, 7em) 1fr auto; }
+}
+
+/* ==== 3.0: RoFit's own pages carry the brand (popup, library/settings page, welcome) ======================
+   Fluoro pink only as a solid field or mark, always with black ink on it; deeper pink for text links. No glow,
+   no gradient. The roblox.com sheet never gets .rf-own, so it keeps Roblox's sampled accent. */
+.rf-own .rf-pop-logo, .rf-own .wl-logo, .rf-own .rf-logo, .rf-pbrand-m { background: var(--rf-brand); color: var(--rf-brand-on); box-shadow: none; }
+.rf-pbrand-m { width: 24px; height: 24px; border-radius: 7px; display: inline-flex; align-items: center; justify-content: center; }
+.rf-own .wl-eyebrow { color: var(--rf-brand-ink); }
+.rf-own .wl-links a, .rf-own .rf-poplinks a, .rf-own .rf-about a { color: var(--rf-brand-ink); }
+.rf-own .rf-poplinks a:hover, .rf-own .wl-links a:hover { text-decoration: underline; text-underline-offset: 2px; }
+.rf-own .rf-pop-now.live { background: var(--rf-brand); color: var(--rf-brand-on); }
+.rf-own .rf-pop-now.live:hover { background: color-mix(in srgb, var(--rf-brand) 88%, #000); }
+.rf-own .rf-pop-now.live .rf-muted, .rf-own .rf-pop-now.live small { color: var(--rf-brand-on); opacity: 1; }
+.rf-own .rf-pop-now.live:focus-visible { box-shadow: 0 0 0 2px var(--rf-bg), 0 0 0 4px var(--rf-fg); }
+.rf-own .rf-pop-tabs em { color: var(--rf-brand-ink); }
+.rf-pop-statuswrap:empty { display: none; }
+.rf-compare .rf-mirror-legend .b::before, .rf-compare .rf-lens .rf-chip.lens-b.on { background: var(--rf-side-b); }
+.rf-compare .rf-lens .rf-chip.lens-b.on { color: #111; }
+.rf-poplinks { padding: 8px 14px 12px; font-size: 12px; color: var(--rf-muted); text-align: center; }
+
+/* Welcome tour: real outfit renders instead of drawn figures */
+.ws-img { width: 100%; height: 100%; object-fit: contain; display: block; }
+.ws-tile .ws-img { height: 86%; margin-bottom: 8%; }
+.ws-av { overflow: hidden; background: var(--rf-surface-2); }
+.ws-av img { width: 100%; height: 100%; object-fit: cover; display: block; }

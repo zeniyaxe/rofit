@@ -1,0 +1,450 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-13T00:00:00Z",
+  "title": "Design System: RoFit",
+  "extensions": {
+    "colorMeta": {
+      "spot": {
+        "role": "primary",
+        "displayName": "Fluoro Spot Pink",
+        "canonical": "#ff3d7f",
+        "tonalRamp": [
+          "#3d0a1d",
+          "#66112f",
+          "#8f1843",
+          "#c8104f",
+          "#ff3d7f",
+          "#ff7aa6",
+          "#ffb3cc",
+          "#ffe0eb"
+        ]
+      },
+      "link": {
+        "role": "primary",
+        "displayName": "Deep Spot Link",
+        "canonical": "#c8104f",
+        "tonalRamp": [
+          "#3d0a1d",
+          "#66112f",
+          "#8f1843",
+          "#c8104f",
+          "#ff3d7f",
+          "#ff7aa6",
+          "#ffb3cc",
+          "#ffe0eb"
+        ]
+      },
+      "spot-ink": {
+        "role": "neutral",
+        "displayName": "Ink on Spot",
+        "canonical": "#0c0c0d"
+      },
+      "paper": {
+        "role": "neutral",
+        "displayName": "Coated Paper",
+        "canonical": "#f4f4f1",
+        "tonalRamp": [
+          "#0c0c0d",
+          "#26262a",
+          "#45454b",
+          "#66666e",
+          "#8c8c94",
+          "#b6b6bc",
+          "#e9e9e4",
+          "#f4f4f1"
+        ]
+      },
+      "paper-2": {
+        "role": "neutral",
+        "displayName": "Second Pass",
+        "canonical": "#e9e9e4"
+      },
+      "stock": {
+        "role": "neutral",
+        "displayName": "White Stock",
+        "canonical": "#ffffff"
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Press Ink",
+        "canonical": "#0c0c0d",
+        "tonalRamp": [
+          "#0c0c0d",
+          "#26262a",
+          "#45454b",
+          "#66666e",
+          "#8c8c94",
+          "#b6b6bc",
+          "#e9e9e4",
+          "#f4f4f1"
+        ]
+      },
+      "ink-2": {
+        "role": "neutral",
+        "displayName": "Ink 2",
+        "canonical": "#45454b"
+      },
+      "ink-3": {
+        "role": "neutral",
+        "displayName": "Ink 3",
+        "canonical": "#66666e"
+      },
+      "rule": {
+        "role": "neutral",
+        "displayName": "Hairline",
+        "canonical": "rgb(12 12 13 / .14)"
+      },
+      "rule-2": {
+        "role": "neutral",
+        "displayName": "Hairline Strong",
+        "canonical": "rgb(12 12 13 / .32)"
+      },
+      "spot-rule": {
+        "role": "neutral",
+        "displayName": "Hairline on Spot",
+        "canonical": "rgb(12 12 13 / .28)"
+      },
+      "ok": {
+        "role": "state",
+        "displayName": "OK Ink (long-form only)",
+        "canonical": "#0b7a52"
+      },
+      "warn": {
+        "role": "state",
+        "displayName": "Warn Ink (long-form only)",
+        "canonical": "#8f4f00"
+      },
+      "bad": {
+        "role": "state",
+        "displayName": "Bad Ink",
+        "canonical": "#c21f3a"
+      },
+      "dark-paper": {
+        "role": "neutral",
+        "displayName": "Dark Paper",
+        "canonical": "#0f0f10"
+      },
+      "dark-paper-2": {
+        "role": "neutral",
+        "displayName": "Dark Second Pass",
+        "canonical": "#18181a"
+      },
+      "dark-stock": {
+        "role": "neutral",
+        "displayName": "Dark Stock",
+        "canonical": "#1c1c1f"
+      },
+      "dark-ink": {
+        "role": "neutral",
+        "displayName": "Warm Off-white Ink",
+        "canonical": "#f3f3ef"
+      },
+      "dark-ink-2": {
+        "role": "neutral",
+        "displayName": "Dark Ink 2",
+        "canonical": "#b6b6bc"
+      },
+      "dark-ink-3": {
+        "role": "neutral",
+        "displayName": "Dark Ink 3",
+        "canonical": "#8c8c94"
+      },
+      "dark-link": {
+        "role": "primary",
+        "displayName": "Dark Spot Link",
+        "canonical": "#ff7aa6"
+      },
+      "dark-ok": {
+        "role": "state",
+        "displayName": "Dark OK",
+        "canonical": "#3fcf98"
+      },
+      "dark-warn": {
+        "role": "state",
+        "displayName": "Dark Warn",
+        "canonical": "#f0a53c"
+      },
+      "dark-bad": {
+        "role": "state",
+        "displayName": "Dark Bad",
+        "canonical": "#ff6b85"
+      }
+    },
+    "typographyMeta": {
+      "masthead": {
+        "displayName": "Masthead",
+        "purpose": "The ROFIT title across the cover and repeated as the footer sign-off. Anybody 150% width, 900, uppercase."
+      },
+      "cover-line": {
+        "displayName": "Cover line",
+        "purpose": "The shout: cover h1, headings on spot fields and the ink band, the Proof head, long-form page mastheads, 404. Anybody 62% width (--narrow), uppercase."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Sentence-case condensed h2 for paper working sections. Anybody 72% width (--cond), 820."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Card and sub-section titles (h3). Anybody 86% width; Onest 750-760 inside prose and dense card backs."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Onest reading text; prose 70ch, docs 72ch."
+      },
+      "numeral": {
+        "displayName": "Numeral",
+        "purpose": "Totals, counts, step numbers, release versions. Anybody 128% width (--wide), tabular."
+      },
+      "collector-no": {
+        "displayName": "Collector No.",
+        "purpose": "The real outfit ID, prefixed with a CSS-generated 'No.' (90% width, 800)."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Footer column heads, TOC heads and table headers only. Never a kicker above a headline."
+      },
+      "code": {
+        "displayName": "Code",
+        "purpose": "Inline code, permission and host names, share URLs."
+      }
+    },
+    "shadows": [
+      {
+        "name": "lift",
+        "value": "0 1px 0 rgb(12 12 13 / .06), 0 14px 32px -18px rgb(12 12 13 / .35)",
+        "purpose": "Hovered collector cards, share-URL slip."
+      },
+      {
+        "name": "lift-2",
+        "value": "0 2px 0 rgb(12 12 13 / .05), 0 30px 60px -28px rgb(12 12 13 / .45)",
+        "purpose": "Share card, demo frame, display popover."
+      },
+      {
+        "name": "lift-dark",
+        "value": "0 1px 0 rgb(0 0 0 / .4), 0 18px 40px -22px rgb(0 0 0 / .9)",
+        "purpose": "Lift in the dark theme."
+      },
+      {
+        "name": "lift-2-dark",
+        "value": "0 2px 0 rgb(0 0 0 / .4), 0 34px 70px -30px rgb(0 0 0 / .95)",
+        "purpose": "Lift 2 in the dark theme."
+      },
+      {
+        "name": "field-drop",
+        "value": "0 34px 60px -34px rgb(70 0 25 / .75)",
+        "purpose": "Printed cards resting on the spot field (compare). A cast shadow, not a glow."
+      },
+      {
+        "name": "card-frame",
+        "value": "0 0 0 1px var(--rule), inset 0 0 0 4px var(--stock), inset 0 0 0 5px var(--rule)",
+        "purpose": "Collector card double hairline frame (a border, not elevation)."
+      },
+      {
+        "name": "button-hover",
+        "value": "0 10px 24px -14px rgb(12 12 13 / .8)",
+        "purpose": "Soft ink drop under a hovered button."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease",
+        "value": "cubic-bezier(.16, 1, .3, 1)",
+        "purpose": "Exponential ease for all travel."
+      },
+      {
+        "name": "ease-in",
+        "value": "cubic-bezier(.55, 0, .85, .35)",
+        "purpose": "Exits (leader lines retracting)."
+      },
+      {
+        "name": "land",
+        "value": "linear(0, .0089 1%, .0352 2%, .1404 4.1%, .4467 9.2%, .6103 12%, .7378 14.8%, .8364 17.9%, .9051 21.2%, .9504 24.6%, .9818 28.6%, 1.0012 33.4%, 1.0089 38.8%, 1.0084 45.9%, 1.0016 61.2%, 1)",
+        "purpose": "Spring for things that land: cards, pins, presses. Calm swaps it for --ease."
+      },
+      {
+        "name": "d-fast",
+        "value": "160ms",
+        "purpose": "Controls, colour changes. 0ms in Off."
+      },
+      {
+        "name": "d",
+        "value": "320ms",
+        "purpose": "Standard transitions. 0ms in Off."
+      },
+      {
+        "name": "d-slow",
+        "value": "640ms",
+        "purpose": "Deals, reveals, card turns. 240ms in Calm, 0ms in Off."
+      },
+      {
+        "name": "rise",
+        "value": "22px",
+        "purpose": "Reveal travel. 0 in Calm and Off."
+      },
+      {
+        "name": "deal",
+        "value": "34px",
+        "purpose": "Card deal and cover render travel. 0 in Calm and Off."
+      },
+      {
+        "name": "tilt",
+        "value": "1.6deg",
+        "purpose": "Dealt-card rotation. 0 in Calm and Off."
+      },
+      {
+        "name": "press",
+        "value": "scale(.97) over 70ms",
+        "purpose": "Button press; .93-.96 for small controls."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "phone",
+        "value": "480px"
+      },
+      {
+        "name": "card-2up",
+        "value": "520px"
+      },
+      {
+        "name": "head-line-stack",
+        "value": "860px"
+      },
+      {
+        "name": "nav-menu",
+        "value": "900px"
+      },
+      {
+        "name": "toc-drop",
+        "value": "1000px"
+      },
+      {
+        "name": "cover-stack",
+        "value": "1100px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Rectangle of ink whose label says what happens. Arrow nudges on hover; press lands on the spring.",
+      "html": "<a class=\"ds-btn\" href=\"#\">Install RoFit<svg class=\"ds-go\" width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M5 12h14M13 6l6 6-6 6\"/></svg></a>",
+      "css": ".ds-btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 52px; padding: 0 22px; background: var(--ink, #0c0c0d); color: var(--paper, #f4f4f1); border-radius: 2px; font-family: 'Onest Variable', 'Onest', system-ui, sans-serif; font-weight: 700; font-size: 1rem; letter-spacing: -.005em; text-decoration: none; white-space: nowrap; transition: transform 320ms cubic-bezier(.16,1,.3,1), box-shadow 160ms; } .ds-btn svg { transition: transform 320ms cubic-bezier(.16,1,.3,1); } .ds-btn:hover { box-shadow: 0 10px 24px -14px rgb(12 12 13 / .8); } .ds-btn:hover .ds-go { transform: translateX(3px); } .ds-btn:active { transform: scale(.97); transition-duration: 70ms; } .ds-btn:focus-visible { outline: 2px solid #0c0c0d; outline-offset: 3px; }"
+    },
+    {
+      "name": "Line Button",
+      "kind": "button",
+      "refersTo": "button-line",
+      "description": "Secondary action: transparent with a 1.5px inset ring in the current colour.",
+      "html": "<a class=\"ds-btn-line\" href=\"#\">Try it live</a>",
+      "css": ".ds-btn-line { display: inline-flex; align-items: center; min-height: 52px; padding: 0 22px; background: transparent; color: #0c0c0d; box-shadow: inset 0 0 0 1.5px currentColor; border-radius: 2px; font-family: 'Onest Variable', 'Onest', system-ui, sans-serif; font-weight: 700; font-size: 1rem; text-decoration: none; transition: background 160ms, transform 320ms; } .ds-btn-line:hover { background: color-mix(in srgb, currentColor 8%, transparent); } .ds-btn-line:active { transform: scale(.97); transition-duration: 70ms; } .ds-btn-line:focus-visible { outline: 2px solid #0c0c0d; outline-offset: 3px; }"
+    },
+    {
+      "name": "Spot Field with Buttons",
+      "kind": "custom",
+      "refersTo": "spot-field",
+      "description": "A printed area of spot pink. Text is ink; buttons invert to ink fill with spot text.",
+      "html": "<section class=\"ds-field\"><h2 class=\"ds-shout\">Get the look.</h2><p>Every piece, named, with what Roblox actually knows.</p><a class=\"ds-field-btn\" href=\"#\">Install RoFit</a></section>",
+      "css": ".ds-field { background: #ff3d7f; color: #0c0c0d; padding: 40px 32px; } .ds-field p { margin: 12px 0 20px; font-family: 'Onest Variable', 'Onest', system-ui, sans-serif; } .ds-shout { margin: 0; font-family: 'Anybody Variable', 'Anybody', 'Arial Narrow', sans-serif; font-stretch: 62%; font-weight: 900; font-size: 4rem; line-height: .88; letter-spacing: -.02em; text-transform: uppercase; } .ds-field-btn { display: inline-flex; align-items: center; min-height: 52px; padding: 0 22px; background: #0c0c0d; color: #ff3d7f; border-radius: 2px; font-family: 'Onest Variable', 'Onest', system-ui, sans-serif; font-weight: 700; text-decoration: none; transition: box-shadow 160ms, transform 320ms; } .ds-field-btn:hover { box-shadow: 0 10px 24px -14px rgb(12 12 13 / .8); } .ds-field-btn:active { transform: scale(.97); } .ds-field-btn:focus-visible { outline: 2px solid #0c0c0d; outline-offset: 3px; }"
+    },
+    {
+      "name": "Collector Card",
+      "kind": "card",
+      "refersTo": "collector-card",
+      "description": "Outfit render on white stock, double hairline frame, collector No. (real outfit ID), ruled stat strip and price mark.",
+      "html": "<a class=\"ds-card\" href=\"#\"><div class=\"ds-art\"><span class=\"ds-no\">2190483</span></div><div class=\"ds-body\"><span class=\"ds-t\">Black Iron Telamon</span><span class=\"ds-stats\">6 pieces · 2 on sale</span><span class=\"ds-cost\"><span class=\"ds-price\">R$ 100</span><span class=\"ds-price-unknown\">1 unknown</span></span></div></a>",
+      "css": ".ds-card { display: grid; width: 220px; background: #fff; color: #0c0c0d; border-radius: 3px; padding: 5px; text-decoration: none; box-shadow: 0 0 0 1px rgb(12 12 13 / .14), inset 0 0 0 4px #fff, inset 0 0 0 5px rgb(12 12 13 / .14); transition: transform 640ms cubic-bezier(.16,1,.3,1), box-shadow 320ms; font-family: 'Onest Variable', 'Onest', system-ui, sans-serif; } .ds-card:hover { transform: translateY(-4px); box-shadow: 0 0 0 1px rgb(12 12 13 / .32), inset 0 0 0 4px #fff, inset 0 0 0 5px rgb(12 12 13 / .14), 0 1px 0 rgb(12 12 13 / .06), 0 14px 32px -18px rgb(12 12 13 / .35); } .ds-card:focus-visible { outline: 2px solid #0c0c0d; outline-offset: 3px; } .ds-art { position: relative; aspect-ratio: 1; background: #f0f0ec; border-radius: 1px; } .ds-no { position: absolute; left: 8px; top: 8px; padding: 1px 5px; border-radius: 2px; background: rgb(255 255 255 / .82); color: #45454b; font-family: 'Anybody Variable', 'Anybody', sans-serif; font-stretch: 128%; font-weight: 600; font-size: .78rem; font-variant-numeric: tabular-nums; } .ds-no::before { content: 'No.'; font-stretch: 90%; font-weight: 800; margin-right: .35em; } .ds-body { display: grid; gap: 6px; padding: 11px 7px 8px; } .ds-t { font-weight: 760; font-size: 1.05rem; line-height: 1.2; } .ds-stats { font-family: 'Anybody Variable', 'Anybody', sans-serif; font-stretch: 112%; font-weight: 560; font-size: .72rem; color: #45454b; } .ds-cost { display: flex; gap: 8px; align-items: center; padding-top: 8px; border-top: 1px dashed rgb(12 12 13 / .14); font-size: .875rem; } .ds-price { font-family: 'Anybody Variable', 'Anybody', sans-serif; font-stretch: 128%; font-weight: 750; font-variant-numeric: tabular-nums; } .ds-price-unknown { padding: 1px 7px; border-radius: 2px; outline: 1px dashed currentColor; outline-offset: -1px; color: #66666e; font-weight: 600; font-size: .86em; }"
+    },
+    {
+      "name": "Price Marks",
+      "kind": "chip",
+      "refersTo": "price-known",
+      "description": "Known solid, off sale outlined, unknown dashed; Limited tag only when Roblox marks it. Values come only from real.ts#priceOf.",
+      "html": "<div class=\"ds-prices\"><span class=\"ds-p\">R$ 75</span><span class=\"ds-p ds-off\">Off sale</span><span class=\"ds-p ds-unk\">Unknown</span><span class=\"ds-ltd\">Limited U</span></div>",
+      "css": ".ds-prices { display: flex; gap: 10px; align-items: center; font-family: 'Onest Variable', 'Onest', system-ui, sans-serif; color: #0c0c0d; } .ds-p { display: inline-flex; align-items: center; font-weight: 750; font-variant-numeric: tabular-nums; white-space: nowrap; } .ds-off { font-weight: 600; padding: 1px 7px; border-radius: 2px; box-shadow: inset 0 0 0 1px currentColor; font-size: .86em; } .ds-unk { font-weight: 600; padding: 1px 7px; border-radius: 2px; outline: 1px dashed currentColor; outline-offset: -1px; color: #66666e; font-size: .86em; } .ds-ltd { display: inline-block; font-size: .7rem; font-weight: 800; letter-spacing: .07em; text-transform: uppercase; line-height: 1.5; background: #0c0c0d; color: #f4f4f1; padding: 0 5px; border-radius: 1px; }"
+    },
+    {
+      "name": "Navigation",
+      "kind": "nav",
+      "refersTo": "nav",
+      "description": "Fixed 64px bar; solid paper with hairline once scrolled; sliding 2px thumb under the current link; wordmark with spot dot.",
+      "html": "<nav class=\"ds-nav\"><a class=\"ds-mark\" href=\"#\">RoFit<span class=\"ds-dot\"></span></a><div class=\"ds-links\"><a href=\"#\" aria-current=\"page\">Features</a><a href=\"#\">Docs</a><a href=\"#\">Guides</a><a href=\"#\">Privacy</a><a class=\"ds-cta\" href=\"#\">Install RoFit</a></div></nav>",
+      "css": ".ds-nav { display: flex; align-items: center; gap: 24px; height: 64px; padding: 0 24px; background: color-mix(in srgb, #f4f4f1 94%, transparent); box-shadow: 0 1px 0 rgb(12 12 13 / .14); backdrop-filter: saturate(1.4) blur(12px); color: #0c0c0d; font-family: 'Onest Variable', 'Onest', system-ui, sans-serif; } .ds-mark { display: inline-flex; align-items: baseline; gap: .12em; font-family: 'Anybody Variable', 'Anybody', sans-serif; font-stretch: 78%; font-weight: 880; font-size: 26px; letter-spacing: -.035em; text-decoration: none; color: inherit; } .ds-dot { width: .28em; height: .28em; border-radius: 50%; background: #ff3d7f; } .ds-links { display: flex; align-items: center; gap: 2px; margin-left: auto; } .ds-links a:not(.ds-cta) { position: relative; padding: 10px 12px; font-weight: 600; font-size: .94rem; text-decoration: none; color: inherit; } .ds-links a[aria-current='page']::after { content: ''; position: absolute; left: 12px; right: 12px; bottom: 4px; height: 2px; background: currentColor; } .ds-links a:focus-visible { outline: 2px solid #0c0c0d; outline-offset: 3px; } .ds-cta { margin-left: 12px; display: inline-flex; align-items: center; min-height: 42px; padding: 0 16px; background: #0c0c0d; color: #f4f4f1; border-radius: 2px; font-weight: 700; font-size: .94rem; text-decoration: none; } .ds-cta:hover { box-shadow: 0 10px 24px -14px rgb(12 12 13 / .8); }"
+    },
+    {
+      "name": "Segmented Control",
+      "kind": "chip",
+      "refersTo": "segmented-selected",
+      "description": "Theme and motion preferences: paper-2 track, selected segment in solid ink.",
+      "html": "<div class=\"ds-seg\" role=\"radiogroup\" aria-label=\"Motion\"><label><input type=\"radio\" name=\"m\" checked>Full</label><label><input type=\"radio\" name=\"m\">Calm</label><label><input type=\"radio\" name=\"m\">Off</label></div>",
+      "css": ".ds-seg { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 2px; padding: 2px; width: 280px; background: #e9e9e4; border-radius: 2px; font-family: 'Onest Variable', 'Onest', system-ui, sans-serif; } .ds-seg label { display: grid; place-items: center; min-height: 38px; font-size: .875rem; font-weight: 600; cursor: pointer; border-radius: 2px; color: #0c0c0d; transition: background 160ms, color 160ms; } .ds-seg label:hover { background: rgb(12 12 13 / .06); } .ds-seg input { position: absolute; opacity: 0; pointer-events: none; } .ds-seg label:has(input:checked) { background: #0c0c0d; color: #f4f4f1; } .ds-seg label:has(input:focus-visible) { outline: 2px solid #0c0c0d; outline-offset: 2px; }"
+    },
+    {
+      "name": "Callout Note",
+      "kind": "card",
+      "refersTo": "callout-note",
+      "description": "Paper-2 well for notes and callouts in long-form pages.",
+      "html": "<p class=\"ds-note\"><b>Store listings aren't live yet.</b> Load RoFit unpacked from the download page.</p>",
+      "css": ".ds-note { margin: 0; padding: 16px 24px; background: #e9e9e4; border-radius: 6px; font-family: 'Onest Variable', 'Onest', system-ui, sans-serif; font-size: .875rem; color: #45454b; max-width: 60ch; } .ds-note b { color: #0c0c0d; font-weight: 800; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Get-the-Look Issue",
+    "overview": "rofit.site reads as a fashion magazine issue about Roblox wardrobes, crossed with a collector's archive. A real saved outfit is the cover, every piece gets a callout with only what Roblox actually knows about it, and outfits sit on the page as printed collector cards stamped with their real outfit ID. The stock is coated near-white, the ink is near-black, and one fluoro-pink spot colour is printed as whole fields: the cover, the face-to-face compare spread and the closing call. It never shows up as a glow, gradient or tint.\n\nThe page alternates between loud and quiet. Spot fields and the ink band shout in ultra-narrow heavy capitals. Paper sections do the reading in sentence-case condensed headings over Onest body text. Data honesty is drawn, not written: a value Roblox returned prints solid, and a value it did not return prints as a dashed hairline. Motion is a deal of cards and a redraw of leader lines, and all of it rests on tokens that Calm and Off modes zero out.\n\nThis file governs rofit.site only. The extension UI inside roblox.com is not governed by it: that UI inherits Roblox's font and sampled colours (--rf-bg/--rf-fg/--rf-accent, see the repo CLAUDE.md). RoFit's own extension pages borrow exactly two things from this system: the pink mark (--rf-brand, the spot on ink) and the link colours (light link, dark #FF6F9F), in src/ui/theme.ts.",
+    "keyCharacteristics": [
+      "One spot colour, printed as fields with ink text on top.",
+      "Anybody's variable width does the work of a type family: 150% for mastheads, 62% for cover lines, 72% for headings, 128% for numerals.",
+      "Known values solid, unknown values dashed. Nothing is inferred.",
+      "Collector cards: the outfit render on stock, a double hairline frame, a ruled stat strip, \"No.\" plus the real outfit ID.",
+      "Flat print. Depth is used sparingly, for paper lifting off paper, never for glow.",
+      "Entrance travel and all durations are tokens, so Calm and Off are designed states."
+    ],
+    "rules": [
+      {
+        "name": "The One Spot Rule",
+        "body": "The site prints in ink and one pink. The spot is a field or a mark, never a glow, gradient, tinted shadow halo or second accent. Text on the spot is ink.",
+        "section": "colors"
+      },
+      {
+        "name": "The Re-ink Rule",
+        "body": "States that the extension shows in green and amber are re-inked on the site: known or public states in solid ink, refusals as a spot field or spot outline, unknowns as a dashed hairline. ok, warn and bad are reserved for functional long-form notes and badges.",
+        "section": "colors"
+      },
+      {
+        "name": "The Width Is the Role Rule",
+        "body": "Change emphasis by changing width (--narrow 62%, --cond 72%, --wide 128%, 150% for mastheads), not by adding families or colours.",
+        "section": "typography"
+      },
+      {
+        "name": "The Shout and Speak Rule",
+        "body": "Narrow uppercase is for section turns: the spot fields, the ink band, page mastheads and the Proof head. Paper working sections speak in sentence-case condensed. A section that holds the reader's attention for a while does not shout.",
+        "section": "typography"
+      },
+      {
+        "name": "The Paper Lifts, Light Doesn't Rule",
+        "body": "A shadow means one sheet sitting on another. No glows, no coloured halos, no hard offset shadows.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do print the spot as a whole field with ink (spot-ink) text, and re-point rules, links and focus to ink inside it.",
+      "Do draw honesty: solid for known values, a solid outline for off sale, a dashed hairline for unknown. Show the limited tag only when Roblox marks it.",
+      "Do take every price from real.ts#priceOf over the real snapshot, and stamp every outfit with its real ID as the collector No.",
+      "Do change emphasis through Anybody's width axis: 150% masthead, 62% cover line, 72% headline, 128% numerals.",
+      "Do shout (narrow uppercase) only at section turns, and speak in sentence-case condensed on paper working sections.",
+      "Do express entrance and travel distances (reveals, deals, the cover render, leader lines) and every duration through the motion tokens, so Calm and Off still work. Resting tilts on placed cards are layout, not motion.",
+      "Do keep printed objects (compare cards, share card) white with fixed ink in both themes."
+    ],
+    "donts": [
+      "Don't use the spot as glow, gradient, tint or text on paper. Use link for pink text on paper.",
+      "Don't add a second accent or bring the extension's green and amber visibility colours onto the homepage.",
+      "Don't invent prices, rarity, owners or \"Limited\" status, and never call an unresolved item deleted.",
+      "Don't hardcode a travel distance or duration in a new entrance or keyframe. Use --rise, --deal, --tilt and the --d tokens.",
+      "Don't apply this file to the extension's in-Roblox UI. It inherits Roblox's sampled colours, and only the pink mark and link colours carry over to RoFit's own extension pages.",
+      "Don't add kickers or eyebrow labels above headlines. Small uppercase labels are reserved for footer columns, TOCs and table headers.",
+      "Don't use hard offset shadows or coloured glows. Shadows are soft, downward and ink-tinted."
+    ]
+  }
+}

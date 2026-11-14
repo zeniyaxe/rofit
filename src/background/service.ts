@@ -122,8 +122,9 @@ async function outfitThumbs(ids: number[], size: '150x150' | '420x420') {
   const out: Record<number, { state: string; url: string | null }> = {};
   const need: number[] = [];
   have.forEach((h, i) => {
-    // 'Pending' thumbnails are re-asked soon; completed URLs are content-addressed and stable for days.
-    const ttl = h?.state === 'Completed' ? 6 * 3600_000 : 20_000;
+    // Completed URLs are content-addressed and stable for days. 'Pending' is only shared by requests in the same moment:
+    // the UI re-asks pending renders on a backoff (ui/data.ts THUMB_RETRY_MS, ≥ 2.5 s apart), and each retry must reach Roblox.
+    const ttl = h?.state === 'Completed' ? 6 * 3600_000 : h?.state === 'Pending' ? 2_000 : 20_000;
     if (h && Date.now() - h.at < ttl) out[ids[i]] = { state: h.state, url: h.url };
     else need.push(ids[i]);
   });

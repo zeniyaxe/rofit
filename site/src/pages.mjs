@@ -81,7 +81,7 @@ ${card('Command', 'Fast to drive', 'Ctrl K jumps to any outfit, profile or actio
 }
 
 const feat = (id, eyebrow, title, lede, bullets, art) => `<section class="feat" id="${id}">
-<div><span class="eyebrow">${eyebrow}</span><h2>${title}</h2><p class="muted">${lede}</p><ul>${bullets.map((b) => `<li>${b}</li>`).join('')}</ul></div>
+<div><h2>${title}</h2><p class="muted">${lede}</p><ul>${bullets.map((b) => `<li>${b}</li>`).join('')}</ul></div>
 <div class="feat-art" aria-hidden="true">${art}</div>
 </section>`;
 
@@ -89,10 +89,10 @@ const row = (cls, name, sub, right = '') => `<div class="faux-row ${cls}"><i></i
 
 export function features() {
   return `<div class="wrap">
-<header class="page-head narrow-left"><span class="eyebrow">Features</span><h1>What RoFit does</h1>
+<header class="page-head narrow-left"><h1>What RoFit does</h1>
 <p class="lede">Browse saved outfits, find the pieces you like, and keep your favorite looks.</p></header>
 
-<nav class="feature-nav" aria-label="Explore features"><a href="/#demo">Try the demo</a><a href="#profiles">Profiles</a><a href="#explorer">Search</a><a href="#inspector">Inspect</a><a href="#compare">Compare</a><a href="#library">Library</a><a href="#share">Share</a><a href="/docs/">Read the docs</a></nav>
+<nav class="feature-nav" aria-label="Explore features"><a href="/#try">Try the demo</a><a href="#profiles">Profiles</a><a href="#explorer">Search</a><a href="#inspector">Inspect</a><a href="#compare">Compare</a><a href="#library">Library</a><a href="#share">Share</a><a href="/docs/">Read the docs</a></nav>
 
 ${feat('profiles', 'On every profile', 'Right where you already look', 'RoFit fits into roblox.com instead of sending you somewhere else.', [
   'An <b>Outfits</b> tab next to About and Creations, styled like Roblox’s own.',
@@ -164,7 +164,7 @@ const PERMS = [
 
 export function download({ version }) {
   return `<div class="narrow">
-<header class="page-head"><span class="eyebrow">Download</span><h1>Install RoFit</h1>
+<header class="page-head"><h1>Install RoFit</h1>
 <p class="lede">RoFit isn’t in the Chrome Web Store yet, so you install it straight from GitHub. It takes about a minute and works in Chrome, Edge, Brave and other Chromium browsers (version 113 or newer).</p></header>
 <div class="btns"><a class="btn primary" href="${ZIP}">${icon('Download')}Download RoFit ${esc(version)} (.zip)</a><a class="btn" href="${REPO}">${icon('ExternalLink')}Source on GitHub</a></div>
 <div class="note detect" id="detect" role="status" hidden></div>
@@ -228,7 +228,7 @@ const h2 = (id, text) => `<h2 id="${id}">${text}<a class="anchor" href="#${id}" 
 
 export function docs() {
   return `<div class="wrap">
-<header class="page-head"><span class="eyebrow">Docs</span><h1>Using RoFit</h1><p class="lede">Get started, find the controls, or <a href="/guides/">browse the illustrated guides</a>.</p></header>
+<header class="page-head"><h1>Using RoFit</h1><p class="lede">Get started, find the controls, or <a href="/guides/">browse the illustrated guides</a>.</p></header>
 <div class="docs">
 <nav class="toc" aria-label="On this page"><h4>On this page</h4><ol>${TOC.map(([id, t]) => `<li><a href="#${id}">${t}</a></li>`).join('')}</ol></nav>
 <article class="prose">
@@ -368,7 +368,7 @@ ${h2('faq', 'FAQ')}
 
 export function privacy() {
   return `<div class="narrow">
-<header class="page-head"><span class="eyebrow">Privacy</span><h1>Privacy policy</h1><p class="lede">Short version: RoFit has no servers, no accounts and no analytics. What it knows stays in your browser.</p><p class="small muted">Last updated 4 November 2026. Covers the RoFit browser extension and rofit.site.</p></header>
+<header class="page-head"><h1>Privacy policy</h1><p class="lede">Short version: RoFit has no servers, no accounts and no analytics. What it knows stays in your browser.</p><p class="small muted">Last updated 4 November 2026. Covers the RoFit browser extension and rofit.site.</p></header>
 <div class="prose">
 <h2 id="extension">The extension</h2>
 <h3>What it stores</h3>
@@ -398,7 +398,7 @@ export function privacy() {
 
 export function changelog({ html }) {
   return `<div class="narrow">
-<header class="page-head"><span class="eyebrow">Changelog</span><h1>What’s new</h1><p class="lede">Every release of RoFit, newest first.</p></header>
+<header class="page-head"><h1>What’s new</h1><p class="lede">Every release of RoFit, newest first.</p></header>
 <div class="prose changelog">
 ${html}
 </div>

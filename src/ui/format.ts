@@ -1,4 +1,4 @@
-import { costTotal, type OutfitCost } from '../shared/analysis.ts';
+import type { OutfitCost } from '../shared/analysis.ts';
 
 export const nf = new Intl.NumberFormat('en-US');
 export const robux = (n: number) => `R$ ${nf.format(n)}`;
@@ -8,10 +8,48 @@ export const robux = (n: number) => `R$ ${nf.format(n)}`;
  * bound ("R$ 120+"), and a lower bound of zero says nothing, so it's never shown as "R$ 0+".
  */
 export function costLabel(c: OutfitCost): string | null {
-  const t = costTotal(c);
-  if (c.offsale === 0 && c.unknown === 0) return t === 0 ? 'Free' : robux(t);
-  if (t > 0) return robux(t) + '+';
-  return c.unknown === 0 ? 'Off sale' : null;
+  return costFigure(c).text;
+}
+
+/** The counts every price summary shares (OutfitCost on cards, PriceSummary in the inspector and compare). */
+export interface CostParts { buyNow: number; resale: number; free: number; offsale: number; unknown: number }
+export interface CostFigure {
+  /** New items at list price plus limiteds at their lowest resale: what Roblox's prices prove. */
+  amount: number;
+  /** null when nothing can honestly be said (only unknown prices, or a lower bound of zero). */
+  text: string | null;
+  /** false: some items aren't counted, so `amount` is a lower bound and the UI marks it as one. */
+  exact: boolean;
+  /** What isn't counted, e.g. "1 off sale · 2 prices unknown"; null when exact. */
+  missing: string | null;
+  /** One sentence for title/aria-label that says what the number means. */
+  says: string;
+}
+
+/**
+ * The single rule for showing a cost: a known total prints as is; with off-sale or unknown items it is a lower bound
+ * ("R$ 854+") that the UI draws differently (dashed underline) and explains; a lower bound of zero is never shown.
+ */
+export function costFigure(c: CostParts): CostFigure {
+  const amount = c.buyNow + c.resale;
+  const exact = c.offsale === 0 && c.unknown === 0;
+  const missing = exact ? null : [c.offsale && `${nf.format(c.offsale)} off sale`, c.unknown && plural(c.unknown, 'price') + ' unknown'].filter(Boolean).join(' · ');
+  if (exact) {
+    const text = amount === 0 ? 'Free' : robux(amount);
+    return { amount, text, exact, missing, says: amount === 0 ? 'Free: every item costs nothing' : `${robux(amount)} to recreate with today’s prices` };
+  }
+  const notCounted = [c.offsale && plural(c.offsale, 'item') + ' off sale with no resale price', c.unknown && plural(c.unknown, 'item') + ' with no price from Roblox'].filter(Boolean).join(' and ');
+  if (amount > 0) return { amount, text: robux(amount) + '+', exact, missing, says: `At least ${robux(amount)}. Not counted: ${notCounted}.` };
+  if (c.unknown === 0) return { amount, text: 'Off sale', exact, missing, says: `Can’t be bought today: ${notCounted}.` };
+  return { amount, text: null, exact, missing, says: `Cost unknown: ${notCounted}.` };
+}
+
+/** Difference between two costs (b − a), only claimed when both are exact. */
+export function costDelta(a: CostParts, b: CostParts): { text: string; exact: boolean; diff: number | null } {
+  const fa = costFigure(a), fb = costFigure(b);
+  if (!fa.exact || !fb.exact) return { text: 'Difference unknown', exact: false, diff: null };
+  const d = fb.amount - fa.amount;
+  return { text: d === 0 ? 'Same cost' : `${d > 0 ? '+' : '−'}${robux(Math.abs(d))}`, exact: true, diff: d };
 }
 
 export function timeAgo(t: number, now = Date.now()): string {

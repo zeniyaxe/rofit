@@ -5,9 +5,9 @@ import { diffOutfits, summarizePrices } from '../shared/analysis.ts';
 import { typeName } from '../shared/assetTypes.ts';
 import { rpc } from '../shared/rpc.ts';
 import { Ico } from './icons.tsx';
-import { Chip, Empty, Seg, Spinner, Swatch, Thumb, useToast } from './primitives.tsx';
+import { Chip, Empty, Figure, Seg, Spinner, Swatch, Thumb, useToast } from './primitives.tsx';
 import { BodyFigure } from './Inspector.tsx';
-import { copy, errorText, plural, robux } from './format.ts';
+import { copy, costDelta, costFigure, errorText, plural, robux } from './format.ts';
 import { useAsync, useOutfitBundle } from './data.ts';
 import { EASE, SPRING } from './motion.tsx';
 
@@ -51,7 +51,8 @@ const SCALE: Record<string, string> = { height: 'Height', width: 'Width', head: 
 function Preview({ s, size = '420x420' }: { s?: Loaded; size?: string }) {
   if (!s) return <div class="rf-skel" />;
   if (s.thumbId) return <Thumb id={s.thumbId} size={size as any} src={s.thumbUrl} alt={s.label} />;
-  if (s.thumbUrl) return <span class="rf-thumb"><img src={s.thumbUrl} alt={s.label} /></span>;
+  // A bare <img> inside .rf-thumb stays transparent until Thumb marks it loaded, so direct render URLs go through Thumb too.
+  if (s.thumbUrl) return <Thumb id={0} size={size as any} src={s.thumbUrl} alt={s.label} />;
   return <BodyFigure c={s.details.bodyColors} />;
 }
 
@@ -133,7 +134,7 @@ function SimRing({ value }: { value: number }) {
   );
 }
 
-export function Compare({ a, b, onClose, onSwap }: { a: Subject; b: Subject; onClose: () => void; onSwap: () => void }) {
+export function Compare({ a, b, onClose, onSwap, tech = false }: { a: Subject; b: Subject; onClose: () => void; onSwap: () => void; /** Settings → Technical details: hex codes. */ tech?: boolean }) {
   const A = useSubject(a), B = useSubject(b);
   const [mode, setMode] = useState<'sides' | 'blend'>('sides');
   const [lens, setLens] = useState<Lens>(() => (matchMedia('(max-width: 760px)').matches ? 'a' : 'all'));
@@ -201,7 +202,7 @@ export function Compare({ a, b, onClose, onSwap }: { a: Subject; b: Subject; onC
     { v: 'both', label: 'In both', n: diff.shared.length },
     { v: 'b', label: `Only ${B.data!.label}`, n: diff.onlyB.length },
   ] : [];
-  const maxCost = Math.max(1, sa?.buyNow ?? 0, sb?.buyNow ?? 0);
+  const maxCost = Math.max(1, sa ? sa.buyNow + sa.resale : 0, sb ? sb.buyNow + sb.resale : 0);
 
   return (
     <div class="rf-compare rf-mirror-tool">
@@ -210,8 +211,8 @@ export function Compare({ a, b, onClose, onSwap }: { a: Subject; b: Subject; onC
         <h2>The mirror</h2>
         <div class="rf-grow" />
         {canBlend && <Seg label="Mirror view" value={mode} onChange={setMode} options={[{ v: 'sides', label: 'Side by side' }, { v: 'blend', label: 'Wipe' }]} />}
-        <button class="rf-btn rf-swapbtn" onClick={swap} title="Swap sides (S)"><span class="rf-swapico" style={{ '--turn': String(turn) } as any}><Ico n="repeat" size={16} /></span>Swap</button>
-        <button class="rf-btn" disabled={!diff} onClick={async () => toast((await copy(text())) ? 'Copied differences' : 'Couldn’t copy')}><Ico n="copy" size={16} />Copy differences</button>
+        <button class="rf-btn rf-swapbtn" onClick={swap} title="Swap sides (S)" aria-label="Swap sides"><span class="rf-swapico" style={{ '--turn': String(turn) } as any}><Ico n="repeat" size={16} /></span><span class="rf-hide-s">Swap</span></button>
+        <button class="rf-btn" disabled={!diff} aria-label="Copy differences" title="Copy differences as text" onClick={async () => toast((await copy(text())) ? 'Copied differences' : 'Couldn’t copy')}><Ico n="copy" size={16} /><span class="rf-hide-s">Copy differences</span></button>
       </header>
       <div class="rf-cscroll" ref={root}>
         {err ? <Empty icon="warn" title={errorText(err).title} body={errorText(err).body} /> : (
@@ -227,7 +228,11 @@ export function Compare({ a, b, onClose, onSwap }: { a: Subject; b: Subject; onC
                 <figure class="rf-mside a"><div class="rf-stage rf-mstage" data-morph={ka}><Preview s={A.data} /></div>{caption(A, 'a')}</figure>
                 <div class="rf-mid">
                   {diff ? <SimRing value={diff.similarity} /> : <Spinner />}
-                  {diff && <div class="rf-mid-n"><span title="Only on the left"><i class="a" />{diff.onlyA.length}</span><span title="In both"><i class="both" />{diff.shared.length}</span><span title="Only on the right"><i class="b" />{diff.onlyB.length}</span></div>}
+                  {diff && <dl class="rf-mid-n">
+                    <div class="a"><dt>Only left</dt><dd>{diff.onlyA.length}</dd></div>
+                    <div class="both"><dt>Shared</dt><dd>{diff.shared.length}</dd></div>
+                    <div class="b"><dt>Only right</dt><dd>{diff.onlyB.length}</dd></div>
+                  </dl>}
                 </div>
                 <figure class="rf-mside b"><div class="rf-stage rf-mstage" data-morph={kb}><Preview s={B.data} /></div>{caption(B, 'b')}</figure>
               </div>
@@ -235,9 +240,16 @@ export function Compare({ a, b, onClose, onSwap }: { a: Subject; b: Subject; onC
 
             {diff && (
               <>
-                <div class="rf-lens" role="radiogroup" aria-label="Show items">
+                <div class="rf-lens" role="radiogroup" aria-label="Show items" onKeyDown={(e) => {
+                  if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+                  e.preventDefault(); e.stopPropagation();
+                  const i = lenses.findIndex((l) => l.v === lens);
+                  const n = lenses[(i + (e.key === 'ArrowRight' ? 1 : lenses.length - 1)) % lenses.length];
+                  setLens(n.v);
+                  (e.currentTarget as HTMLElement).querySelector<HTMLElement>(`.lens-${n.v}`)?.focus();
+                }}>
                   {lenses.map((l) => (
-                    <button key={l.v} role="radio" aria-checked={lens === l.v} class={'rf-chip lens-' + l.v + (lens === l.v ? ' on' : '')} onClick={() => setLens(l.v)}>
+                    <button key={l.v} role="radio" aria-checked={lens === l.v} tabIndex={lens === l.v ? 0 : -1} class={'rf-chip lens-' + l.v + (lens === l.v ? ' on' : '')} onClick={() => setLens(l.v)}>
                       <span class="rf-lens-t">{l.label}</span><em>{l.n}</em>
                     </button>
                   ))}
@@ -251,18 +263,34 @@ export function Compare({ a, b, onClose, onSwap }: { a: Subject; b: Subject; onC
                 <div class="rf-cdetails">
                   {sa && sb && (
                     <section class="rf-ccost">
-                      <h3><Ico n="coins" size={15} />Cost today</h3>
-                      <div class="rf-cbarrow a"><span>{A.data!.label}</span><i style={{ '--w': String(sa.buyNow / maxCost) } as any} /><b>{robux(sa.buyNow)}</b></div>
-                      <div class="rf-cbarrow b"><span>{B.data!.label}</span><i style={{ '--w': String(sb.buyNow / maxCost) } as any} /><b>{robux(sb.buyNow)}</b></div>
-                      {toB && toA && <p class="rf-small">Switching to {B.data!.label}: <b>{robux(toB.buyNow)}</b>{own ? ' (skipping what you own)' : ''}. The other way: <b>{robux(toA.buyNow)}</b>.</p>}
-                      <p class="rf-muted rf-small">New-price items only; limiteds, off-sale and unknown prices aren’t counted.</p>
+                      <h3><Ico n="coins" size={15} />Cost to recreate</h3>
+                      {([['a', A.data!.label, sa], ['b', B.data!.label, sb]] as const).map(([side, label, s]) => {
+                        const f = costFigure(s);
+                        return (
+                          <div key={side} class={'rf-cbarrow ' + side + (f.exact ? '' : ' approx')}>
+                            <span>{label}</span><i style={{ '--w': String(f.amount / maxCost) } as any} />
+                            {f.text ? <Figure f={f} /> : <span class="rf-fig-n approx unknown" title={f.says}><span aria-hidden="true">Unknown</span><span class="rf-sr">{f.says}</span></span>}
+                          </div>
+                        );
+                      })}
+                      {(() => {
+                        const d = costDelta(sa, sb);
+                        if (d.diff == null) return <p class="rf-small rf-cdelta"><span class="rf-fig-n approx unknown" title="At least one side has items that are off sale or have no price">Difference unknown</span>: some prices are missing.</p>;
+                        if (d.diff === 0) return <p class="rf-small rf-cdelta">Both cost the same.</p>;
+                        const more = d.diff > 0 ? B.data!.label : A.data!.label;
+                        return <p class="rf-small rf-cdelta">{more} costs <b class="rf-fig-n">{robux(Math.abs(d.diff))}</b> more.</p>;
+                      })()}
+                      {toB && toA && (
+                        <p class="rf-small">To switch to {B.data!.label}: <Figure f={costFigure(toB)} />{!costFigure(toB).text && 'unknown'}{own ? ' (skipping what you own)' : ''}. The other way: <Figure f={costFigure(toA)} />{!costFigure(toA).text && 'unknown'}.</p>
+                      )}
+                      <p class="rf-muted rf-small">New items at list price plus limiteds at their lowest resale. A dashed figure is a minimum: some items are off sale or have no price.</p>
                     </section>
                   )}
                   <section>
                     <h3><Ico n="palette" size={15} />Body colors</h3>
                     <div class="rf-bodypair"><BodyFigure c={A.data!.details.bodyColors} /><BodyFigure c={B.data!.details.bodyColors} /></div>
                     {diff.colors.length === 0 ? <p class="rf-muted rf-small">Identical.</p> : diff.colors.map((c) => (
-                      <div class="rf-cdiff" key={c.part}><span>{PART[c.part]}</span><Swatch hex={c.a} /><Ico n="right" size={14} /><Swatch hex={c.b} /><code>#{c.a} → #{c.b}</code></div>
+                      <div class="rf-cdiff" key={c.part}><span>{PART[c.part]}</span><Swatch hex={c.a} label={PART[c.part]} /><Ico n="right" size={14} /><Swatch hex={c.b} label={PART[c.part]} />{tech && <code>#{c.a} → #{c.b}</code>}</div>
                     ))}
                     {diff.avatarTypeDiffers && <p class="rf-small"><Chip tone="warn">{A.data!.details.avatarType} vs {B.data!.details.avatarType}</Chip></p>}
                   </section>

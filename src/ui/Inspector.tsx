@@ -8,8 +8,8 @@ import { DURATION, type MotionLevel } from '../shared/motion.ts';
 import { renderCard, type CardData } from './shareCard.ts';
 import type { AccessInfo } from '../shared/access.ts';
 import { Ico } from './icons.tsx';
-import { Chip, Confirm, Empty, Menu, Spinner, Swatch, Thumb, useToast, type MenuItem } from './primitives.tsx';
-import { copy, dateStr, download, errorText, itemUrl, outfitUrl, plural, robux, timeAgo } from './format.ts';
+import { Chip, Confirm, Empty, Figure, Menu, Spinner, Swatch, Thumb, useToast, type MenuItem } from './primitives.tsx';
+import { copy, costFigure, dateStr, download, errorText, itemUrl, outfitUrl, plural, robux, timeAgo } from './format.ts';
 import { thumbStore, useAsync, useOutfitBundle } from './data.ts';
 import { Collapse, fitSquare, flyGhost, whenLoaded } from './motion.tsx';
 import { AccessBadge } from './Access.tsx';
@@ -188,13 +188,17 @@ export function Inspector(p: InspectorProps) {
       <div class="rf-iscroll" ref={scroller}>
         <div class="rf-hero">
           <div class="rf-stage" ref={heroRef}><Thumb id={p.outfit.id} size="420x420" alt={p.outfit.name} class="big" /></div>
+          <div class="rf-kicker">
+            <button class="rf-no" onClick={() => doCopy(String(p.outfit.id), 'outfit ID')} title="Copy outfit ID" aria-label={`Outfit number ${p.outfit.id}, copy`}>
+              <span class="rf-no-k">No.</span><span class="rf-no-n">{p.outfit.id}</span><Ico n="copy" size={12} />
+            </button>
+            {p.outfit.isEditable === false && <Chip tone="muted" title="Supplied by Roblox, not saved by this user">Roblox preset</Chip>}
+          </div>
           <h2 class="rf-iname-h">{d?.name || p.outfit.name || 'Untitled'}</h2>
           <div class="rf-meta">
-            <span>{p.userName}</span>
-            {d && <><i>·</i><span>{d.avatarType}</span><i>·</i><span>{plural(d.assets.length, 'item')}</span></>}
-            {p.outfit.isEditable === false && <Chip tone="muted" title="Supplied by Roblox, not saved by this user">Roblox preset</Chip>}
+            <span>by <b class="rf-meta-who">{p.userName}</b></span>
+            {d && <><i aria-hidden="true">·</i><span>{d.avatarType}</span><i aria-hidden="true">·</i><span>{plural(d.assets.length, 'item')}</span></>}
             {p.access && <AccessBadge info={p.access} />}
-            {p.settings.technical && <><i>·</i><span class="rf-mono">#{p.outfit.id}</span></>}
           </div>
           {b.bundle && (
             <div class="rf-prov">
@@ -212,7 +216,7 @@ export function Inspector(p: InspectorProps) {
 
         {b.bundle?.change && <ChangeBanner change={b.bundle.change} at={b.bundle.previousAt!} names={Object.fromEntries(d!.assets.map((a) => [a.id, a.name]))} />}
 
-        {d && priced && (
+        {d && priced && d.assets.length > 0 && (
           <CostSummary sum={owned?.me ? sum : sumAll} all={sumAll} loading={b.phase === 'assets'} owned={owned?.me ? { have: ownedCount, total: list.length } : null} views={list} />
         )}
 
@@ -318,29 +322,34 @@ function CostSummary({ sum, all, loading, owned, views }: { sum: ReturnType<type
   const byId = new Map(views.map((v) => [v.id, v]));
   const total = sum.parts.reduce((a, x) => a + x.amount, 0);
   const segs = sum.parts.slice(0, 6);
+  const fig = costFigure(sum);
+  const nameOf = (id: number) => byId.get(id)?.rec?.name ?? byId.get(id)?.ref?.name ?? String(id);
+  // How the total is made up, in the order a buyer meets it. Only parts that exist are listed.
+  const parts = [
+    sum.buyCount > 0 && `${robux(sum.buyNow)} new (${sum.buyCount})`,
+    sum.resaleCount > 0 && `${robux(sum.resale)} resale (${plural(sum.resaleCount, 'limited')})`,
+    sum.free > 0 && `${sum.free} free`,
+  ].filter(Boolean) as string[];
   return (
-    <section class="rf-cost" aria-label="Cost to recreate">
-      <div class="rf-cost-top">
-        <div>
-          <div class="rf-cost-n">{loading ? <span class="rf-skel inline" /> : sum.buyCount > 0 ? robux(sum.buyNow) : sum.free > 0 ? 'Free' : 'Nothing on sale'}</div>
-          <div class="rf-cost-l">{loading ? 'Checking prices…' : sum.buyCount > 0 ? (owned ? 'to buy what you’re missing' : 'to buy new today') : sum.free > 0 ? 'everything missing is free' : 'none of these can be bought new right now'}{sum.buyCount > 0 && sum.free > 0 && <> · {sum.free} free</>}</div>
-        </div>
-        {sum.resaleCount > 0 && !loading && (
-          <div class="rf-cost-r">
-            <div class="rf-cost-n sm">{robux(sum.resale)}</div>
-            <div class="rf-cost-l">{plural(sum.resaleCount, 'limited')} from resellers</div>
-          </div>
-        )}
+    <section class="rf-cost" aria-label="Cost to recreate" aria-busy={loading || undefined}>
+      <div class="rf-cost-k">{owned ? 'To buy what you’re missing' : 'Cost to recreate'}</div>
+      <div class="rf-cost-n">
+        {loading ? <span class="rf-skel inline" /> : fig.text ? <Figure f={fig} /> : <span class="rf-fig-n approx unknown" title={fig.says}><span aria-hidden="true">Unknown</span><span class="rf-sr">{fig.says}</span></span>}
       </div>
-      {segs.length > 1 && total > 0 && (
-        <div class="rf-costbar" role="img" aria-label={`Largest costs: ${segs.map((s) => `${byId.get(s.id)?.rec?.name ?? byId.get(s.id)?.ref?.name} ${robux(s.amount)}`).join(', ')}`}>
-          {segs.map((s, i) => <i key={s.id} class={'seg s' + (i % 6) + (s.kind === 'resale' ? ' resale' : '')} style={{ flexGrow: s.amount }} title={`${byId.get(s.id)?.rec?.name ?? byId.get(s.id)?.ref?.name} · ${robux(s.amount)}${s.kind === 'resale' ? ' (resale)' : ''}`} />)}
+      {!loading && (
+        <div class="rf-cost-l">
+          {parts.length ? parts.join(' · ') : fig.text === 'Off sale' ? 'Nothing here can be bought today' : fig.text ? 'Every item is free' : sum.offsale > 0 ? 'Nothing here has a price Roblox can confirm today' : 'Roblox returned no prices for these items'}
+        </div>
+      )}
+      {segs.length > 1 && total > 0 && !loading && (
+        <div class="rf-costbar" role="img" aria-label={`Largest costs: ${segs.map((x) => `${nameOf(x.id)} ${robux(x.amount)}`).join(', ')}`}>
+          {segs.map((x, i) => <i key={x.id} class={'seg s' + (i % 6) + (x.kind === 'resale' ? ' resale' : '')} style={{ flexGrow: x.amount }} title={`${nameOf(x.id)} · ${robux(x.amount)}${x.kind === 'resale' ? ' (resale)' : ''}`} />)}
         </div>
       )}
       {!loading && (all.offsale > 0 || all.unknown > 0) && (
         <div class="rf-cost-notes">
-          {all.offsale > 0 && <Chip tone="warn" icon="lock" title="Not sold by Roblox right now and with no resellers">{plural(all.offsale, 'item')} unavailable</Chip>}
-          {all.unknown > 0 && <Chip tone="muted" icon="dashed" title="Roblox didn’t return a price, so they’re not in the total">{plural(all.unknown, 'price')} unknown</Chip>}
+          {all.offsale > 0 && <Chip tone="warn" icon="lock" title="Not sold by Roblox right now and nobody is reselling them">{plural(all.offsale, 'item')} off sale, not counted</Chip>}
+          {all.unknown > 0 && <Chip tone="unknown" icon="dashed" title="Roblox didn’t return a price for these, so the total is a lower bound">{plural(all.unknown, 'price')} unknown, not counted</Chip>}
         </div>
       )}
       {owned && <div class="rf-cost-own">You own {owned.have} of {owned.total}</div>}
@@ -361,7 +370,7 @@ function ItemRow({ v, pending, settings, owned, reuse, outfitName, onOpenOutfit,
   const lastKnown = v.provenance === 'last-known';
   const resale = useAsync(async () => (open && rec && rec.restriction !== 'none' ? await rpc('assets.resale', { id: v.id }).catch(() => null) : null), [open, v.id]);
 
-  const status = unresolved ? (pending ? null : { t: 'No data', i: 'dashed' as const, tone: 'muted' as const, tip: 'Roblox returned nothing for this item, and RoFit has never seen it before. It may be deleted or moderated; only its name and type are known.' })
+  const status = unresolved ? (pending ? null : { t: 'No data', i: 'dashed' as const, tone: 'unknown' as const, tip: 'Roblox returned nothing for this item, and RoFit has never seen it before. It may be deleted or moderated; only its name and type are known.' })
     : lastKnown ? { t: 'Unavailable', i: 'lock' as const, tone: 'warn' as const, tip: `Roblox no longer returns this item. It may be deleted or moderated. Showing what RoFit last saw on ${dateStr(rec!.observedAt)}.` }
       : pk.kind === 'offsale' ? { t: 'Off sale', i: 'lock' as const, tone: 'warn' as const }
         : pk.kind === 'resale' ? { t: rec!.restriction === 'collectible' ? 'Collectible' : 'Limited', i: 'tag' as const, tone: 'accent' as const }

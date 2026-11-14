@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "RoFit Inspector",
+  "name": "RoFit",
   "short_name": "RoFit",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "description": "Browse, inspect, compare and keep the saved avatar outfits on any Roblox profile.",
   "minimum_chrome_version": "113",
   "icons": {
@@ -12,7 +12,7 @@
     "128": "icons/icon128.png"
   },
   "action": {
-    "default_title": "RoFit Inspector",
+    "default_title": "RoFit",
     "default_popup": "popup.html",
     "default_icon": {
       "16": "icons/icon16.png",

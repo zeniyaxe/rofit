@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
-import { Ico, type IconName } from './icons.tsx';
+import { Ico, type IconName, GithubMark } from './icons.tsx';
 import { saveSettings } from '../shared/settings.ts';
 import { ACCOUNT_URL, REPO_URL, SITE_URL } from '../shared/links.ts';
 import { HIGHLIGHTS } from '../shared/changelog.ts';
@@ -11,24 +11,28 @@ import { useMotion, useSettings } from './data.ts';
  * step 2 is the same element that becomes the inspector preview, the left half of the mirror, and the saved tile.
  */
 const SCENES: { id: string; icon: IconName; title: string; body: string; ms: number }[] = [
-  { id: 'discover', icon: 'search', title: 'Find their saved outfits', body: 'Every Roblox profile gets an Outfits tab with the looks that person actually saved.', ms: 2600 },
+  { id: 'discover', icon: 'search', title: 'Find their saved outfits', body: 'Every Roblox profile gets a Saved Outfits entry with the looks that person actually saved.', ms: 2600 },
   { id: 'open', icon: 'outfit', title: 'Open one', body: 'Pick any outfit. It lifts straight out of the grid.', ms: 2000 },
   { id: 'inspect', icon: 'eye', title: 'See the whole avatar', body: 'A big preview, the body setup, and what it costs today, with nothing guessed.', ms: 2800 },
-  { id: 'explore', icon: 'layers', title: 'Go item by item', body: 'Every accessory, clothing piece and body part, with what’s off sale or gone.', ms: 2800 },
+  { id: 'explore', icon: 'layers', title: 'Go item by item', body: 'Every accessory, clothing piece and body part, with what’s off sale or unavailable.', ms: 2800 },
   { id: 'compare', icon: 'compare', title: 'Hold two looks up to the mirror', body: 'Side by side or wiped across one another, with shared and unique items.', ms: 3200 },
   { id: 'save', icon: 'saved', title: 'Keep it', body: 'Save to your library. It stays in this browser even if the owner deletes it.', ms: 2600 },
 ];
 const TILE_HUES = [210, 28, 150, 330, 265, 48];
+// Real renders of Shedletsky's outfits, bundled in the extension (public/welcome/), so the tour shows real looks without a request.
+const TILES = ['black-iron-telamon', 'pirate', 'egg-hunter', 'lord-telamon', 'og-shedletsky', 'duke-of-ops'].map((n) => `welcome/${n}.png`);
 
 function Story({ still }: { still: boolean }) {
   const [step, setStep] = useState(still ? 2 : 0);
   const [playing, setPlaying] = useState(!still);
   const hover = useRef(false);
+  const [tick, setTick] = useState(0);
   useEffect(() => {
     if (!playing || still) return;
-    const t = window.setTimeout(() => { if (!hover.current) setStep((s) => (s + 1) % SCENES.length); else setStep((s) => s); }, SCENES[step].ms);
+    // While the pointer rests on the tour it holds the scene; the timer re-arms (via tick) instead of stopping for good.
+    const t = window.setTimeout(() => { if (hover.current) setTick((n) => n + 1); else setStep((s) => (s + 1) % SCENES.length); }, SCENES[step].ms);
     return () => clearTimeout(t);
-  }, [step, playing, still]);
+  }, [step, playing, still, tick]);
   const go = (i: number) => { setStep((i + SCENES.length) % SCENES.length); };
   const sc = SCENES[step];
   return (
@@ -37,23 +41,23 @@ function Story({ still }: { still: boolean }) {
       <div class="ws-stage" aria-hidden="true">
         <div class="ws-win">
           <div class="ws-bar"><i /><i /><i /><span>roblox.com/users/…/profile</span></div>
-          <div class="ws-head"><span class="ws-av" /><div><b>builderman</b><small>@builderman</small></div>
-            <div class="ws-tabs"><span>About</span><span>Creations</span><span class="ws-tab-o">Outfits<em>6</em></span><i class="ws-ul" /></div>
+          <div class="ws-head"><span class="ws-av"><img src="welcome/avatar.png" alt="" /></span><div><b>Shedletsky</b><small>@Shedletsky</small></div>
+            <div class="ws-tabs"><span>About</span><span>Creations</span><span class="ws-tab-o">Outfits<em>8</em></span><i class="ws-ul" /></div>
           </div>
           <div class="ws-body">
             <div class="ws-grid">
               {TILE_HUES.map((h, i) => (
-                <div key={i} class={'ws-tile t' + i} style={{ '--h': String(h), '--i': String(i) } as any}><span class="ws-fig"><i /><i /><i /></span><b /></div>
+                <div key={i} class={'ws-tile t' + i} style={{ '--h': String(h), '--i': String(i) } as any}><img class="ws-img" src={TILES[i]} alt="" /><b /></div>
               ))}
             </div>
             {/* The hero outfit: one element that plays tile → inspector preview → mirror half → saved tile. */}
-            <div class="ws-hero" style={{ '--h': String(TILE_HUES[1]) } as any}><span class="ws-fig big"><i /><i /><i /></span></div>
-            <div class="ws-twin" style={{ '--h': String(TILE_HUES[4]) } as any}><span class="ws-fig big"><i /><i /><i /></span></div>
+            <div class="ws-hero" style={{ '--h': String(TILE_HUES[0]) } as any}><img class="ws-img" src={TILES[0]} alt="" /></div>
+            <div class="ws-twin" style={{ '--h': String(TILE_HUES[4]) } as any}><img class="ws-img" src={TILES[4]} alt="" /></div>
             <div class="ws-wipe"><i /></div>
-            <div class="ws-sim"><b>62%</b><small>shared</small></div>
+            <div class="ws-sim"><b>38%</b><small>shared</small></div>
             <aside class="ws-panel">
-              <b class="ws-title">Street Knight</b>
-              <div class="ws-cost"><Ico n="coins" size={13} /><span>R$ 1,240</span><em>today</em></div>
+              <b class="ws-title">Black Iron Telamon</b>
+              <div class="ws-cost"><Ico n="coins" size={13} /><span>R$ 100</span><em>on sale</em></div>
               <div class="ws-chips"><i /><i /><i /></div>
               <ul class="ws-items">{[0, 1, 2, 3, 4].map((i) => <li key={i} style={{ '--i': String(i) } as any}><span /><b /><em /></li>)}</ul>
               <div class="ws-save"><Ico n="save" size={13} /><span>Save</span><Ico n="check" size={13} /></div>
@@ -95,14 +99,13 @@ export function Welcome({ mode, onDone }: { mode: 'welcome' | 'whatsnew'; onDone
 
   return (
     <div class="wl wl2">
-      <div class="wl-glow" aria-hidden="true" />
       <section class="wl-left">
         <div class="wl-logo" aria-hidden="true"><Ico n="outfit" size={34} class="pp-swing" /></div>
         <p class="wl-eyebrow">{mode === 'welcome' ? `Installed · v${ver}` : `Updated to v${ver}`}</p>
         <h1 class="wl-title">{words.map((w, i) => <span key={i} style={{ '--i': String(i) } as any}>{w}</span>)}</h1>
         <p class="wl-lead">
           {mode === 'welcome'
-            ? <>RoFit adds an <b>Outfits</b> tab to every Roblox profile, with the outfits that person actually saved. Read-only, and everything stays in this browser.</>
+            ? <>RoFit adds <b>Saved Outfits</b> to every Roblox profile: the outfits that person actually saved, each piece called out with what Roblox knows about it. Read-only, and everything stays in this browser.</>
             : <>Here’s what’s new. Everything still runs locally in your browser.</>}
         </p>
 
@@ -121,8 +124,8 @@ export function Welcome({ mode, onDone }: { mode: 'welcome' | 'whatsnew'; onDone
           <button class="rf-linkbtn" onClick={() => done()}>{mode === 'welcome' ? 'Skip' : 'Close'}</button>
         </div>
         <div class="wl-links">
-          <a href={SITE_URL} target="_blank" rel="noopener noreferrer"><Ico n="globe" size={15} />rofit.site</a>
-          <a href={REPO_URL} target="_blank" rel="noopener noreferrer"><Ico n="link" size={15} />GitHub</a>
+          <a href={SITE_URL} target="_blank" rel="noopener noreferrer"><Ico n="outfit" size={15} />rofit.site</a>
+          <a href={REPO_URL} target="_blank" rel="noopener noreferrer"><GithubMark size={15} />GitHub</a>
           <span class="wl-keys"><kbd class="rf-kbd">←</kbd><kbd class="rf-kbd">→</kbd> step through the tour</span>
         </div>
       </section>

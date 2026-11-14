@@ -1,0 +1,182 @@
+---
+import { people, cardStats, money, capturedLabel, knownItems, visible, priceOf, kindOf } from '../lib/real';
+const shelves = people.filter((p) => p.outfits.length);
+const BACK = 6; // pieces printed on a card's back
+---
+<section class="rack section" id="wardrobe" aria-labelledby="rack-h">
+  <div class="wrap">
+    <h2 id="rack-h" class="rv">A wardrobe, filed.</h2>
+    <p class="lead rv" style="--i:1">Open someone’s profile and RoFit lays out every outfit they saved, numbered with its real Roblox ID. Search them, sort them by cost, and see at a glance which pieces you can still buy. Turn a card over for its pieces.</p>
+
+    <div class="shelf-tabs" role="tablist" aria-label="Public profiles in the snapshot">
+      {shelves.map((p, n) => (
+        <button type="button" role="tab" id={`tab-${p.id}`} aria-controls={`shelf-${p.id}`} aria-selected={n === 0 ? 'true' : 'false'} tabindex={n === 0 ? 0 : -1}>
+          {p.displayName}<span class="num">{p.outfits.length}</span>
+        </button>
+      ))}
+      <span class="tab-thumb" aria-hidden="true"></span>
+    </div>
+
+    {shelves.map((p, n) => (
+      <div class="shelf" role="tabpanel" id={`shelf-${p.id}`} aria-labelledby={`tab-${p.id}`} hidden={n !== 0} data-on={n === 0 ? '' : undefined}>
+        <ul class="cards" role="list">
+          {p.outfits.map((o, k) => {
+            const s = cardStats(o);
+            const pieces = knownItems(o).filter(visible);
+            const rest = pieces.length - Math.min(BACK, pieces.length);
+            return (
+              <li style={`--k:${k}`}>
+                <article class="card flip">
+                  <div class="face front">
+                    <a class="art" href="#try" data-demo-user={p.id}>
+                      <img src={o.thumb} alt="" width="420" height="420" loading="lazy" decoding="async" />
+                      <span class="no">{o.id}</span>
+                      <span class="sr">Open {p.displayName}’s outfits in the live demo</span>
+                    </a>
+                    <div class="body">
+                      <h3 class="t">{o.name}</h3>
+                      <p class="stats">
+                        <span>{s.pieces} pieces</span>
+                        {o.avatarType && <span>{o.avatarType}</span>}
+                        {s.limited > 0 && <span class="ltd">{s.limited} Limited</span>}
+                      </p>
+                      <p class="cost">
+                        {s.forSale > 0
+                          ? <><span class="price known num">{money(s.total)}</span><span class="for">for the {s.forSale} {s.forSale === 1 ? 'piece' : 'pieces'} on sale</span></>
+                          : <><span class="price off">Off sale</span><span class="for">nothing here is sold new</span></>}
+                      </p>
+                      {s.unresolved > 0 && <p class="unk"><span class="price unknown">{s.unresolved} unknown</span><span class="for">Roblox didn’t say</span></p>}
+                      <button type="button" class="turn" aria-expanded="false" aria-controls={`back-${o.id}`}>Pieces<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 0 1 15.5-6.3L21 8M21 3v5h-5" /></svg></button>
+                    </div>
+                  </div>
+                  <div class="face back" id={`back-${o.id}`} role="region" aria-label={`Pieces in ${o.name}`}>
+                    <span class="no">{o.id}</span>
+                    <h4>{o.name}</h4>
+                    <ul>
+                      {pieces.slice(0, BACK).map((i) => { const pr = priceOf(i); return <li><span><b>{i.name}</b><small>{kindOf(i.typeName)}</small></span><span class={'price ' + pr.tone}>{pr.text}</span></li>; })}
+                    </ul>
+                    {(rest > 0 || s.unresolved > 0) && <p class="more">{rest > 0 && <>and {rest} more</>}{rest > 0 && s.unresolved > 0 && ' · '}{s.unresolved > 0 && <>{s.unresolved} Roblox didn’t describe</>}</p>}
+                    <button type="button" class="turn" aria-expanded="true" aria-controls={`back-${o.id}`}>Front<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 0 1-15.5 6.3L3 16M3 21v-5h5" /></svg></button>
+                  </div>
+                </article>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+    ))}
+    <p class="src">Saved outfits of real public profiles, as a signed-out visitor saw them on {capturedLabel}. Roblox’s own presets are left out, as RoFit does by default.</p>
+  </div>
+</section>
+
+<style>
+  /* the heading runs the full measure; the lead sits under it, set in from the right — a spread, not a split hero */
+  h2 { font-size: clamp(3.4rem, 9.5vw, 9rem); line-height: .86; letter-spacing: -.03em; }
+  .lead { margin: var(--s5) 0 var(--s7) auto; max-width: 52ch; color: var(--ink-2); font-size: 1.06em; padding-top: var(--s4); border-top: 1.5px solid var(--ink); }
+  .shelf-tabs { position: relative; display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; margin-bottom: var(--s6); border-bottom: 1px solid var(--rule); }
+  .shelf-tabs::-webkit-scrollbar { display: none; }
+  [role='tab'] { position: relative; flex: none; display: inline-flex; align-items: baseline; gap: 8px; min-height: 48px; padding: 0 14px; font-weight: 700; color: var(--ink-3); transition: color var(--d-fast); }
+  [role='tab']:hover, [role='tab'][aria-selected='true'] { color: var(--ink); }
+  [role='tab'] span { font-family: var(--f-display); font-stretch: var(--wide); font-size: .78rem; font-weight: 600; }
+  .tab-thumb { position: absolute; left: 0; bottom: -1px; height: 3px; width: 100px; background: var(--ink); transform-origin: 0 50%; transform: scaleX(0); transition: transform var(--d) var(--ease); }
+
+  .cards { list-style: none; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr)); gap: var(--s5) var(--s4); }
+  .shelf[hidden] { display: none; }
+  .cards > li { display: grid; perspective: 1400px; }
+  /* dealt onto the table: from a stack, slightly turned, landing on the spring */
+  .js .shelf .cards > li { opacity: 0; transform: translateY(var(--deal)) rotate(calc(var(--tilt) * (var(--k) - 2) * .4)); }
+  .js .shelf.dealt .cards > li { opacity: 1; transform: none; transition: opacity var(--d) var(--ease), transform var(--d-slow) var(--land); transition-delay: calc(min(var(--k), 10) * 45ms); }
+
+  /* a printed card with a back: the front is the outfit, the back its pieces. Turns in Full motion, crossfades otherwise. */
+  .card.flip { overflow: visible; padding: 0; box-shadow: none; background: none; display: grid; transform-style: preserve-3d; transition: transform var(--d-slow) var(--land), translate var(--d) var(--land); }
+  .cards > li:hover .card.flip { translate: 0 calc(var(--nudge) * -1); }
+  .card.flip.turned { transform: rotateY(180deg); }
+  .face { grid-area: 1 / 1; display: grid; grid-template-rows: auto 1fr; min-width: 0; background: var(--stock); border-radius: 3px; padding: 5px;
+    box-shadow: 0 0 0 1px var(--rule), inset 0 0 0 4px var(--stock), inset 0 0 0 5px var(--rule); backface-visibility: hidden; -webkit-backface-visibility: hidden; transition: box-shadow var(--d) var(--ease); }
+  .cards > li:hover .face { box-shadow: 0 0 0 1px var(--rule-2), inset 0 0 0 4px var(--stock), inset 0 0 0 5px var(--rule), var(--lift); }
+  .face.back { transform: rotateY(180deg); grid-template-rows: auto auto 1fr auto auto; gap: 4px; padding: 14px 12px 10px; align-content: start; }
+  .card .art { display: block; overflow: hidden; }
+  .card .art img { transition: transform var(--d-slow) var(--ease); }
+  .cards > li:hover .art img { transform: scale(1.04); }
+  .card .t { font-family: var(--f-body); font-stretch: normal; font-size: var(--t-lead); font-weight: 760; letter-spacing: -.01em; }
+  .cost, .unk { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 8px; font-size: var(--t-small); }
+  .cost { margin-top: 4px; padding-top: 8px; border-top: 1px dashed var(--rule); }
+  .cost .price.known { font-family: var(--f-display); font-stretch: var(--wide); font-size: var(--t-ui-l); }
+  .for { color: var(--ink-3); font-size: var(--t-tiny); }
+  .stats .ltd { font-size: var(--t-micro); }
+  .back .no { color: var(--ink-3); }
+  .back h4 { font-family: var(--f-body); font-stretch: normal; font-size: .98rem; font-weight: 760; letter-spacing: -.01em; line-height: 1.2; }
+  .back ul { list-style: none; margin-top: 6px; }
+  .back li { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-top: 1px dashed var(--rule); font-size: .8rem; line-height: 1.2; }
+  .back li > span:first-child { display: grid; flex: 1; min-width: 0; }
+  .back li b { font-weight: 650; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .back li small { color: var(--ink-3); font-size: var(--t-micro); }
+  .back .price.off, .back .price.unknown { font-size: var(--t-micro); }
+  .more { font-size: var(--t-tiny); color: var(--ink-3); }
+  .turn { justify-self: start; display: inline-flex; align-items: center; gap: 6px; min-height: 36px; margin-top: 6px; padding: 0 10px; border-radius: var(--r-sm); font-size: .8rem; font-weight: 700; box-shadow: inset 0 0 0 1px var(--rule-2); transition: background var(--d-fast); }
+  .turn:hover { background: var(--paper-2); }
+  .card.flip:not(.turned) .face.back, .card.flip.turned .face.front { pointer-events: none; }
+  :root:not([data-motion='full']) .card.flip.turned { transform: none; }
+  :root:not([data-motion='full']) .face { backface-visibility: visible; transition: opacity var(--d) var(--ease), visibility 0s linear var(--d); }
+  :root:not([data-motion='full']) .face.back { transform: none; opacity: 0; visibility: hidden; }
+  :root:not([data-motion='full']) .turned .face.back { opacity: 1; visibility: visible; transition-delay: 0s; }
+  :root:not([data-motion='full']) .turned .face.front { opacity: 0; visibility: hidden; }
+  .src { margin-top: var(--s5); font-size: var(--t-tiny); color: var(--ink-3); max-width: 80ch; }
+  @media (max-width: 520px) { .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s3); } .card .body { padding: 10px 5px 6px; } .for { display: none; } .back li small { display: none; } }
+</style>
+
+<script>
+  const tabs = [...document.querySelectorAll<HTMLButtonElement>('.shelf-tabs [role="tab"]')];
+  const thumb = document.querySelector<HTMLElement>('.tab-thumb');
+  const list = document.querySelector<HTMLElement>('.shelf-tabs');
+  const deal = (panel: HTMLElement) => { panel.classList.remove('dealt'); void panel.offsetWidth; panel.classList.add('dealt'); };
+  const place = (t: HTMLElement, instant = false) => {
+    if (!thumb || !list) return;
+    if (instant) thumb.style.transition = 'none';
+    thumb.style.transform = `translateX(${t.offsetLeft}px) scaleX(${t.offsetWidth / 100})`;
+    if (instant) { thumb.getBoundingClientRect(); thumb.style.transition = ''; }
+  };
+  const select = (t: HTMLButtonElement, focus = false) => {
+    tabs.forEach((b) => {
+      const on = b === t;
+      b.setAttribute('aria-selected', String(on)); b.tabIndex = on ? 0 : -1;
+      const p = document.getElementById(b.getAttribute('aria-controls')!)!;
+      p.hidden = !on;
+      if (on) deal(p);
+    });
+    place(t);
+    if (focus) t.focus();
+    t.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+  };
+  tabs.forEach((t, i) => {
+    t.addEventListener('click', () => select(t));
+    t.addEventListener('keydown', (e) => {
+      const k = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+      if (k) { e.preventDefault(); select(tabs[(i + k + tabs.length) % tabs.length], true); }
+      if (e.key === 'Home') { e.preventDefault(); select(tabs[0], true); }
+      if (e.key === 'End') { e.preventDefault(); select(tabs[tabs.length - 1], true); }
+    });
+  });
+  if (tabs[0]) { place(tabs[0], true); document.fonts?.ready.then(() => place(tabs.find((t) => t.getAttribute('aria-selected') === 'true')!, true)); }
+  addEventListener('resize', () => { const t = tabs.find((b) => b.getAttribute('aria-selected') === 'true'); if (t) place(t, true); });
+
+  // Turn a card to its back (the piece list) and back again. The hidden face is inert; focus follows to the shown face.
+  document.querySelectorAll<HTMLElement>('.card.flip').forEach((card) => {
+    const front = card.querySelector<HTMLElement>('.front')!, back = card.querySelector<HTMLElement>('.back')!;
+    const sync = (turned: boolean) => {
+      card.classList.toggle('turned', turned);
+      back.inert = !turned; front.inert = turned;
+      card.querySelectorAll('.turn').forEach((b) => b.setAttribute('aria-expanded', String(turned)));
+    };
+    sync(false);
+    card.querySelectorAll<HTMLButtonElement>('.turn').forEach((b) => b.addEventListener('click', () => {
+      const turned = !card.classList.contains('turned');
+      sync(turned);
+      (turned ? back : front).querySelector<HTMLButtonElement>('.turn')?.focus({ preventScroll: true });
+    }));
+  });
+
+  // The first shelf is dealt once, when it comes into view.
+  const first = document.querySelector<HTMLElement>('.shelf[data-on]');
+  if (first) new IntersectionObserver((es, o) => { if (es[0].isIntersecting) { deal(first); o.disconnect(); } }, { rootMargin: '0px 0px -15% 0px' }).observe(first);
+</script>

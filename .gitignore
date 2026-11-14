@@ -7,3 +7,6 @@ site/dist/
 *.log
 site/.astro/
 site/src/demo-dist/
+
+site/.impeccable/review/
+site/.impeccable/build/

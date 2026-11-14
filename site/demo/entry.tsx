@@ -1,4 +1,3 @@
-import { examplePrice } from '../src/lib/example-price';
 /**
  * The website demo: RoFit's real Shell (src/ui) mounted in a shadow root, fed by demo/shim-rpc.ts.
  * Loaded lazily when the demo section nears the viewport.
@@ -11,7 +10,6 @@ import { Shell } from '../../src/ui/Shell.tsx';
 import { resolveTheme, themeVars } from '../../src/ui/theme.ts';
 import { DEFAULTS, setDemoSettings } from './shim-settings.ts';
 import { renderCard } from '../../src/ui/shareCard.ts';
-import { USERS, ITEM, allOutfits, detailsOf, assetRec, outfitUri, itemUri } from './fixtures.ts';
 import { summarizePrices } from '../../src/shared/analysis.ts';
 import { loadReal, realUser, realUsers, capturedAt, realOutfit, realDetails, realAssetRec } from './real.ts';
 import { PRIVATE_ID } from './shim-rpc.ts';
@@ -68,8 +66,8 @@ export async function makeCard(outfitId: number, root: Element): Promise<Blob> {
     items: d.assets.map((asset) => {
       const record = realAssetRec(asset.id);
       const price = record && !record.isOffSale
-        ? record.isFree ? 'Free' : record.price != null ? money(record.price) : examplePrice(asset.id)
-        : examplePrice(asset.id);
+        ? record.isFree ? 'Free' : record.price != null ? money(record.price) : 'Price unknown'
+        : record ? 'Off sale' : 'Unknown';
       return { name: record?.name ?? asset.name, sub: asset.assetTypeName.replace(/Accessory$/, ''), price, thumb: record?.thumb };
     }),
     total: money(sum.buyNow), totalNote: 'For-sale total',

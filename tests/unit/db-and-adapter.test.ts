@@ -272,9 +272,10 @@ test('outfit thumbnails: completed ones are reused, pending ones re-asked, only 
   await h['outfits.thumbs']({ ids: [21, 22] });
   assert.equal(asked.length, 1, 'a second look within the TTL is answered from cache');
   const row = await db.get<any>('thumbs', 'o:22:150x150');
-  await db.put('thumbs', { ...row, at: Date.now() - 60_000 });
+  // The UI retries pending renders ≥ 2.5 s apart (ui/data.ts THUMB_RETRY_MS): by then the cached Pending must have expired.
+  await db.put('thumbs', { ...row, at: Date.now() - 2_500 });
   await h['outfits.thumbs']({ ids: [21, 22, 23] });
-  assert.deepEqual(asked, ['21,22', '22,23'], 'pending is re-asked after a short wait; completed is not');
+  assert.deepEqual(asked, ['21,22', '22,23'], 'pending is re-asked once the UI retries; completed is not');
 });
 
 test('library bulk edits and collection operations', async () => {

@@ -1,5 +1,28 @@
 # Changelog
 
+## 3.0.0 — RoFit 3.0: get the look
+**rofit.site, redesigned** (`site/`, design system in `site/DESIGN.md`)
+- A new identity replaces the blue fitting room: coated white stock, ink black and one fluoro-pink spot printed as whole fields; Anybody (variable width) for mastheads and cover lines, Onest for reading.
+- The homepage opens on a **cover**: a real saved outfit called out piece by piece with leader lines (name, kind, creator, and Roblox’s own price or an honest *Off sale* / *Unknown*), its real outfit ID as a collector number, and a switcher through five real looks (buttons, arrow keys, swipe). Then a **wardrobe** of collector cards for five public profiles (each card opens that profile in the live demo), **Face to face** (a wipe between two real outfits and a shared / only-in ledger with on-sale totals), **Take it with you** (the share card PNG drawn by the extension’s own renderer, fragment-only links), **Some wardrobes stay shut** (the visibility labels, read from the extension’s source), the live demo (now follows the site’s theme and lets you pick the profile), the manifest-generated privacy proof, and an install close.
+- **Fixed: the site showed made-up prices.** The old scroll scenes and the demo’s share card filled in “illustrative” prices for items that aren’t for sale. Every price now comes from the dated snapshot, and `example-price.ts` is gone.
+- The sticky scroll scenes, which held the page still while you scrolled, are gone (desktop homepage 13,186 → 10,013 px tall; on a phone it is about the same length as before). Motion is reveals, the cover’s re-dealt looks, card deals and the compare wipe; all of it retargets when interrupted, Calm keeps fades only, Off removes it.
+- **Install page** rebuilt: honest store status, one download, four steps with a copy button, the permissions table generated from the manifest, the keep-the-same-folder warning, and an FAQ for updating, removing and trouble.
+- **Features** rebuilt with real outfits (the old page used an invented profile and invented prices). Docs, guides, changelog, legal pages, the share viewer and 404 moved onto the same system; tables of contents sit on the left everywhere.
+- Navigation: a sliding current-page indicator (transform only), and a full-screen menu on phones that keeps focus inside and closes with Esc. Fixed: nav links were nearly invisible over the old hero.
+- Fixed: the share viewer’s manual-import help stayed visible when RoFit was installed (a style overrode `hidden`).
+- New OG image and icons. New test: `npm --prefix site run test:ui` (cover switcher, tabs, menu focus trap, wipe, no sideways scroll at 320–1920 px on seven pages, Calm motion).
+
+**Extension**
+- **Wardrobe overview.** With no outfit open, the side panel is no longer empty: it sums up what RoFit already knows about the profile (count, presets hidden, R6/R15, the dearest known look, how many can be bought new, the most-worn pieces). It makes no requests, and shows nothing for private lists. Click an item to filter to the outfits that wear it.
+- **Honest costs everywhere.** One rule for cards, the inspector and compare: exact totals print plainly; totals with unknown prices read “R$ 854+” with a dashed underline and say what wasn’t counted; differences are stated only when both totals are exact. The inspector’s cost block shows new, resale and free separately.
+- **Fixed: renders stuck on “Rendering…”.** The worker cached Roblox’s “pending” answer for 20 s while the UI retried every 2.5 s, so no retry reached Roblox. Pending is now cached for 2 s, retries back off (bounded), and while a big render is being made the inspector and compare show the small one the grid already has. A render that never arrives says so instead of spinning.
+- **Collector number.** The inspector header shows the outfit’s real ID as “No. …”; click to copy it.
+- **Compare:** one colour per side throughout, labelled only-left / shared / only-right counts, switching cost per side, body-colour hex codes only with Technical details, icon-only actions on narrow sheets. Fixed: the “What I’m wearing” render never appeared.
+- **Keyboard:** the explorer grid is one tab stop (arrow keys move inside it), so Tab reaches the inspector without walking every card. Menus stay attached to their button while it moves.
+- **RoFit’s own pages** (popup, welcome, library, settings) carry the new pink mark; inside roblox.com RoFit keeps Roblox’s own colours. The popup no longer shows a horizontal scrollbar when its content is tall, and only flags status when something is wrong.
+- Secondary text contrast raised to at least 4.5:1 on tinted surfaces.
+- Tests: wardrobe overview and cost rules (55 unit tests); the e2e suites were updated for the 2.x UI they had drifted from (welcome, popup, motion, skeleton cards).
+
 ## 2.0.0 — visibility, search, library 2.0, rofit.site
 **Visibility you can trust** (research: `docs/research/outfit-access.md`)
 - Every outfit list gets a label: **Your outfits**, **Public**, **Visible to you**, **Saved earlier**, **Private**, **Unavailable** or **Visibility unknown**. To tell Public from Visible to you, RoFit asks for the first page once more without your session (Settings → Privacy, on by default).

@@ -6,7 +6,7 @@ import { SettingsPage } from '../ui/Settings.tsx';
 import { Welcome } from '../ui/Welcome.tsx';
 import { useMotion, useSettings } from '../ui/data.ts';
 import { ToastHost } from '../ui/primitives.tsx';
-import { resolveTheme, themeVars } from '../ui/theme.ts';
+import { brandVars, resolveTheme, themeVars } from '../ui/theme.ts';
 import { motionClass } from '../shared/motion.ts';
 import { Ico } from '../ui/icons.tsx';
 import { payloadFrom, shareUrl } from '../shared/share.ts';
@@ -45,7 +45,8 @@ function Page() {
     mq.addEventListener('change', g);
     return () => { window.removeEventListener('hashchange', f); mq.removeEventListener('change', g); };
   }, []);
-  const vars = themeVars(resolveTheme(settings, false));
+  const theme = resolveTheme(settings, false);
+  const vars = { ...themeVars(theme), ...brandVars(theme) };
   const page = route.page;
   document.title = page === 'settings' ? 'RoFit settings' : page === 'welcome' ? 'Welcome to RoFit' : 'RoFit library';
   const go = (r: string) => { location.hash = r; };
@@ -53,11 +54,11 @@ function Page() {
   const importShown = () => { history.replaceState(null, '', '#library'); setRoute({ page: 'library' }); };
   useEffect(() => { if (route.openKey) history.replaceState(null, '', '#library'); }, [route.openKey]);
   return (
-    <div class={'rf rf-page' + motionClass(motion)} style={vars as any}>
+    <div class={'rf rf-page rf-own' + motionClass(motion)} style={vars as any}>
       {(page === 'welcome' || location.hash === '#whatsnew') ? <Welcome mode={location.hash === '#whatsnew' ? 'whatsnew' : 'welcome'} onDone={(r) => go(r ?? 'library')} /> : (
         <>
           <nav class="rf-pnav" aria-label="RoFit">
-            <b class="rf-pbrand"><Ico n="outfit" size={18} />RoFit</b>
+            <b class="rf-pbrand"><span class="rf-pbrand-m" aria-hidden="true"><Ico n="outfit" size={15} /></span>RoFit</b>
             <button class={page !== 'settings' ? 'on' : ''} aria-current={page !== 'settings' ? 'page' : undefined} onClick={() => go('library')}>Library</button>
             <button class={page === 'settings' ? 'on' : ''} aria-current={page === 'settings' ? 'page' : undefined} onClick={() => go('settings')}>Settings</button>
           </nav>

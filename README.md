@@ -1,4 +1,4 @@
-# RoFit Inspector
+# RoFit
 
 A Manifest V3 extension (Chrome, Edge, Brave) for exploring **the outfits a Roblox user has actually saved**: browse them on their profile, take them apart, compare them, keep the ones you like and share a snapshot of one.
 
