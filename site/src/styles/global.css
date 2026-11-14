@@ -298,3 +298,7 @@ main:has(> .field:last-child) + .foot { margin-top: 0; border-top: 0; }
 @media print { .nav, .foot .display, .skip { display: none; } .js .rv { opacity: 1; transform: none; } }
 
 @media (max-width: 480px) { :root { --nav-h: 58px; } .btn { min-height: 50px; } }
+
+/* GitHub links carry GitHub's own mark, inked like the link */
+.gh { flex: none; }
+.gh-link { display: inline-flex; align-items: center; gap: 7px; color: var(--link); font-weight: 650; }

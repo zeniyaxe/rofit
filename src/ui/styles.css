@@ -1238,7 +1238,7 @@ label.rf-frow { cursor: pointer; }
 .ws-fig i:nth-child(3) { top: 64%; width: 62%; height: 34%; background: hsl(var(--h) 35% 30%); }
 .ws-fig.big { width: 30%; height: 64%; }
 .ws-hero, .ws-twin { position: absolute; border-radius: 12px; display: flex; align-items: center; justify-content: center; background: radial-gradient(120% 90% at 50% 10%, color-mix(in srgb, hsl(var(--h) 60% 55%) 24%, var(--rf-surface)), var(--rf-surface)); transition: left .7s var(--rf-spring), top .7s var(--rf-spring), width .7s var(--rf-spring), height .7s var(--rf-spring), opacity .35s var(--rf-ease), box-shadow .4s, border-radius .5s; }
-.ws-hero { left: 35.7%; top: 6%; width: 28.6%; height: 42.5%; opacity: 0; z-index: 2; }
+.ws-hero { left: 3.6%; top: 6%; width: 28.6%; height: 42.5%; opacity: 0; z-index: 2; }
 .ws-twin { left: 96%; top: 6%; width: 42%; height: 88%; opacity: 0; z-index: 1; }
 .ws-panel { position: absolute; left: 52%; top: 6%; width: 44%; height: 88%; padding: 4% 4.5%; border-radius: 12px; background: var(--rf-surface); display: flex; flex-direction: column; gap: 7px; opacity: 0; transform: translateX(16px); transition: opacity .4s var(--rf-ease), transform .6s var(--rf-spring), left .7s var(--rf-spring), width .7s var(--rf-spring); font-size: 12px; overflow: hidden; }
 .ws-title { font-size: 15px; letter-spacing: -.01em; }
@@ -1261,7 +1261,7 @@ label.rf-frow { cursor: pointer; }
 /* moments */
 .wl-story[data-step=discover] .ws-cursor { left: 82%; top: 17%; }
 .wl-story[data-step=open] .ws-hero { opacity: 1; box-shadow: 0 18px 40px rgb(0 0 0 / .28); }
-.wl-story[data-step=open] .ws-cursor { left: 50%; top: 40%; }
+.wl-story[data-step=open] .ws-cursor { left: 18%; top: 40%; }
 .wl-story[data-step=open] .ws-grid { filter: saturate(.6); }
 .wl-story:is([data-step=inspect], [data-step=explore], [data-step=compare], [data-step=save]) .ws-grid { opacity: 0; transform: scale(.92); pointer-events: none; }
 .wl-story:is([data-step=inspect], [data-step=explore]) .ws-hero { opacity: 1; left: 4%; top: 6%; width: 44%; height: 88%; }
@@ -1419,3 +1419,9 @@ dl.rf-mid-n dd { margin: 0; font-size: 15px; font-weight: 800; font-variant-nume
 .rf-compare .rf-mirror-legend .b::before, .rf-compare .rf-lens .rf-chip.lens-b.on { background: var(--rf-side-b); }
 .rf-compare .rf-lens .rf-chip.lens-b.on { color: #111; }
 .rf-poplinks { padding: 8px 14px 12px; font-size: 12px; color: var(--rf-muted); text-align: center; }
+
+/* Welcome tour: real outfit renders instead of drawn figures */
+.ws-img { width: 100%; height: 100%; object-fit: contain; display: block; }
+.ws-tile .ws-img { height: 86%; margin-bottom: 8%; }
+.ws-av { overflow: hidden; background: var(--rf-surface-2); }
+.ws-av img { width: 100%; height: 100%; object-fit: cover; display: block; }

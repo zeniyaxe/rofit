@@ -1,4 +1,5 @@
 ---
+import GithubMark from './GithubMark.astro';
 import '../styles/ported.css';
 import Base from '../layouts/Base.astro';
 import { LINKS } from '../config';
@@ -27,7 +28,7 @@ const host = (h: string) => h.replace('https://', '').replace('/*', '');
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M5 21h14" /></svg>
           Download RoFit {pkg.version} source (.zip)
         </a>
-        <a class="btn line" href={LINKS.github} rel="noopener">View on GitHub</a>
+        <a class="btn line" href={LINKS.github} rel="noopener"><GithubMark size={18} />View on GitHub</a>
       </div>
       <p class="note detect" id="detect" role="status" hidden></p>
 
