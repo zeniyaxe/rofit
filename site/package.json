@@ -7,7 +7,7 @@
     "dev": "node scripts/build-demo.mjs && astro dev",
     "build": "node scripts/build-demo.mjs && node scripts/check-claims.mjs && astro build",
     "preview": "astro preview",
-    "test": "node scripts/check-claims.mjs && node --test tests/",
+    "test": "node scripts/check-claims.mjs && node --test \"tests/*.test.mjs\"",
     "test:e2e": "node tests/e2e/run.mjs",
     "test:ui": "node tests/e2e/v3.mjs"
   },
